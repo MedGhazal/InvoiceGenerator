@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="login-form">
+  <h1>{% translate 'LOGIN' %}</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form }}
+    <p class="helptext">{% translate 'ToGetAcccesLoggingInRequired' %}</p>
+    <button type="submit">{% translate 'LOGIN' %}</button>
+  </form>
+</div>
+{% endblock %}

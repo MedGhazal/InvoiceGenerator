@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block aside %}
+<aside>
+  <div class="nav-box column">
+    <ul>
+      <li><a href={% url 'home:index' %}>{% translate 'Home' %}</a></li>
+      {% if user.is_authenticated %}
+        {% for invoicer in invoicer_list %}
+        <li><a href="{% url 'Invoicer:details' invoicer.id %}">{{ invoicer.name }}</a></li>
+        {% endfor %}
+      <li><a href={% url 'home:index' %}>{% translate 'Settings' %}</a></li>
+      <li><a href={% url 'home:index' %}>{% translate 'Manage' %}</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</aside>
+{% endblock %}

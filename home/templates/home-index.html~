@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load i18n %}
+    {% block title %}
+    <title>LAMOME Business | {% translate 'Home' %}</title>
+    {% endblock %}
+    {% block aside %}
+    {% if user.is_authenticated %}
+    <aside>
+        <div class="nav-box column">
+            <ul>
+                <li><a href={% url 'home:index' %}>{% translate 'Home' %}</a></li>
+                <li><a href={% url 'admin:Invoicee_Invoicee_changelist' %}>{% translate 'INVOICEES' %}</a></li>
+                <li><a href={% url 'admin:invoice_Invoice_changelist' %}>{% translate 'Manage' %}</a></li>
+            </ul>
+        </div>
+    </aside>
+    {% endif %}
+    {% endblock %}
+    {% block content %}
+    <h1>Home</h1>
+    {% endblock %}

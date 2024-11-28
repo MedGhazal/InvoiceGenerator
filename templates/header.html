@@ -1,0 +1,26 @@
+{% load i18n %}
+{% load static %}
+<header>
+
+  <div class="brand-box">
+    <img src="{% static 'img/lmmb-compact.svg' %}" alt="complete-logo" class="complete-logo">
+  </div>
+
+  <div class="nav-box">
+    <ul>
+      <li><a href={% url 'home:index' %}>Home</a></li>
+      {% if user.is_authenticated %}
+        {% if user.is_superuser or user.is_staff %}
+          <li><a href={% url 'admin:index' %}>{% translate 'ADMIN' %}</a></li>
+        {% endif %}
+        {% if user.is_superuser %}
+          <li><a href={% url 'rosetta-old-home-redirect' %}>{% translate 'ROSETTA' %}</a></li>
+        {% endif %}
+      {% else %}
+        <li><a href={% url 'login' %}>{% translate 'LOGIN' %}</a></li>
+        <li><a href={% url 'home:register' %}>{% translate 'REGISTER' %}</a></li>
+      {% endif %}
+    </ul>
+  </div>
+
+</header>

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load i18n %}
+  {% block content %}
+<div class='register-form'>
+  <h1>{% translate 'REGISTER' %}</h1>
+  <form action="{% url 'home:register' %}" method="POST">
+    {% csrf_token %} 
+    <!-- {{form}} -->
+    {% for field in form %}
+      {{ field.errors }}
+      {{ field.label_tag }} {{ field }}
+    {% endfor %}
+    <button>{% translate 'SUBMIT' %}</button>
+  </form>
+</div>
+{% endblock %}
