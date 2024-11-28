@@ -10,6 +10,35 @@
 	--a-background-color: rgba(7, 35, 82, .2);
 	--a-background-color-focus: rgba(7, 35, 82, .3);
 	--box-shadow-color: rgba( 31, 38, 135, 0.3 );
+	--font-family-primary:
+		"Segoe UI",
+		system-ui,
+		Roboto,
+		"Helvetica Neue",
+		Arial,
+		sans-serif,
+		"Apple Color Emoji",
+		"Segoe UI Emoji",
+		"Segoe UI Symbol",
+		"Noto Color Emoji";
+	--font-family-monospace:
+		ui-monospace,
+		Menlo,
+		Monaco,
+		"Cascadia Mono",
+		"Segoe UI Mono",
+		"Roboto Mono",
+		"Oxygen Mono",
+		"Ubuntu Monospace",
+		"Source Code Pro",
+		"Fira Mono",
+		"Droid Sans Mono",
+		"Courier New",
+		monospace,
+		"Apple Color Emoji",
+		"Segoe UI Emoji",
+		"Segoe UI Symbol",
+		"Noto Color Emoji";
 }
 
 * {
@@ -20,10 +49,9 @@
 
 html, body {
 	overflow-x: hidden;
-	font-family: 'Raleway', sans-serif;
+	font-family: var(--font-family-primary);
 	line-height: 1.6;
 	position: relative;
-	background-color: var(--secondary-color);
 	color: var(--primary-color);
 	background-color: var(--secondary-color);
 }
