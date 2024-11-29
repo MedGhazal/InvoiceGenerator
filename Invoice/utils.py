@@ -146,8 +146,9 @@ def generate_invoice_tex(invoice):
         invoiceBlock = '''
 \\textbf{\\Large Devis}
         '''
+    else:
         invoiceBlock = f'''
-Date d{invoiceStatus}: {invoice.facturationDate}\\
+Date d{invoiceStatus}: {invoice.facturationDate}\\\\
 {invoiceType} Numéro: {invoice.facturationDate.year}-{invoice.count}
         '''
     data = {
