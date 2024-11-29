@@ -359,7 +359,7 @@ class ProjectAdmin(ModelAdmin):
             invoice__in=Invoice.objects.all().filter(
                 invoicer__in=Invoicer.objects.filter(manager=request.user),
             )
-        )
+        ).order_by('-id')
 
     def has_view_permission(self, request, obj=None):
         if obj is not None and (
