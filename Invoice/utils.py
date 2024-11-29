@@ -141,9 +141,16 @@ def generate_invoice_tex(invoice):
         invoice.invoicer.country.lower() == 'mar'
     invoiceStatus = ''
     activities, invoiceStatus, invoiceType = parse_activities(invoice)
+    invoiceBlock = ''
+    if invoice.draft:
+        invoiceBlock = '''
+\\textbf{\\Large Devis}
+        '''
+        invoiceBlock = f'''
+Date d{invoiceStatus}: {invoice.facturationDate}\\
+{invoiceType} Numéro: {invoice.facturationDate.year}-{invoice.count}
+        '''
     data = {
-        '%INVOICEORCREDIT%': invoiceStatus,
-        '%INVOICETYPE%': invoiceType,
         '%COUNT%': str(invoice.count),
         '%ACTIVITIES%': activities,
         '%INVOICERADRESS%': parse_address(invoice.invoicer.address) +
@@ -160,14 +167,12 @@ def generate_invoice_tex(invoice):
         f'\\newline {invoiceeCountry}',
         '%INVOICEEICE%': invoicee_id,
         '%INVOICEENAME%': invoice.invoicee.name,
-        '%FACTURATIONDATE%': f'{invoice.facturationDate.day}-'
-        f'{invoice.facturationDate.month}-'
-        f'{invoice.facturationDate.year}',
         '%FACTURATIONYEAR%': str(invoice.facturationDate.year),
         '%DUEDATE%': str(invoice.dueDate),
         '%PAYMENTMODE%': _(PaymentMethod(invoice.paymentMethod).label),
         '%NOTE%': textNote if isForeign else '',
         '%PATHTOLOGO%': str(invoice.invoicer.logo),
+        '%INVOICEBLOCK%': invoiceBlock,
         '%BANKBLOCK%': parse_bankdata(
             invoice.invoicer, isDomestic=(
                 invoice.baseCurrency == invoice.invoicer.bookKeepingCurrency
