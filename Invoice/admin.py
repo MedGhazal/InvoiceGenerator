@@ -204,7 +204,7 @@ class InvoiceAdmin(ModelAdmin):
             return querySet
         return querySet.filter(
             invoicer__in=Invoicer.objects.filter(manager=request.user),
-        )
+        ).order_by('-id')
 
     def has_view_permission(self, request, obj=None):
         if obj is not None and (
