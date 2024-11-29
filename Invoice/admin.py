@@ -255,6 +255,8 @@ class InvoiceAdmin(ModelAdmin):
     get_status.short_description = _('Status')
 
     def get_balance(self, invoice):
+        if invoice.draft:
+            return _('IsDraft')
         balance = invoice.owedAmount - invoice.paidAmount
         if balance == 0:
             return '-'
