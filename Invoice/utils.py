@@ -38,8 +38,8 @@ def parse_activities(invoice):
         feesVAT = 0
         feesVATIncluded = 0
         title = split_description(project.title)
-        activities += f'''\\begin{{center}}\LARGE\\textbf{{{title}}}\end{{center}}
-\\begin{{longtable}}{{p{{10cm}}p{{1cm}}p{{1cm}}p{{2cm}}p{{2cm}}}}\hline
+        activities += f'''\\begin{{center}}\\LARGE\\textbf{{{title}}}\\end{{center}}
+\\begin{{longtable}}{{p{{10cm}}p{{1cm}}p{{1cm}}p{{2cm}}p{{2cm}}}}\\hline
 \\multirow{{2}}{{*}}{{\\textbf{{Désignation}}}} &
 \\multirow{{2}}{{*}}{{\\textbf{{TVA}}}} &
 \\multirow{{2}}{{*}}{{\\textbf{{QTÉ}}}} &
@@ -55,20 +55,20 @@ def parse_activities(invoice):
             feesVATIncluded += fee.rateUnit * Decimal(fee.vat / 100 + 1) * fee.count
             description = split_description(fee.description)
             activities += f'''
-{description}& {fee.vat}\%& {fee.count}
-& \multicolumn{{1}}{{c}}{{{lformat_decimal(fee.rateUnit)}}}
-& \multicolumn{{1}}{{c}}{{{lformat_decimal(fee.rateUnit * fee.count)}}}\\\\
+{description}& {fee.vat}\\%& {fee.count}
+& \\multicolumn{{1}}{{c}}{{{lformat_decimal(fee.rateUnit)}}}
+& \\multicolumn{{1}}{{c}}{{{lformat_decimal(fee.rateUnit * fee.count)}}}\\\\
             '''
         totalSum += fees
         activities += f'''
-\hline\hline
+\\hline\\hline
 \\multicolumn{{4}}{{l}}{{\\textbf{{Total HT ({currency})}}}}&
 \\multicolumn{{1}}{{c}}{{{lformat_decimal(fees)}}}\\\\
 \\multicolumn{{4}}{{l}}{{\\textbf{{TVA ({currency})}}}}&
 \\multicolumn{{1}}{{c}}{{{lformat_decimal(feesVAT)}}}\\\\
 \\multicolumn{{4}}{{l}}{{\\textbf{{Total TTC ({currency})}}}}&
-\\multicolumn{{1}}{{c}}{{{lformat_decimal(feesVATIncluded)}}}\\\\\hline
-\end{{longtable}}
+\\multicolumn{{1}}{{c}}{{{lformat_decimal(feesVATIncluded)}}}\\\\\\hline
+\\end{{longtable}}
         '''
         if not project_parsed:
             raise LateXError(
