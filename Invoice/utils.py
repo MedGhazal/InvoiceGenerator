@@ -144,7 +144,7 @@ def generate_invoice_tex(invoice):
     invoiceBlock = ''
     if invoice.draft:
         invoiceBlock = '''
-\\textbf{\\Large Devis}
+\\textit{\\Large Devis}
         '''
     else:
         invoiceBlock = f'''
