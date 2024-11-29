@@ -185,6 +185,19 @@ class InvoiceAdmin(ModelAdmin):
     autocomplete_fields = ('invoicee',)
     search_fields = ('description',)
 
+    def save_model(self, request, obj, form, change):
+        if form.cleaned_data['draft'] != form.initial['draft']:
+            invoices = Invoice.objects.filter(
+                draft=form.cleaned_data['draft']
+            )
+            if invoices.count() > 0:
+                obj.count = max(
+                    invoice.count for invoice in invoices
+                ) + 1
+            else:
+                obj.count = 1
+        obj.save()
+
     def get_queryset(self, request):
         querySet = super().get_queryset(request)
         if request.user.is_superuser:
@@ -216,7 +229,8 @@ class InvoiceAdmin(ModelAdmin):
         if obj is not None:
             return (
                 obj.invoicer.manager == request.user
-                and obj.paidAmount < obj.owedAmount
+                and obj.draft
+                and obj.paidAmount == 0
             )
         return True
 

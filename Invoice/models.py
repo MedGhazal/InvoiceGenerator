@@ -143,25 +143,12 @@ class Invoice(Model):
         if self.dueDate < self.facturationDate:
             raise ValidationError('DueDateIsLessThanFacturationDate')
 
-    def save(self, *args, **kwargs):
+    def save(self, update_fields=None):
         if self.paidAmount is None:
             self.paidAmount = 0
         if self.owedAmount is None:
             self.owedAmount = 0
-        if self.count is None or self.count == 0 or not isinstance(self.count, int):
-            period = self.facturationDate.year
-            period_invoices = Invoice.objects.filter(
-                facturationDate__gte=f'{period}-01-01',
-            ).filter(
-                invoicer=self.invoicer
-            )
-            if len(period_invoices) == 0:
-                self.count = 1
-            else:
-                self.count = max(
-                    invoice.count for invoice in period_invoices
-                ) + 1
-        super(Invoice, self).save(*args, **kwargs)
+        return super(Invoice, self).save()
 
     class Meta:
         verbose_name = _('INVOICE')

@@ -143,12 +143,12 @@ def generate_invoice_tex(invoice):
     activities, invoiceStatus, invoiceType = parse_activities(invoice)
     invoiceBlock = ''
     if invoice.draft:
-        invoiceBlock = '''
-\\textit{\\Large Devis}
+        invoiceBlock = f'''
+Date d{invoiceStatus}: {invoice.facturationDate}\\\\
         '''
     else:
         invoiceBlock = f'''
-Date d{invoiceStatus}: {invoice.facturationDate}\\\\
+\\\\Date d{invoiceStatus}: {invoice.facturationDate}\\\\
 {invoiceType} Numéro: {invoice.facturationDate.year}-{invoice.count}
         '''
     data = {
