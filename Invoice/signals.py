@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from decimal import Decimal
 from django.db.models.signals import (
     pre_save,
@@ -91,9 +92,19 @@ def m2m_changed_payment_invoice(
 
 @receiver(pre_delete, sender=Payment)
 def pre_delete_payment(**kwargs):
-    for payment in kwargs['origin']:
+    if isinstance(kwargs['origin'], Iterable):
+        payments = kwargs['origin']
+        for payment in payments:
+            invoices = payment.invoice.all()
+            coverage = Decimal(round(payment.paidAmount / invoices.count(), 2))
+            for invoice in invoices:
+                invoice.paidAmount -= coverage
+                invoice.save()
+    else:
+        payment = kwargs['origin']
         invoices = payment.invoice.all()
         coverage = Decimal(round(payment.paidAmount / invoices.count(), 2))
         for invoice in invoices:
             invoice.paidAmount -= coverage
             invoice.save()
+

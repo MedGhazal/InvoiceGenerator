@@ -1,4 +1,5 @@
 from glob import glob
+from datetime import date
 from babel.numbers import format_decimal
 from decimal import Decimal
 from os import system, chdir, getcwd, remove
@@ -139,22 +140,23 @@ def generate_invoice_tex(invoice):
         invoicee_id = f'\\textbf{{{invoicee_ice_designation}}}: {invoice.invoicee.ice}\\newline'
     isForeign = invoice.invoicee.country != invoice.invoicer.country and \
         invoice.invoicer.country.lower() == 'mar'
-    invoiceStatus = ''
     activities, invoiceStatus, invoiceType = parse_activities(invoice)
-    invoiceBlock = ''
     if invoice.draft:
         invoiceBlock = f'''
-Date d{invoiceStatus}: {invoice.facturationDate}\\\\
+Date d{invoiceStatus}: {date.today().year}-{invoice.count}\\\\
         '''
     else:
         invoiceBlock = f'''
 \\\\Date d{invoiceStatus}: {invoice.facturationDate}\\\\
 {invoiceType} Numéro: {invoice.facturationDate.year}-{invoice.count}
         '''
-    if invoice.facturationDate == invoice.dueDate:
-        dueDateBlock = 'Échéance: À la réception de la facture'
+    if invoice.facturationDate is not None and invoice.dueDate is not None:
+        if invoice.facturationDate == invoice.dueDate:
+            dueDateBlock = 'Échéance: À la réception de la facture'
+        else:
+            dueDateBlock = f'Date d\'échéance: {invoice.dueDate}'
     else:
-        dueDateBlock = f'Date d\'échéance: {invoice.dueDate}'
+        dueDateBlock = 'Infomation sur le devis:'
     data = {
         '%COUNT%': str(invoice.count),
         '%ACTIVITIES%': activities,
@@ -172,7 +174,9 @@ Date d{invoiceStatus}: {invoice.facturationDate}\\\\
         f'\\newline {invoiceeCountry}',
         '%INVOICEEICE%': invoicee_id,
         '%INVOICEENAME%': invoice.invoicee.name,
-        '%FACTURATIONYEAR%': str(invoice.facturationDate.year),
+        '%FACTURATIONYEAR%': str(invoice.facturationDate.year)
+        if invoice.facturationDate is not None
+        else date.today().year,
         '%DUEDATE%': str(invoice.dueDate),
         '%PAYMENTMODE%': _(PaymentMethod(invoice.paymentMethod).label),
         '%NOTE%': textNote if isForeign else '',
@@ -205,16 +209,26 @@ def compile_texFile(texFileName):
 
 def generate_invoice_file(invoice):
     rawTex = generate_invoice_tex(invoice)
-    texFileName = f'{invoice.invoicer.name}_'\
-        f'{invoice.facturationDate}_'\
-        f'{invoice.count}.tex'.replace(' ', '')
+    if invoice.draft:
+        texFileName = f'{invoice.invoicer.name}_'\
+            f'{date.today()}_'\
+            f'{invoice.count}.tex'.replace(' ', '')
+    else:
+        texFileName = f'{invoice.invoicer.name}_'\
+            f'{invoice.facturationDate}_'\
+            f'{invoice.count}.tex'.replace(' ', '')
     texFilePath = join(getcwd(), TEMPTEXFILESDIR, texFileName)
     with open(texFilePath, 'w', encoding='utf-8') as texFile:
         texFile.write(rawTex)
     compile_texFile(texFileName)
-    return f'{invoice.invoicer.name}_'\
-        f'{invoice.facturationDate}_'\
-        f'{invoice.count}.pdf'.replace(' ', '')
+    if invoice.draft:
+        return f'{invoice.invoicer.name}_'\
+            f'{date.today()}_'\
+            f'{invoice.count}.pdf'.replace(' ', '')
+    else:
+        return f'{invoice.invoicer.name}_'\
+            f'{invoice.facturationDate}_'\
+            f'{invoice.count}.pdf'.replace(' ', '')
 
 
 def get_bookkkeeping_prefix(invoicer):

@@ -24,6 +24,7 @@ from django.http import (
     HttpResponse,
 )
 from django.contrib.messages import error, warning
+from django.core.exceptions import ValidationError
 from rangefilter.filters import DateRangeFilter
 from Invoicee.models import Invoicee
 from Invoicer.models import Invoicer
@@ -66,6 +67,9 @@ def export_invoices(invoiceAdmin, request, querySet):
             dictWriter = DictWriter(temporaryFile, EXPORT_DATA_HEADER)
             dictWriter.writeheader()
             for invoice in querySet:
+                if invoice.draft:
+                    error(request, _('TheQUERYSETHasADraft'))
+                    return None
                 data = export_invoice_data(invoice, EXPORT_DATA_HEADER)
                 dictWriter.writerows(data)
             temporaryFile.seek(0)
@@ -212,7 +216,7 @@ class InvoiceAdmin(ModelAdmin):
     get_objects.short_description = _('INCOICEObjects')
 
     def save_model(self, request, obj, form, change):
-        if form.cleaned_data['draft'] != form.initial['draft']:
+        if change and form.cleaned_data['draft'] != form.initial['draft']:
             invoices = Invoice.objects.filter(
                 draft=form.cleaned_data['draft']
             )
@@ -690,6 +694,26 @@ class PaymentAdmin(ModelAdmin):
         )
 
     def save_model(self, request, payment, form, change):
+        invoices = form.cleaned_data['invoice']
+        coverage = round(
+            form.cleaned_data['paidAmount'] / invoices.count(),
+            2,
+        )
+        if change:
+            coverage -= round(
+                form.initial['paidAmount'] / invoices.count(),
+                2,
+            )
+        for invoice in invoices:
+            if invoice.owedAmount < invoice.paidAmount + coverage:
+                excess = invoice.owedAmount - invoice.paidAmount + coverage
+                errorText = _(
+                    'PAIDAmountExceedsOwedAmountFor %(invoice)s WITH %(excess)s DIFFERENCE, CHECK'
+                ) % {'invoice': invoice.description, 'excess': excess}
+                error(
+                    request,
+                    errorText,
+                 )
         if change and form.cleaned_data['paidAmount'] != form.initial['paidAmount']:
             invoices = payment.invoice.all()
             oldCoverage = round(

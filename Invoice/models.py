@@ -73,10 +73,14 @@ class Invoice(Model):
     dueDate = DateField(
         db_default=date.today(),
         verbose_name=_('DueDate'),
+        blank=True,
+        null=True,
     )
     facturationDate = DateField(
         db_default=date.today(),
         verbose_name=_('FacturationDate'),
+        blank=True,
+        null=True,
     )
     paymentMethod = CharField(
         max_length=2,
@@ -140,6 +144,12 @@ class Invoice(Model):
         return f'{self.description}'
 
     def clean(self):
+        if (
+            self.dueDate is None or self.facturationDate is None
+        ) and not self.draft:
+            raise ValidationError(
+                'DueANDFacturationDATESareMANDATORYForINVOICES'
+            )
         if self.dueDate < self.facturationDate:
             raise ValidationError('DueDateIsLessThanFacturationDate')
 
