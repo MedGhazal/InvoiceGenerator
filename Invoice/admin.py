@@ -2,6 +2,7 @@ from datetime import date, timedelta
 from csv import DictWriter
 from os import getcwd, remove
 from os.path import join
+from decimal import Decimal
 from tempfile import (
     SpooledTemporaryFile,
 )
@@ -9,8 +10,10 @@ from zipfile import (
     ZIP_DEFLATED,
     ZipFile,
 )
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 from django.contrib.admin import (
     action,
     register,
@@ -177,6 +180,7 @@ class InvoiceAdmin(ModelAdmin):
     list_display = (
         '__str__',
         'get_projects',
+        'get_fees',
         'dueDate',
         'facturationDate',
         'get_status',
@@ -184,6 +188,28 @@ class InvoiceAdmin(ModelAdmin):
     )
     autocomplete_fields = ('invoicee',)
     search_fields = ('description',)
+    readonly_fields = ('get_objects',)
+
+    def get_objects(self, invoice):
+        projects = '<pre>'
+        for project in invoice.project_set.all():
+            projects += format_html(
+                '<a href="{}">{}</a><br>',
+                reverse('admin:Invoice_project_change', args=(project.id,)),
+                f'{project.title}',
+            )
+            fees = ''
+            for fee in project.fee_set.all():
+                fees += format_html(
+                    '    -<a href="{}">{}</a><br>',
+                    reverse('admin:Invoice_fee_change', args=(fee.id,)),
+                    f'{fee.description}',
+                )
+            projects += fees + '<hr>'
+        projects += '</pre>'
+        return mark_safe(projects)
+
+    get_objects.short_description = _('INCOICEObjects')
 
     def save_model(self, request, obj, form, change):
         if form.cleaned_data['draft'] != form.initial['draft']:
@@ -283,12 +309,33 @@ class InvoiceAdmin(ModelAdmin):
     get_balance.short_description = _('TBPaid')
 
     def get_projects(self, invoice):
-        projects = []
+        projects = '<ul class="field_ul_table">'
         for project in invoice.project_set.all():
-            projects.append(str(project))
-        return f'{projects}'
+            projects += format_html(
+                '<li><a href="{}">{}</a></li>',
+                reverse('admin:Invoice_project_change', args=(project.id,)),
+                f'{project.title}',
+            )
+        projects += '</ul>'
+        return mark_safe(projects)
 
     get_projects.short_description = _('PROJECTS')
+
+    def get_fees(self, invoice):
+        projects = '<ul class="field_ul_table">'
+        for project in invoice.project_set.all():
+            fees = '<ul class="field_ul_table">'
+            for fee in project.fee_set.all():
+                fees += format_html(
+                    '<li><a href="{}">{}</a></li>',
+                    reverse('admin:Invoice_fee_change', args=(fee.id,)),
+                    f'{fee.description}',
+                )
+            projects += fees + '</ul><hr style="color: black">'
+        projects += '</ul>'
+        return mark_safe(projects)
+
+    get_fees.short_description = _('Fees')
 
 
 class InvoicerOfProjectFilter(SimpleListFilter):
@@ -347,9 +394,45 @@ class ProjectAdmin(ModelAdmin):
     search_fields = ('title',)
     list_display = (
         'title',
-        'invoice',
+        'get_invoice',
+        'get_fees',
     )
     autocomplete_fields = ('invoice',)
+    readonly_fields = ('get_objects',)
+
+    def get_objects(self, project):
+        fees = ''
+        for fee in project.fee_set.all():
+            fees += format_html(
+                '    -<a href="{}">{}</a><br>',
+                reverse('admin:Invoice_fee_change', args=(fee.id,)),
+                f'{fee.description}',
+            )
+        return _('NoeFees') if fees == '' else mark_safe(fees)
+
+    get_objects.short_description = _('Fees')
+
+    def get_invoice(self, project):
+        invoice = format_html(
+            '<a href="{}">{}</a>',
+            reverse('admin:Invoice_invoice_change', args=(project.id,)),
+            f'{project.invoice.description}',
+        )
+        return invoice
+
+    get_invoice.short_description = _('INVOICE')
+
+    def get_fees(self, project):
+        fees = mark_safe('<ul class="field_ul_table">')
+        for fee in project.fee_set.all():
+            fees += format_html(
+                '<li><a href="{}">{}</a></li>',
+                reverse('admin:Invoice_project_change', args=(fee.id,)),
+                f'{fee.description}',
+            )
+        return fees + mark_safe('</ul>')
+
+    get_fees.short_description = _('Fees')
 
     def get_queryset(self, request):
         querySet = super().get_queryset(request)
@@ -445,10 +528,35 @@ class FeeAdmin(ModelAdmin):
     )
     list_display = (
         'description',
-        'project',
+        'get_project',
+        'get_beforeVAT',
+        'get_afterVAT',
     )
     search_fields = ('description',)
     autocomplete_fields = ('project',)
+
+    def get_project(self, fee):
+        project = '<ul class="field_ul_table">'
+        project += format_html(
+            '<a href="{}">{}</a>',
+            reverse('admin:Invoice_project_change', args=(fee.project.id,)),
+            f'{fee.project.title}',
+        )
+        return mark_safe(project)
+
+    get_project.short_description = _('PROJECT')
+
+    def get_afterVAT(self, fee):
+        return round(
+            fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100), 2
+        )
+
+    get_afterVAT.short_description = _('AfterVAT')
+
+    def get_beforeVAT(self, fee):
+        return round(fee.rateUnit * fee.count, 2)
+
+    get_beforeVAT.short_description = _('BeforeVAT')
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request)
@@ -559,7 +667,15 @@ class PaymentAdmin(ModelAdmin):
     autocomplete_fields = ('invoice',)
 
     def get_invoice(self, payment):
-        return f'{list(str(invoice) for invoice in payment.invoice.all())}'
+        invoices = '<ul class="field_ul_table">'
+        for invoice in payment.invoice.all():
+            invoices += format_html(
+                '<li><a href="{}">{}</a></li>',
+                reverse('admin:Invoice_invoice_change', args=(invoice.id,)),
+                f'{invoice.description}',
+            )
+        invoices += '</ul>'
+        return mark_safe(invoices)
 
     get_invoice.short_description = _('INVOICE')
 
