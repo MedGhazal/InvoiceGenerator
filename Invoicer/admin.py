@@ -1,9 +1,10 @@
 from django.contrib.admin import (
     register,
     ModelAdmin,
-    display,
 )
 from .models import Invoicer
+from django.urls import reverse
+from django.utils.html import format_html, mark_safe
 from django.utils.translation import gettext_lazy as _
 
 
@@ -18,9 +19,14 @@ class InvoicerAdmin(ModelAdmin):
     search_fields = ('name',)
 
     def get_invoicees(self, invoicer):
-        invoicees = []
+        invoicees = '<ul class="field_ul_table">'
         for invoicee in invoicer.invoicee_set.all():
-            invoicees.append(str(invoicee))
-        return f'{invoicees}'
+            invoicees += format_html(
+                '<li><a href="{}">{}</a></li>',
+                reverse('admin:Invoicee_invoicee_change', args=(invoicee.id,)),
+                f'{invoicee.name}',
+            )
+        invoicees += '</ul>'
+        return mark_safe(invoicees)
 
-    get_invoicees.short_description = _('INVOICEES')
+    get_invoicees.short_description = _('INVOICEE')
