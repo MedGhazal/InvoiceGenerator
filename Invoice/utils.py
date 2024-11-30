@@ -151,6 +151,10 @@ Date d{invoiceStatus}: {invoice.facturationDate}\\\\
 \\\\Date d{invoiceStatus}: {invoice.facturationDate}\\\\
 {invoiceType} Numéro: {invoice.facturationDate.year}-{invoice.count}
         '''
+    if invoice.facturationDate == invoice.dueDate:
+        dueDateBlock = 'Échéance: À la réception de la facture'
+    else:
+        dueDateBlock = f'Date d\'échéance: {invoice.dueDate}'
     data = {
         '%COUNT%': str(invoice.count),
         '%ACTIVITIES%': activities,
@@ -178,7 +182,8 @@ Date d{invoiceStatus}: {invoice.facturationDate}\\\\
             invoice.invoicer, isDomestic=(
                 invoice.baseCurrency == invoice.invoicer.bookKeepingCurrency
             )
-        )
+        ),
+        '%DUEDATEBLOCK%': dueDateBlock,
     }
     for key, value in data.items():
         rawTex = rawTex.replace(key, value)
