@@ -150,7 +150,7 @@ Date d{invoiceStatus}: {date.today().year}-{invoice.count}\\\\
 \\\\Date d{invoiceStatus}: {invoice.facturationDate}\\\\
 {invoiceType} Numéro: {invoice.facturationDate.year}-{invoice.count}
         '''
-    if invoice.facturationDate is not None and invoice.dueDate is not None:
+    if invoice.facturationDate is not None and invoice.dueDate is not None and not invoice.draft:
         if invoice.facturationDate == invoice.dueDate:
             dueDateBlock = 'Échéance: À la réception de la facture'
         else:
