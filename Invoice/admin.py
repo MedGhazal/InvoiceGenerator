@@ -689,6 +689,22 @@ class PaymentAdmin(ModelAdmin):
             )
         )
 
+    def save_model(self, request, payment, form, change):
+        if change and form.cleaned_data['paidAmount'] != form.initial['paidAmount']:
+            invoices = payment.invoice.all()
+            oldCoverage = round(
+                form.initial['paidAmount'] / invoices.count(),
+                2,
+            )
+            coverage = round(
+                form.cleaned_data['paidAmount'] / invoices.count(),
+                2,
+            )
+            for invoice in invoices:
+                invoice.paidAmount -= oldCoverage - coverage
+                invoice.save()
+        payment.save()
+
     def has_view_permission(self, request, obj=None):
         if obj is not None:
             if request.user.is_superuser:

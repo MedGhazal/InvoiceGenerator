@@ -260,12 +260,7 @@ class Payment(Model):
     history = HistoricalRecords()
 
     def save(self):
-        print('Payment saving')
         super(Payment, self).save()
-
-    def delete(self, **kwargs):
-        print('Payment deleting')
-        super(Payment, self).delete()
 
     class Meta:
         verbose_name = _('Payment')
