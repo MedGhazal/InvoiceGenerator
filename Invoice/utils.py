@@ -147,7 +147,7 @@ Date d{invoiceStatus}: {date.today().year}-{invoice.count}\\\\
         '''
     else:
         invoiceBlock = f'''
-\\\\Date d{invoiceStatus}: {invoice.facturationDate}\\\\
+Date d{invoiceStatus}: {invoice.facturationDate}\\\\
 {invoiceType} Numéro: {invoice.facturationDate.year}-{invoice.count}
         '''
     if invoice.facturationDate is not None and invoice.dueDate is not None and not invoice.draft:
