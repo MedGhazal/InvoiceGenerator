@@ -52,7 +52,7 @@ class InvoiceeAdmin(ModelAdmin):
 
     def get_balance(self, invoicee):
         balance = 0
-        for invoice in invoicee.invoice_set.filter(draft=True):
+        for invoice in invoicee.invoice_set.filter(draft=False):
             balance += invoice.owedAmount - invoice.paidAmount
         if balance == 0:
             return '-'
