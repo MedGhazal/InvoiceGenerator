@@ -66,13 +66,13 @@ def m2m_changed_payment_invoice_pre_clear(payment):
 
 @receiver(m2m_changed, sender=Payment.invoice.through)
 def m2m_changed_payment_invoice(
-    sender,
-    instance,
-    action,
-    reverse,
-    model,
-    pq_set,
-    using,
+    sender=None,
+    instance=None,
+    action=None,
+    reverse=None,
+    model=None,
+    pq_set=None,
+    using=None,
     **kwargs,
 ):
     if action == 'pre_add':
@@ -90,8 +90,8 @@ def m2m_changed_payment_invoice(
 
 
 @receiver(pre_delete, sender=Payment)
-def pre_delete_payment(sender, instance, using, origin, **kwargs):
-    for payment in origin:
+def pre_delete_payment(**kwargs):
+    for payment in kwargs['origin']:
         invoices = payment.invoice.all()
         coverage = Decimal(round(payment.paidAmount / invoices.count(), 2))
         for invoice in invoices:
