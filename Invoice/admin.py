@@ -19,6 +19,8 @@ from django.contrib.admin import (
     register,
     ModelAdmin,
     SimpleListFilter,
+    TabularInline,
+    StackedInline,
 )
 from django.http import (
     HttpResponse,
@@ -168,6 +170,18 @@ class InvoiceInvoicerFilter(SimpleListFilter):
             return queryset.filter(invoicer=self.value())
 
 
+class FeeTabularInline(TabularInline):
+    model = Fee
+    extra = 0
+    min_num = 1
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request)
+        if not request.user.is_superuser:
+            fields.remove('bookKeepingAmount')
+        return fields
+
+
 @register(Invoice)
 class InvoiceAdmin(ModelAdmin):
     actions = [
@@ -192,28 +206,6 @@ class InvoiceAdmin(ModelAdmin):
     )
     autocomplete_fields = ('invoicee',)
     search_fields = ('description',)
-    readonly_fields = ('get_objects',)
-
-    def get_objects(self, invoice):
-        projects = '<pre>'
-        for project in invoice.project_set.all():
-            projects += format_html(
-                '<a href="{}">{}</a><br>',
-                reverse('admin:Invoice_project_change', args=(project.id,)),
-                f'{project.title}',
-            )
-            fees = ''
-            for fee in project.fee_set.all():
-                fees += format_html(
-                    '    -<a href="{}">{}</a><br>',
-                    reverse('admin:Invoice_fee_change', args=(fee.id,)),
-                    f'{fee.description}',
-                )
-            projects += fees + '<hr>'
-        projects += '</pre>'
-        return mark_safe(projects)
-
-    get_objects.short_description = _('INCOICEObjects')
 
     def save_model(self, request, obj, form, change):
         if change and form.cleaned_data['draft'] != form.initial['draft']:
@@ -402,19 +394,7 @@ class ProjectAdmin(ModelAdmin):
         'get_fees',
     )
     autocomplete_fields = ('invoice',)
-    readonly_fields = ('get_objects',)
-
-    def get_objects(self, project):
-        fees = ''
-        for fee in project.fee_set.all():
-            fees += format_html(
-                '    -<a href="{}">{}</a><br>',
-                reverse('admin:Invoice_fee_change', args=(fee.id,)),
-                f'{fee.description}',
-            )
-        return _('NoeFees') if fees == '' else mark_safe(fees)
-
-    get_objects.short_description = _('Fees')
+    inlines = [FeeTabularInline,]
 
     def get_invoice(self, project):
         invoice = format_html(
