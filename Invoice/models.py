@@ -150,7 +150,7 @@ class Invoice(Model):
             raise ValidationError(
                 'DueANDFacturationDATESareMANDATORYForINVOICES'
             )
-        if self.dueDate < self.facturationDate:
+        elif self.dueDate < self.facturationDate:
             raise ValidationError('DueDateIsLessThanFacturationDate')
 
     def save(self, update_fields=None):
