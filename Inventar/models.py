@@ -128,6 +128,7 @@ class Sale(Model):
     invoicee = ForeignKey(
         'Invoicee.Invoicee',
         null=True,
+        default=None,
         on_delete=SET_NULL,
         related_name='Buyer',
         verbose_name=_('BUYER'),
