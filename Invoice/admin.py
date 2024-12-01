@@ -19,7 +19,6 @@ from django.contrib.admin import (
     register,
     ModelAdmin,
     SimpleListFilter,
-    TabularInline,
     StackedInline,
 )
 from django.http import (
@@ -170,7 +169,7 @@ class InvoiceInvoicerFilter(SimpleListFilter):
             return queryset.filter(invoicer=self.value())
 
 
-class FeeTabularInline(TabularInline):
+class FeeStackedInline(StackedInline):
     model = Fee
     extra = 0
     min_num = 1
@@ -394,7 +393,7 @@ class ProjectAdmin(ModelAdmin):
         'get_fees',
     )
     autocomplete_fields = ('invoice',)
-    inlines = [FeeTabularInline,]
+    inlines = [FeeStackedInline,]
 
     def get_invoice(self, project):
         invoice = format_html(
