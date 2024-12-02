@@ -1,39 +1,31 @@
 from datetime import date
 from decimal import Decimal
 from django.db.models import (
-    Q, F, When, Case, Value, Exists,
+    Q, F, When, Case, Value,
     Model,
     ForeignKey,
     IntegerField,
     CharField,
     BooleanField,
-    TextChoices,
     DateField,
     DecimalField,
     GeneratedField,
     ManyToManyField,
-    CheckConstraint,
-    SET_NULL,
     CASCADE,
 )
 from django.db.models.lookups import LessThanOrEqual
 from django.core.validators import (
     MinValueValidator,
     MaxValueValidator,
-    MinLengthValidator,
-    MaxLengthValidator,
     RegexValidator,
 )
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from simple_history.models import HistoricalRecords
 
-
-class PaymentMethod(TextChoices):
-    TRANSFER = 'TR', _('Bank Transfer')
-    CASH = 'CS', _('Cash Payment')
-    CHECK = 'CK', _('Check')
-    DIVERS = 'DV', _('Divers')
+from Core.utils import (
+    PaymentMethod,
+)
 
 
 class Invoice(Model):
@@ -169,6 +161,7 @@ class Invoice(Model):
             self.count = 1 if invoices.count() == 0 else max(
                 invoice.count for invoice in invoices
             ) + 1
+        self.description = f'{self.invoicer}|{self.invoicee}:F{self.count}'
         super(Invoice, self).save()
 
     class Meta:
@@ -237,6 +230,8 @@ class Fee(Model):
         invoice.owedAmount += self.rateUnit * self.count * Decimal(
             round(1 + self.vat / 100, 2)
         )
+        currencySymbol = get_currency_symbol(invoice.baseCurrency)
+        invoice.description += f':{invoice.owedAmount}{currencySymbol}'
         invoice.save()
 
     def delete(self, *args, **kwargs):

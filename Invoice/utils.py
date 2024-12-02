@@ -4,13 +4,15 @@ from babel.numbers import format_decimal
 from decimal import Decimal
 from os import system, chdir, getcwd, remove
 from os.path import join
-from .models import PaymentMethod
 from django.utils.translation import gettext as _
 from InvoiceGenerator.settings import (
     TEMPTEXFILESDIR,
     PREFIX_CLIENT_BOOKKEEPING_MOROCCO,
     PREFIX_CLIENT_BOOKKEEPING_FRANCE,
-    VAT_NOTE,
+)
+from Core.utils import (
+    get_currency_symbol,
+    get_paymentMethod_label,
 )
 
 
@@ -19,27 +21,30 @@ class LateXError(Exception):
 
 
 def split_description(description):
-    return ' \\cr '.join(description[i:i+50] for i in range(0, len(description), 50))
+    return ' \\cr '.join(
+        description[i:i+50] for i in range(0, len(description), 50)
+    )
 
 
 def lformat_decimal(decimal):
     return format_decimal(decimal, format='#,##0.00', locale='ar_MR')
 
 
-def parse_activities(invoice):
-    activities_parsed = False
-    if invoice.baseCurrency == 'EUR':
-        currency = '\\euro{}'
-    else:
-        currency = ' DH'
-    activities = ''
-    totalSum = 0
-    for project in invoice.project_set.all():
-        fees = 0
-        feesVAT = 0
-        feesVATIncluded = 0
-        title = split_description(project.title)
-        activities += f'''\\begin{{center}}\\LARGE\\textbf{{{title}}}\\end{{center}}
+def parse_fee(fee):
+    fee_ = fee.rateUnit * fee.count
+    feeVAT = round(fee_ * Decimal(fee.vat / 100), 2)
+    feeVATIncluded = round(fee_ * Decimal(1 + fee.vat / 100), 2)
+    description = split_description(fee.description)
+    activity = f'''{description}& {fee.vat}\\%& {fee.count}
+& \\multicolumn{{1}}{{c}}{{{lformat_decimal(fee.rateUnit)}}}
+& \\multicolumn{{1}}{{c}}{{{lformat_decimal(fee.rateUnit * fee.count)}}}\\\\
+    '''
+    return (activity, fee_, feeVAT, feeVATIncluded)
+
+
+def parse_project_header(project):
+    title = split_description(project.title)
+    return f'''\\begin{{center}}\\LARGE\\textbf{{{title}}}\\end{{center}}
 \\begin{{longtable}}{{p{{10cm}}p{{1cm}}p{{1cm}}p{{2cm}}p{{2cm}}}}\\hline
 \\multirow{{2}}{{*}}{{\\textbf{{Désignation}}}} &
 \\multirow{{2}}{{*}}{{\\textbf{{TVA}}}} &
@@ -47,21 +52,11 @@ def parse_activities(invoice):
 \\multirow{{2}}{{*}}{{\\textbf{{PU HT}}}} &
 \\multirow{{2}}{{*}}{{\\textbf{{Total HT}}}}
 \\\\\\\\\hline\hline
-        '''
-        project_parsed = False
-        for fee in project.fee_set.all():
-            project_parsed = True
-            fees += fee.rateUnit * fee.count
-            feesVAT += fee.rateUnit * Decimal(fee.vat / 100) * fee.count
-            feesVATIncluded += fee.rateUnit * Decimal(fee.vat / 100 + 1) * fee.count
-            description = split_description(fee.description)
-            activities += f'''
-{description}& {fee.vat}\\%& {fee.count}
-& \\multicolumn{{1}}{{c}}{{{lformat_decimal(fee.rateUnit)}}}
-& \\multicolumn{{1}}{{c}}{{{lformat_decimal(fee.rateUnit * fee.count)}}}\\\\
-            '''
-        totalSum += fees
-        activities += f'''
+    '''
+
+
+def parse_project_footer(fees, feesVAT, feesVATIncluded, currency):
+    return f'''
 \\hline\\hline
 \\multicolumn{{4}}{{l}}{{\\textbf{{Total HT ({currency})}}}}&
 \\multicolumn{{1}}{{c}}{{{lformat_decimal(fees)}}}\\\\
@@ -70,18 +65,45 @@ def parse_activities(invoice):
 \\multicolumn{{4}}{{l}}{{\\textbf{{Total TTC ({currency})}}}}&
 \\multicolumn{{1}}{{c}}{{{lformat_decimal(feesVATIncluded)}}}\\\\\\hline
 \\end{{longtable}}
-        '''
-        if not project_parsed:
-            raise LateXError(
-                _('INVOICEInvalid'),
-                f'{_('ADDProjectItems')}{project}',
-            )
-        activities_parsed = True
-    if not activities_parsed:
+    '''
+
+
+def parse_project(invoice, project, currency):
+    if project.fee_set.count() == 0:
+        raise LateXError(_('INVOICEInvalid'), f'{_('ADDProject')}{invoice}')
+    activities = parse_project_header(project)
+    fees, feesVAT, feesVATIncluded = 0, 0, 0
+    for fee in project.fee_set.all():
+        activity, fee, feeVAT, feeVATIncluded = parse_fee(fee)
+        fees += fee
+        feesVAT += feeVAT
+        feesVATIncluded += feeVATIncluded
+        activities += activity
+    activities += parse_project_footer(
+        fees,
+        feesVAT,
+        feesVATIncluded,
+        currency,
+    )
+    return (activities, fees)
+
+
+def parse_activities(invoice):
+    if invoice.project_set.count() == 0:
         raise LateXError(
             _('INVOICEInvalid'),
-            f'{_('ADDProject')}{invoice}',
+            f'{_('ADDProjectItems')}{invoice}',
         )
+    currency = get_currency_symbol(invoice.baseCurrency)
+    activities = ''
+    totalSum = 0
+    for project in invoice.project_set.all():
+        activities, fees = parse_project(
+            invoice,
+            project,
+            currency,
+        )
+        totalSum += fees
     return (
         activities,
         'e facturation' if totalSum >= 0 else '\'avoir',
@@ -101,7 +123,7 @@ def parse_bankdata(invoicer, isDomestic=False):
             bankData += f'\\textbf{{RIB}}: {invoicer.rib}\\\\'
         else:
             bankData += f'\\textbf{{IBAN}}: {invoicer.iban}\\\\'
-        return bankData 
+        return bankData
     else:
         return ''
 
@@ -143,7 +165,7 @@ def generate_invoice_tex(invoice):
     activities, invoiceStatus, invoiceType = parse_activities(invoice)
     if invoice.draft:
         invoiceBlock = f'''
-Devis: D{date.today().year}-{date.today().day}{date.today().month}\\\\
+Devis Numéro: D{date.today().year}-{date.today().day}{date.today().month}\\\\
         '''
     else:
         invoiceBlock = f'''
@@ -157,6 +179,7 @@ Date d{invoiceStatus}: {invoice.facturationDate}\\\\
             dueDateBlock = f'Date d\'échéance: {invoice.dueDate}'
     else:
         dueDateBlock = 'Infomation sur le devis:'
+    paymentMethodLabel = get_paymentMethod_label(invoice.paymentMethod)
     data = {
         '%COUNT%': str(invoice.count),
         '%ACTIVITIES%': activities,
@@ -178,7 +201,7 @@ Date d{invoiceStatus}: {invoice.facturationDate}\\\\
         if invoice.facturationDate is not None
         else date.today().year,
         '%DUEDATE%': str(invoice.dueDate),
-        '%PAYMENTMODE%': _(PaymentMethod(invoice.paymentMethod).label),
+        '%PAYMENTMODE%': _(paymentMethodLabel),
         '%NOTE%': textNote if isForeign else '',
         '%PATHTOLOGO%': str(invoice.invoicer.logo),
         '%INVOICEBLOCK%': invoiceBlock,
@@ -390,7 +413,9 @@ def export_invoice_data(invoice, headers):
             sumFeesVEBaseCurrency += fee.rateUnit * fee.count
             sumFees += fee.bookKeepingAmount
             sumVAT += fee.bookKeepingAmount * Decimal(fee.vat / 100)
-            sumFeesWithoutVAT += fee.bookKeepingAmount * Decimal(1 + fee.vat / 100)
+            sumFeesWithoutVAT += fee.bookKeepingAmount * Decimal(
+                1 + fee.vat / 100
+            )
     if invoice.invoicer.bookKeepingCurrency == invoice.baseCurrency:
         return dectifyData(
             dataCaseDomesticFees(invoice, sumFees, sumFeesWithoutVAT, sumVAT),
