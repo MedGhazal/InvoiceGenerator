@@ -155,11 +155,17 @@ class Invoice(Model):
                 raise ValidationError('DueDateIsLessThanFacturationDate')
 
     def save(self, update_fields=None):
-        if self.paidAmount is None:
-            self.paidAmount = 0
-        if self.owedAmount is None:
-            self.owedAmount = 0
-        return super(Invoice, self).save()
+        invoices = Invoice.objects
+        if self.draft:
+            invoices = invoices.all()
+        else:
+            invoices = invoices.filter(
+                draft=False
+            )
+        self.count = 1 if invoices.count() == 0 else max(
+            invoice.count for invoice in invoices
+        ) + 1
+        super(Invoice, self).save()
 
     class Meta:
         verbose_name = _('INVOICE')
@@ -266,7 +272,8 @@ class Payment(Model):
     invoice = ManyToManyField(
         'Invoice.Invoice',
         verbose_name=_('PaidInvoices'),
-        related_name='invoice',
+        related_name='paymentInvoice',
+        related_query_name='paymentInvoice',
     )
     history = HistoricalRecords()
 

@@ -30,6 +30,7 @@ def m2m_changed_payment_invoice_post_add(payment):
                 payment.paidAmount / payment.invoice.all().count(), 2
             )
         )
+        invoice.draft = False
         invoice.save()
 
 
@@ -107,4 +108,3 @@ def pre_delete_payment(**kwargs):
         for invoice in invoices:
             invoice.paidAmount -= coverage
             invoice.save()
-

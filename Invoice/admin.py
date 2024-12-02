@@ -25,7 +25,6 @@ from django.http import (
     HttpResponse,
 )
 from django.contrib.messages import error, warning
-from django.core.exceptions import ValidationError
 from rangefilter.filters import DateRangeFilter
 from Invoicee.models import Invoicee
 from Invoicer.models import Invoicer
@@ -205,19 +204,10 @@ class InvoiceAdmin(ModelAdmin):
     )
     autocomplete_fields = ('invoicee',)
     search_fields = ('description',)
+    readonly_fields = []
 
-    def save_model(self, request, obj, form, change):
-        if change and form.cleaned_data['draft'] != form.initial['draft']:
-            invoices = Invoice.objects.filter(
-                draft=form.cleaned_data['draft']
-            )
-            if invoices.count() > 0:
-                obj.count = max(
-                    invoice.count for invoice in invoices
-                ) + 1
-            else:
-                obj.count = 1
-        obj.save()
+    def save_model(self, request, invoice, form, change):
+        invoice.save()
 
     def get_queryset(self, request):
         querySet = super().get_queryset(request)
@@ -228,27 +218,24 @@ class InvoiceAdmin(ModelAdmin):
         ).order_by('-id')
 
     def has_view_permission(self, request, obj=None):
-        if obj is not None and (
-            not request.user.is_superuser and obj.invoicer.manager != request.user
-        ):
-            return False
+        if obj is not None:
+            return (
+                request.user.is_superuser
+                or obj.invoice.manager != request.user
+            )
         return True
 
     def has_change_permission(self, request, obj=None):
-        if request.user.is_superuser:
-            return True
         if obj is not None:
-            return (
+            return request.user.is_superuser or (
                 obj.invoicer.manager == request.user
-                and obj.paidAmount < obj.owedAmount
+                and obj.paidAmount == 0
             )
         return True
 
     def has_delete_permission(self, request, obj=None):
-        if request.user.is_superuser:
-            return True
         if obj is not None:
-            return (
+            return request.user.is_superuser or (
                 obj.invoicer.manager == request.user
                 and obj.draft
                 and obj.paidAmount == 0
@@ -260,7 +247,7 @@ class InvoiceAdmin(ModelAdmin):
             kwargs['queryset'] = Invoicer.objects.filter(manager=request.user)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-    def get_fields(self, request, obj=None):
+    def get_fields(self, request, invoice=None):
         fields = super().get_fields(request)
         fields.remove('owedAmount')
         fields.remove('paidAmount')
@@ -269,6 +256,13 @@ class InvoiceAdmin(ModelAdmin):
             fields.remove('salesAccount')
             fields.remove('vatAccount')
         return fields
+
+    def get_readonly_fields(self, request, invoice=None):
+        fields = super().get_readonly_fields(request)
+        if invoice:
+            if not request.user.is_superuser and invoice.paymentInvoice.count() > 0:
+                fields.append('draft')
+        return set(fields)
 
     def get_status(self, invoice):
         if invoice.status == 0:
@@ -671,6 +665,22 @@ class PaymentAdmin(ModelAdmin):
                 invoicer__in=Invoicer.objects.filter(manager=request.user),
             )
         )
+
+    def delete_model(self, request, payment):
+        invoices = payment.invoice.all()
+        coverage = Decimal(round(payment.paidAmount / invoices.count(), 2))
+        for invoice in invoices:
+            invoice.paidAmount -= coverage
+            invoice.save()
+
+    def delete_queryset(self, request, payments):
+        for payment in payments:
+            invoices = payment.invoice.all()
+            coverage = Decimal(round(payment.paidAmount / invoices.count(), 2))
+            for invoice in invoices:
+                invoice.paidAmount -= coverage
+                invoice.save()
+            payment.delete()
 
     def save_model(self, request, payment, form, change):
         invoices = form.cleaned_data['invoice']
