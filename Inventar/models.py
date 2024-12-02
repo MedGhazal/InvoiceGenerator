@@ -54,7 +54,14 @@ class Product(Model):
     price = DecimalField(
         max_digits=10,
         decimal_places=2,
-        verbose_name=_('PRICE'),
+        verbose_name=_('PricePerUnitBeforeVAT'),
+        validators=[
+            MinValueValidator(0),
+        ]
+    )
+    count = IntegerField(
+        default=0,
+        verbose_name=_('COUNT'),
         validators=[
             MinValueValidator(0),
         ]
@@ -106,9 +113,18 @@ class ChargeProduct(Model):
         'Inventar.Charge',
         on_delete=CASCADE,
     )
-    count = IntegerField(
+    pricePerUnit = DecimalField(
+        max_digits=12,
+        decimal_places=2,
         default=0,
+        verbose_name=_('PricePerUnit'),
+    )
+    count = IntegerField(
+        default=1,
         verbose_name=_('COUNT'),
+        validators=[
+            MinValueValidator(1),
+        ]
     )
 
     class Meta:
@@ -128,6 +144,7 @@ class Sale(Model):
     invoicee = ForeignKey(
         'Invoicee.Invoicee',
         null=True,
+        blank=True,
         default=None,
         on_delete=SET_NULL,
         related_name='Buyer',
