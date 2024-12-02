@@ -17,6 +17,7 @@ from django.utils.html import format_html
 from django.contrib.admin import (
     action,
     register,
+    display,
     ModelAdmin,
     SimpleListFilter,
     StackedInline,
@@ -281,6 +282,7 @@ class InvoiceAdmin(ModelAdmin):
 
     get_status.short_description = _('Status')
 
+    @display(ordering='owedAmount')
     def get_balance(self, invoice):
         if invoice.draft:
             return _('IsDraft')
