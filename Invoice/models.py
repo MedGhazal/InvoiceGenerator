@@ -178,7 +178,6 @@ class Project(Model):
         'Invoice.Invoice',
         on_delete=CASCADE,
         verbose_name=_('INVOICE'),
-        related_name=_('PROJECT')
     )
     title = CharField(
         max_length=100,
