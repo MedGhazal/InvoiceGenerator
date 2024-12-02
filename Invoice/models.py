@@ -157,14 +157,18 @@ class Invoice(Model):
     def save(self, update_fields=None):
         invoices = Invoice.objects
         if self.draft:
-            invoices = invoices.all()
+            self.count = 0
         else:
             invoices = invoices.filter(
                 draft=False
+            ).filter(
+                facturationDate__gte=f'{self.facturationDate.year}-01-01'
+            ).filter(
+                facturationDate__lte=f'{self.facturationDate.year}-01-01'
             )
-        self.count = 1 if invoices.count() == 0 else max(
-            invoice.count for invoice in invoices
-        ) + 1
+            self.count = 1 if invoices.count() == 0 else max(
+                invoice.count for invoice in invoices
+            ) + 1
         super(Invoice, self).save()
 
     class Meta:

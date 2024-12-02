@@ -143,7 +143,7 @@ def generate_invoice_tex(invoice):
     activities, invoiceStatus, invoiceType = parse_activities(invoice)
     if invoice.draft:
         invoiceBlock = f'''
-Devis: {date.today().year}-{invoice.count}\\\\
+Devis: D{date.today().year}-{date.today().day}{date.today().month}\\\\
         '''
     else:
         invoiceBlock = f'''
