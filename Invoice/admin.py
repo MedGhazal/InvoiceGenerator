@@ -236,7 +236,7 @@ class InvoiceAdmin(ModelAdmin):
         if obj is not None:
             return request.user.is_superuser or (
                 obj.invoicer.manager == request.user
-                and obj.paymentInvoice.count() > 0
+                and not obj.paymentInvoice.exists()
             )
         return True
 
@@ -419,6 +419,23 @@ class ProjectAdmin(ModelAdmin):
             )
         ).order_by('-id')
 
+    def delete_model(self, request, project):
+        for fee in project.fee_set.all():
+            project.invoice.owedAmount -= round(
+                fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100)
+            )
+            project.invoice.save()
+        project.delete()
+
+    def delete_query(self, request, projects):
+        for project in projects:
+            for fee in project.fee_set.all():
+                project.invoice.owedAmount -= round(
+                    fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100)
+                )
+                project.invoice.save()
+            project.delete()
+
     def has_view_permission(self, request, obj=None):
         if obj is not None:
             return request.user.is_superuser or (
@@ -430,7 +447,7 @@ class ProjectAdmin(ModelAdmin):
         if obj is not None:
             return request.user.is_superuser or (
                 obj.invoice.invoicer.manager == request.user
-                and obj.invoice.paymentInvoice.count() > 0
+                and not obj.invoice.paymentInvoice.exists()
             )
         return True
 
@@ -438,7 +455,7 @@ class ProjectAdmin(ModelAdmin):
         if obj is not None:
             return request.user.is_superuser or (
                 obj.invoice.invoicer.manager == request.user
-                and obj.invoice.paymentInvoice.count() > 0
+                and not obj.invoice.paymentInvoice.exists()
             )
         return True
 
@@ -541,6 +558,21 @@ class FeeAdmin(ModelAdmin):
             fields.remove('bookKeepingAmount')
         return fields
 
+    def delete_model(self, request, fee):
+        fee.project.invoice.owedAmount -= round(
+            fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100)
+        )
+        fee.project.invoice.save()
+        fee.delete()
+
+    def delete_query(self, request, fees):
+        for fee in fees:
+            fee.project.invoice.owedAmount -= round(
+                fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100)
+            )
+            fee.project.invoice.save()
+            fee.delete()
+
     def get_queryset(self, request):
         querySet = super().get_queryset(request)
         if request.user.is_superuser:
@@ -554,18 +586,17 @@ class FeeAdmin(ModelAdmin):
         )
 
     def has_view_permission(self, request, obj=None):
-        if obj is not None and (
-            not request.user.is_superuser
-            and obj.project.invoice.invoicer.manager != request.user
-        ):
-            return False
+        if obj is not None:
+            return request.user.is_superuser or (
+                obj.project.invoice.invoicer.manager == request.user
+            )
         return True
 
     def has_change_permission(self, request, obj=None):
         if obj is not None:
             return request.user.is_superuser or (
                 obj.project.invoice.invoicer.manager == request.user
-                and obj.project.invoice.paymentInvoice.count() > 0
+                and not obj.project.invoice.paymentInvoice.exists()
             )
         return True
 
@@ -573,7 +604,7 @@ class FeeAdmin(ModelAdmin):
         if obj is not None:
             return request.user.is_superuser or (
                 obj.project.invoice.invoicer.manager == request.user
-                and obj.project.invoice.paymentInvoice.count() > 0
+                and not obj.project.invoice.paymentInvoice.exists()
             )
         return True
 
@@ -673,6 +704,7 @@ class PaymentAdmin(ModelAdmin):
         for invoice in invoices:
             invoice.paidAmount -= coverage
             invoice.save()
+        payment.delete()
 
     def delete_queryset(self, request, payments):
         for payment in payments:
@@ -721,32 +753,30 @@ class PaymentAdmin(ModelAdmin):
 
     def has_view_permission(self, request, obj=None):
         if obj is not None:
-            if request.user.is_superuser:
-                return True
-            for invoice in obj.invoice.all():
-                return invoice.invoicer.manager == request.user
+            return (
+                request.user.is_superuser
+                or obj.invoice.filter(
+                    invoicer__in=Invoicer.objects.filter(manager=request.user)
+                ).exists()
+            )
         return True
 
     def has_change_permission(self, request, obj=None):
         if obj is not None:
-            if request.user.is_superuser:
-                return True
-            for invoice in obj.invoice.all():
-                return invoice.invoicer.manager == request.user
+            return (
+                request.user.is_superuser
+                or obj.invoice.filter(
+                    invoicer__in=Invoicer.objects.filter(manager=request.user)
+                ).exists()
+            )
         return True
 
     def has_delete_permission(self, request, obj=None):
         if obj is not None:
-            if request.user.is_superuser:
-                return True
-            for invoice in obj.invoice.all():
-                return invoice.invoicer.manager == request.user
-        return True
-
-    def has_add_permission(self, request, obj=None):
-        if obj is not None:
-            if request.user.is_superuser:
-                return True
-            for invoice in obj.invoice.all():
-                return invoice.invoicer.manager == request.user
+            return (
+                request.user.is_superuser
+                or obj.invoice.filter(
+                    invoicer__in=Invoicer.objects.filter(manager=request.user)
+                ).exists()
+            )
         return True
