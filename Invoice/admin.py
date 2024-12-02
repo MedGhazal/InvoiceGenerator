@@ -180,14 +180,6 @@ class FeeStackedInline(StackedInline):
         return fields
 
 
-class ProjectStackedInline(StackedInline):
-    model = Project
-    extra = 0
-    min_num = 1
-
-    inlines = [FeeStackedInline]
-
-
 @register(Invoice)
 class InvoiceAdmin(ModelAdmin):
     actions = [
@@ -213,7 +205,6 @@ class InvoiceAdmin(ModelAdmin):
     autocomplete_fields = ('invoicee',)
     search_fields = ('description',)
     readonly_fields = []
-    inlines = [ProjectStackedInline]
 
     def save_model(self, request, invoice, form, change):
         invoice.save()
