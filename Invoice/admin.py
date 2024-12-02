@@ -36,6 +36,8 @@ from .utils import (
 )
 from InvoiceGenerator.settings import TEMPTEXFILESDIR, EXPORT_DATA_HEADER
 
+from nested_inline.admin import NestedStackedInline, NestedModelAdmin
+
 
 @action(description=_('InvoiceGenerateAction'))
 def generate_invoice(invoiceAdmin, request, querySet):
@@ -168,7 +170,7 @@ class InvoiceInvoicerFilter(SimpleListFilter):
             return queryset.filter(invoicer=self.value())
 
 
-class FeeStackedInline(StackedInline):
+class FeeStackedInline(NestedStackedInline):
     model = Fee
     extra = 0
     min_num = 1
@@ -180,8 +182,16 @@ class FeeStackedInline(StackedInline):
         return fields
 
 
+class ProjectStackedInline(NestedStackedInline):
+    model = Project
+    extra = 0
+    min_num = 1
+
+    inlines = [FeeStackedInline]
+
+
 @register(Invoice)
-class InvoiceAdmin(ModelAdmin):
+class InvoiceAdmin(NestedModelAdmin):
     actions = [
         generate_invoice,
         export_invoices,
@@ -205,6 +215,7 @@ class InvoiceAdmin(ModelAdmin):
     autocomplete_fields = ('invoicee',)
     search_fields = ('description',)
     readonly_fields = []
+    inlines = [ProjectStackedInline]
 
     def save_model(self, request, invoice, form, change):
         invoice.save()
