@@ -236,7 +236,7 @@ class InvoiceAdmin(ModelAdmin):
         if obj is not None:
             return request.user.is_superuser or (
                 obj.invoicer.manager == request.user
-                and obj.paymentInvoice.count() == 0
+                and obj.paymentInvoice.count() > 0
             )
         return True
 
