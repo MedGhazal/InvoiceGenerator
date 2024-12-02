@@ -227,7 +227,7 @@ class InvoiceAdmin(NestedModelAdmin):
     autocomplete_fields = ('invoicee',)
     search_fields = ('description',)
     readonly_fields = []
-    inlines = [ProjectStackedInline]
+    inlines = [ProjectNestedStackedInline]
 
     def save_model(self, request, invoice, form, change):
         invoice.save()
