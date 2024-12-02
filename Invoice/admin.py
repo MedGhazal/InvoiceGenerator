@@ -170,7 +170,7 @@ class InvoiceInvoicerFilter(SimpleListFilter):
             return queryset.filter(invoicer=self.value())
 
 
-class FeeStackedInline(NestedStackedInline):
+class FeeStackedInline(StackedInline):
     model = Fee
     extra = 0
     min_num = 1
@@ -182,12 +182,24 @@ class FeeStackedInline(NestedStackedInline):
         return fields
 
 
-class ProjectStackedInline(NestedStackedInline):
+class FeeNestedStackedInline(NestedStackedInline):
+    model = Fee
+    extra = 0
+    min_num = 1
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request)
+        if not request.user.is_superuser:
+            fields.remove('bookKeepingAmount')
+        return fields
+
+
+class ProjectNestedStackedInline(NestedStackedInline):
     model = Project
     extra = 0
     min_num = 1
 
-    inlines = [FeeStackedInline]
+    inlines = [FeeNestedStackedInline]
 
 
 @register(Invoice)
