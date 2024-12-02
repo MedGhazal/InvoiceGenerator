@@ -236,8 +236,7 @@ class InvoiceAdmin(ModelAdmin):
         if obj is not None:
             return request.user.is_superuser or (
                 obj.invoicer.manager == request.user
-                and obj.draft
-                and obj.paidAmount == 0
+                and obj.paymentInvoice.count() == 0
             )
         return True
 
@@ -421,24 +420,26 @@ class ProjectAdmin(ModelAdmin):
         ).order_by('-id')
 
     def has_view_permission(self, request, obj=None):
-        if obj is not None and (
-            not request.user.is_superuser and obj.invoice.invoicer.manager != request.user
-        ):
-            return False
+        if obj is not None:
+            return request.user.is_superuser or (
+                obj.invoice.invoicer.manager == request.user
+            )
         return True
 
     def has_change_permission(self, request, obj=None):
-        if obj is not None and (
-            not request.user.is_superuser and obj.invoice.invoicer.manager != request.user
-        ):
-            return False
+        if obj is not None:
+            return request.user.is_superuser or (
+                obj.invoice.invoicer.manager == request.user
+                and obj.invoice.paymentInvoice.count() > 0
+            )
         return True
 
     def has_delete_permission(self, request, obj=None):
-        if obj is not None and (
-            not request.user.is_superuser and obj.invoice.invoicer.manager != request.user
-        ):
-            return False
+        if obj is not None:
+            return request.user.is_superuser or (
+                obj.invoice.invoicer.manager == request.user
+                and obj.invoice.paymentInvoice.count() > 0
+            )
         return True
 
 
@@ -554,7 +555,8 @@ class FeeAdmin(ModelAdmin):
 
     def has_view_permission(self, request, obj=None):
         if obj is not None and (
-            not request.user.is_superuser and obj.project.invoice.invoicer.manager != request.user
+            not request.user.is_superuser
+            and obj.project.invoice.invoicer.manager != request.user
         ):
             return False
         return True
@@ -563,7 +565,7 @@ class FeeAdmin(ModelAdmin):
         if obj is not None:
             return request.user.is_superuser or (
                 obj.project.invoice.invoicer.manager == request.user
-                and obj.project.invoice.paidAmount < obj.project.invoice.owedAmount
+                and obj.project.invoice.paymentInvoice.count() > 0
             )
         return True
 
@@ -571,7 +573,7 @@ class FeeAdmin(ModelAdmin):
         if obj is not None:
             return request.user.is_superuser or (
                 obj.project.invoice.invoicer.manager == request.user
-                and obj.project.invoice.paidAmount < obj.project.invoice.owedAmount
+                and obj.project.invoice.paymentInvoice.count() > 0
             )
         return True
 
