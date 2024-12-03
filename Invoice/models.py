@@ -146,7 +146,7 @@ class Invoice(Model):
             if self.dueDate < self.facturationDate:
                 raise ValidationError('DueDateIsLessThanFacturationDate')
 
-    def save(self, update_fields=None):
+    def save(self, *args, **kwargs):
         invoices = Invoice.objects
         if self.draft:
             self.count = 0
@@ -156,7 +156,7 @@ class Invoice(Model):
             ).filter(
                 facturationDate__gte=f'{self.facturationDate.year}-01-01'
             ).filter(
-                facturationDate__lte=f'{self.facturationDate.year}-01-01'
+                facturationDate__lte=f'{self.facturationDate.year}-12-31'
             )
             self.count = 1 if invoices.count() == 0 else max(
                 invoice.count for invoice in invoices
