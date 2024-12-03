@@ -140,28 +140,32 @@ class Invoice(Model):
             self.dueDate is None or self.facturationDate is None
         ) and not self.draft:
             raise ValidationError(
-                'DueANDFacturationDATESareMANDATORYForINVOICES'
+                _('DueANDFacturationDATESareMANDATORYForINVOICES')
             )
-        if self.dueDate is None and self.facturationDate is not None:
+        if self.dueDate is not None and self.facturationDate is not None:
             if self.dueDate < self.facturationDate:
-                raise ValidationError('DueDateIsLessThanFacturationDate')
+                raise ValidationError(_('DueDateIsLessThanFacturationDate'))
 
     def save(self, *args, **kwargs):
         invoices = Invoice.objects
+        self.description = f'{self.invoicer}|{self.invoicee}'
         if self.draft:
-            self.count = 0
+            self.count = None
+            self.description += ':DEVIS'
         else:
             invoices = invoices.filter(
-                draft=False
+                draft=False,
             ).filter(
-                facturationDate__gte=f'{self.facturationDate.year}-01-01'
+                invoicer=self.invoicer,
             ).filter(
-                facturationDate__lte=f'{self.facturationDate.year}-12-31'
+                facturationDate__gte=f'{self.facturationDate.year}-01-01',
+            ).filter(
+                facturationDate__lte=f'{self.facturationDate.year}-12-31',
             )
             self.count = 1 if invoices.count() == 0 else max(
                 invoice.count for invoice in invoices
             ) + 1
-        self.description = f'{self.invoicer}|{self.invoicee}:F{self.count}'
+            self.description += f':F{self.count}'
         super(Invoice, self).save()
 
     class Meta:
