@@ -210,7 +210,7 @@ class InvoiceAdmin(ModelAdmin):
         'get_balance',
     )
     autocomplete_fields = ('invoicee',)
-    search_fields = ('invoicer', 'invoicee')
+    search_fields = ('invoicer__name', 'invoicee__name')
     readonly_fields = []
 
     def save_model(self, request, invoice, form, change):
