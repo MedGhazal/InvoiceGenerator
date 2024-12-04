@@ -57,11 +57,6 @@ class Invoice(Model):
         default=SystemCurrency.MAD,
         verbose_name=_('BaseCurrency'),
     )
-    description = CharField(
-        max_length=100,
-        db_default='',
-        verbose_name=_('Description'),
-    )
     dueDate = DateField(
         db_default=date.today(),
         verbose_name=_('DueDate'),
