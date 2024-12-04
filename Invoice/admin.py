@@ -39,6 +39,9 @@ from .utils import (
     LateXError,
 )
 from InvoiceGenerator.settings import TEMPTEXFILESDIR, EXPORT_DATA_HEADER
+from Core.utils import (
+    get_currency_symbol,
+)
 
 
 @action(description=_('InvoiceGenerateAction'))
@@ -399,7 +402,7 @@ class ProjectAdmin(ModelAdmin):
         invoice = format_html(
             '<a href="{}">{}</a>',
             reverse('admin:Invoice_invoice_change', args=(project.id,)),
-            f'{project.invoice.description}',
+            f'{project.invoice}',
         )
         return invoice
 
@@ -539,14 +542,16 @@ class FeeAdmin(ModelAdmin):
     get_project.short_description = _('PROJECT')
 
     def get_afterVAT(self, fee):
-        return round(
+        return f'{round(
             fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100), 2
-        )
+        )}{get_currency_symbol(fee.project.invoice.baseCurrency)}'
 
     get_afterVAT.short_description = _('AfterVAT')
 
     def get_beforeVAT(self, fee):
-        return round(fee.rateUnit * fee.count, 2)
+        return f'{round(
+            fee.rateUnit * fee.count, 2
+        )}{get_currency_symbol(fee.project.invoice.baseCurrency)}'
 
     get_beforeVAT.short_description = _('BeforeVAT')
 
