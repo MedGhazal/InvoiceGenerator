@@ -135,7 +135,6 @@ class Invoice(Model):
                 return f'{self.invoicer}|{self.invoicee}:F{self.count}'
             else:
                 currencySymbol = get_currency_symbol(self.baseCurrency)
-                self.description += f':{self.owedAmount}{currencySymbol}'
                 return f'{self.invoicer}|{self.invoicee}:F{self.count}:{self.owedAmount}{currencySymbol}'
         else:
             return ''
