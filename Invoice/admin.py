@@ -669,10 +669,11 @@ class PaymentAdmin(ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(PaymentAdmin, self).get_form(request, obj, **kwargs)
-        form.base_fields[
-            'invoice'
-        ].queryset = form.base_fields['invoice'].queryset.filter(
+        invoices = form.base_fields['invoice'].querySet
+        form.base_fields['invoice'].queryset = invoices.filter(
             paidAmount__lt=F('owedAmount')
+        # ).filter(
+        #     invoicer__in=Invoicee.objects
         ).order_by('-id')
         return form
 
