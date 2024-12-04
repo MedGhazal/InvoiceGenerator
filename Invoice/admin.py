@@ -26,6 +26,9 @@ from django.http import (
     HttpResponse,
 )
 from django.contrib.messages import error, warning
+from django.db.models import (
+    F,
+)
 from rangefilter.filters import DateRangeFilter
 from Invoicee.models import Invoicee
 from Invoicer.models import Invoicer
@@ -662,7 +665,16 @@ class PaymentAdmin(ModelAdmin):
         'paidAmount',
         'get_invoice',
     )
-    autocomplete_fields = ('invoice', 'payor',)
+    autocomplete_fields = ('payor',)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(PaymentAdmin, self).get_form(request, obj, **kwargs)
+        form.base_fields[
+            'invoice'
+        ].queryset = form.base_fields['invoice'].queryset.filter(
+            paidAmount__lt=F('owedAmount')
+        )
+        return form
 
     def get_invoice(self, payment):
         invoices = '<ul class="field_ul_table">'
