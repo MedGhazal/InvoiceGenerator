@@ -673,7 +673,7 @@ class PaymentAdmin(ModelAdmin):
             'invoice'
         ].queryset = form.base_fields['invoice'].queryset.filter(
             paidAmount__lt=F('owedAmount')
-        )
+        ).orde_by('-id')
         return form
 
     def get_invoice(self, payment):
