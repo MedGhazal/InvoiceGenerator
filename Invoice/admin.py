@@ -542,16 +542,12 @@ class FeeAdmin(ModelAdmin):
     get_project.short_description = _('PROJECT')
 
     def get_afterVAT(self, fee):
-        return f'{round(
-            fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100), 2
-        )}{get_currency_symbol(fee.project.invoice.baseCurrency)}'
+        return f'{round(fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100), 2)}{get_currency_symbol(fee.project.invoice.baseCurrency)}'
 
     get_afterVAT.short_description = _('AfterVAT')
 
     def get_beforeVAT(self, fee):
-        return f'{round(
-            fee.rateUnit * fee.count, 2
-        )}{get_currency_symbol(fee.project.invoice.baseCurrency)}'
+        return f'{round(fee.rateUnit * fee.count, 2)}{get_currency_symbol(fee.project.invoice.baseCurrency)}'
 
     get_beforeVAT.short_description = _('BeforeVAT')
 
