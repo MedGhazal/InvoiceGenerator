@@ -129,13 +129,22 @@ class Invoice(Model):
 
     def __str__(self):
         if self.draft:
-            return f'{self.invoicer}|{self.invoicee}:{_('Draft')}'
+            return f'{self.invoicer}|{self.invoicee}:{_('Draft')}'.replace(
+                '\n',
+                ' ',
+            )
         elif not self.draft:
             if self.owedAmount == 0:
-                return f'{self.invoicer}|{self.invoicee}:F{self.count}'
+                return f'{self.invoicer}|{self.invoicee}:F{self.count}'.replace(
+                    '\n',
+                    ' ',
+                )
             else:
                 currencySymbol = get_currency_symbol(self.baseCurrency)
-                return f'{self.invoicer}|{self.invoicee}:F{self.count}:{self.owedAmount}{currencySymbol}'
+                return f'{self.invoicer}|{self.invoicee}:F{self.count}:{self.owedAmount}{currencySymbol}'.replace(
+                    '\n',
+                    ' '.
+                )
         else:
             return ''
 
