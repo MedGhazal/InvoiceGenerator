@@ -673,12 +673,12 @@ class PaymentAdmin(ModelAdmin):
         if request.user.is_superuser:
             form.base_fields['invoice'].queryset = invoices.filter(
                 paidAmount__lt=F('owedAmount')
-            ).filter(
-                invoicer__in=Invoicer.objects.filter(manager=request.user)
             ).order_by('-id')
         else:
             form.base_fields['invoice'].queryset = invoices.filter(
                 paidAmount__lt=F('owedAmount')
+            ).filter(
+                invoicer__in=Invoicer.objects.filter(manager=request.user)
             ).order_by('-id')
         return form
 
