@@ -662,7 +662,7 @@ class PaymentAdmin(ModelAdmin):
         'paidAmount',
         'get_invoice',
     )
-    autocomplete_fields = ('invoice',)
+    autocomplete_fields = ('invoice', 'invoicee')
 
     def get_invoice(self, payment):
         invoices = '<ul class="field_ul_table">'
