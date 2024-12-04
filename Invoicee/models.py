@@ -22,7 +22,7 @@ class Invoicee(Model):
         MOROCCO = 'MAR', _('MOROCCO')
         FRANCE = 'FR', _('FRANCE')
 
-    is_person = BooleanField(default=False)
+    is_person = BooleanField(default=False, verbose_name=_('IsPerson'))
     cin = CharField(
         max_length=15,
         verbose_name=_('CIN'),
