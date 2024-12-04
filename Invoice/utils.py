@@ -48,7 +48,7 @@ def parse_project_header(project):
 \\multirow{{2}}{{*}}{{\\textbf{{QTÉ}}}} &
 \\multirow{{2}}{{*}}{{\\textbf{{PU HT}}}} &
 \\multirow{{2}}{{*}}{{\\textbf{{Total HT}}}}
-\\\\\\\\\hline\hline
+\\\\\\\\\\hline\\hline
 '''
 
 
