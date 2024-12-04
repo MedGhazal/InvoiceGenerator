@@ -670,11 +670,16 @@ class PaymentAdmin(ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         form = super(PaymentAdmin, self).get_form(request, obj, **kwargs)
         invoices = form.base_fields['invoice'].queryset
-        form.base_fields['invoice'].queryset = invoices.filter(
-            paidAmount__lt=F('owedAmount')
-        # ).filter(
-        #     invoicer__in=Invoicee.objects
-        ).order_by('-id')
+        if request.user.is_superuser:
+            form.base_fields['invoice'].queryset = invoices.filter(
+                paidAmount__lt=F('owedAmount')
+            ).filter(
+                invoicer__in=Invoicer.objects.filter(manager=request.user)
+            ).order_by('-id')
+        else:
+            form.base_fields['invoice'].queryset = invoices.filter(
+                paidAmount__lt=F('owedAmount')
+            ).order_by('-id')
         return form
 
     def get_invoice(self, payment):
