@@ -143,7 +143,7 @@ class Invoice(Model):
                 currencySymbol = get_currency_symbol(self.baseCurrency)
                 return f'{self.invoicer}|{self.invoicee}:F{self.count}:{self.owedAmount}{currencySymbol}'.replace(
                     '\n',
-                    ' '.
+                    ' ',
                 )
         else:
             return ''
