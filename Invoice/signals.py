@@ -89,22 +89,3 @@ def m2m_changed_payment_invoice(
         m2m_changed_payment_invoice_pre_remove(instance)
     elif action == 'post_remove':
         m2m_changed_payment_invoice_post_remove(instance)
-
-
-@receiver(pre_delete, sender=Payment)
-def pre_delete_payment(**kwargs):
-    if isinstance(kwargs['origin'], Iterable):
-        payments = kwargs['origin']
-        for payment in payments:
-            invoices = payment.invoice.all()
-            coverage = Decimal(round(payment.paidAmount / invoices.count(), 2))
-            for invoice in invoices:
-                invoice.paidAmount -= coverage
-                invoice.save()
-    else:
-        payment = kwargs['origin']
-        invoices = payment.invoice.all()
-        coverage = Decimal(round(payment.paidAmount / invoices.count(), 2))
-        for invoice in invoices:
-            invoice.paidAmount -= coverage
-            invoice.save()

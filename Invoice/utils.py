@@ -1,6 +1,5 @@
 from glob import glob
 from datetime import date
-from babel.numbers import format_decimal
 from decimal import Decimal
 from os import system, chdir, getcwd, remove
 from os.path import join
@@ -13,11 +12,12 @@ from InvoiceGenerator.settings import (
 from Core.utils import (
     get_currency_symbol,
     get_paymentMethod_label,
+    lformat_decimal,
+    lformat_date,
 )
-
-
-class LateXError(Exception):
-    pass
+from Core.exceptions import (
+    LateXError,
+)
 
 
 def split_description(description):
@@ -26,25 +26,22 @@ def split_description(description):
     )
 
 
-def lformat_decimal(decimal):
-    return format_decimal(decimal, format='#,##0.00', locale='ar_MR')
-
-
 def parse_fee(fee):
     fee_ = fee.rateUnit * fee.count
     feeVAT = round(fee_ * Decimal(fee.vat / 100), 2)
     feeVATIncluded = round(fee_ * Decimal(1 + fee.vat / 100), 2)
     description = split_description(fee.description)
-    activity = f'''{description}& {fee.vat}\\%& {fee.count}
+    activity = f'''
+{description}& {fee.vat}\\%& {fee.count}
 & \\multicolumn{{1}}{{c}}{{{lformat_decimal(fee.rateUnit)}}}
-& \\multicolumn{{1}}{{c}}{{{lformat_decimal(fee.rateUnit * fee.count)}}}\\\\
-    '''
+& \\multicolumn{{1}}{{c}}{{{lformat_decimal(fee.rateUnit * fee.count)}}}\\\\'''
     return (activity, fee_, feeVAT, feeVATIncluded)
 
 
 def parse_project_header(project):
     title = split_description(project.title)
-    return f'''\\begin{{center}}\\LARGE\\textbf{{{title}}}\\end{{center}}
+    return f'''
+\\begin{{center}}\\LARGE\\textbf{{{title}}}\\end{{center}}
 \\begin{{longtable}}{{p{{10cm}}p{{1cm}}p{{1cm}}p{{2cm}}p{{2cm}}}}\\hline
 \\multirow{{2}}{{*}}{{\\textbf{{Désignation}}}} &
 \\multirow{{2}}{{*}}{{\\textbf{{TVA}}}} &
@@ -52,7 +49,7 @@ def parse_project_header(project):
 \\multirow{{2}}{{*}}{{\\textbf{{PU HT}}}} &
 \\multirow{{2}}{{*}}{{\\textbf{{Total HT}}}}
 \\\\\\\\\hline\hline
-    '''
+'''
 
 
 def parse_project_footer(fees, feesVAT, feesVATIncluded, currency):
@@ -65,10 +62,11 @@ def parse_project_footer(fees, feesVAT, feesVATIncluded, currency):
 \\multicolumn{{4}}{{l}}{{\\textbf{{Total TTC ({currency})}}}}&
 \\multicolumn{{1}}{{c}}{{{lformat_decimal(feesVATIncluded)}}}\\\\\\hline
 \\end{{longtable}}
-    '''
+'''
 
 
-def parse_project(invoice, project, currency):
+def parse_project(invoice, project):
+    currency = get_currency_symbol(invoice.baseCurrency)
     if project.fee_set.count() == 0:
         raise LateXError(_('INVOICEInvalid'), f'{_('ADDProject')}{invoice}')
     activities = parse_project_header(project)
@@ -91,17 +89,14 @@ def parse_project(invoice, project, currency):
 def parse_activities(invoice):
     if invoice.project_set.count() == 0:
         raise LateXError(
-            _('INVOICEInvalid'),
-            f'{_('ADDProjectItems')}{invoice}',
+            _('INVOICEInvalid'), f'{_('ADDProjectItems')}{invoice}'
         )
-    currency = get_currency_symbol(invoice.baseCurrency)
     activities = ''
     totalSum = 0
     for project in invoice.project_set.all():
         activities, fees = parse_project(
             invoice,
             project,
-            currency,
         )
         totalSum += fees
     return (
@@ -146,72 +141,102 @@ def get_country(institution):
         return ''
 
 
-def generate_invoice_tex(invoice):
-    template = join(getcwd(), TEMPTEXFILESDIR, 'invoice.tex')
-    with open(template, 'r', encoding='utf-8') as texFile:
-        rawTex = texFile.read()
-    textNote = f'\\begin{{center}}{_("VATNote")}\\end{{center}}'
+def get_invoiceeID(invoicer, invoicee):
+    if invoicee.is_person and invoicer.country.lower() == 'mar':
+        return f'\\textbf{{CIN}}: {invoicee.cin}\\newline'
+    else:
+        invoicee_ice_designation = get_ice_designation(invoicee)
+        return f'\\textbf{{{invoicee_ice_designation}}}: {invoicee.ice}\\newline'
+
+
+def get_invoice_block(invoice, invoiceStatus, invoiceType):
+    if invoice.draft:
+        return f'''
+Devis Numéro: D{date.today().year}-{date.today().day}{date.today().month}\\\\
+'''
+    else:
+        return f'''
+Date d{invoiceStatus}: {lformat_date(invoice.facturationDate)}\\\\
+{invoiceType} Numéro: {invoice.facturationDate.year}-{invoice.count}
+'''
+
+
+def get_dueDate_block(invoice):
+    if (
+        invoice.facturationDate is not None
+        and invoice.dueDate is not None
+        and not invoice.draft
+    ):
+        if invoice.facturationDate == invoice.dueDate:
+            return 'Échéance: À la réception de la facture'
+        else:
+            return f'Date d\'échéance: {lformat_date(invoice.dueDate)}'
+    else:
+        return 'Infomation sur le devis:'
+
+
+def check_invoiceIsForeign(invoicer, invoicee):
+    return (
+        invoicee.country != invoicer.country
+        and invoicer.country.lower() == 'mar'
+    )
+
+
+def get_placeHolder_data(invoice):
+    textNote = f'\\begin{{center}}{_('VATNote')}\\end{{center}}'
     invoicer_ice_designation = get_ice_designation(invoice.invoicer)
     invoiceeCountry = get_country(invoice.invoicee)
     invoicerCountry = get_country(invoice.invoicer)
-    invoicee_id = ''
-    if invoice.invoicee.is_person and invoice.invoicer.country.lower() == 'mar':
-        invoicee_id = f'\\textbf{{CIN}}: {invoice.invoicee.cin}\\newline'
-    else:
-        invoicee_ice_designation = get_ice_designation(invoice.invoicee)
-        invoicee_id = f'\\textbf{{{invoicee_ice_designation}}}: {invoice.invoicee.ice}\\newline'
-    isForeign = invoice.invoicee.country != invoice.invoicer.country and \
-        invoice.invoicer.country.lower() == 'mar'
+    invoicee_id = get_invoiceeID(invoice.invoicer, invoice.invoicee)
+    isForeign = check_invoiceIsForeign(invoice.invoicer, invoice.invoicee)
     activities, invoiceStatus, invoiceType = parse_activities(invoice)
-    if invoice.draft:
-        invoiceBlock = f'''
-Devis Numéro: D{date.today().year}-{date.today().day}{date.today().month}\\\\
-        '''
-    else:
-        invoiceBlock = f'''
-Date d{invoiceStatus}: {invoice.facturationDate}\\\\
-{invoiceType} Numéro: {invoice.facturationDate.year}-{invoice.count}
-        '''
-    if invoice.facturationDate is not None and invoice.dueDate is not None and not invoice.draft:
-        if invoice.facturationDate == invoice.dueDate:
-            dueDateBlock = 'Échéance: À la réception de la facture'
-        else:
-            dueDateBlock = f'Date d\'échéance: {invoice.dueDate}'
-    else:
-        dueDateBlock = 'Infomation sur le devis:'
+    invoiceBlock = get_invoice_block(invoice, invoiceStatus, invoiceType)
+    dueDateBlock = get_dueDate_block(invoice)
     paymentMethodLabel = get_paymentMethod_label(invoice.paymentMethod)
-    data = {
+    invoicerAddress = f'{parse_address(invoice.invoicer.address)} {invoicerCountry}'
+    invoicerFullname = f'{invoice.invoicer.name} {invoice.invoicer.legalForm}'
+    invoiceeAddress = f'{parse_address(invoice.invoicee.address)} {invoiceeCountry}'
+    facturationPeriod = (
+        str(invoice.facturationDate.year)
+        if invoice.facturationDate is not None
+        else date.today().year
+    )
+    bankBlock = parse_bankdata(
+        invoice.invoicer, isDomestic=(
+            invoice.baseCurrency == invoice.invoicer.bookKeepingCurrency
+        )
+    )
+    return {
         '%COUNT%': str(invoice.count),
         '%ACTIVITIES%': activities,
-        '%INVOICERADRESS%': parse_address(invoice.invoicer.address) +
-        f' {invoicerCountry}',
+        '%INVOICERADRESS%': invoicerAddress,
         '%INVOICERNAME%': invoice.invoicer.name,
-        '%INVOICERFULLNAME%': f'{invoice.invoicer.name} {invoice.invoicer.legalForm}',
+        '%INVOICERFULLNAME%': invoicerFullname,
         '%INVOICERICE%': f'{invoicer_ice_designation}: {invoice.invoicer.ice}',
         '%RC%': invoice.invoicer.rc,
         '%PATENTE%': invoice.invoicer.patente,
         '%CNSS%': invoice.invoicer.cnss,
         '%IF%': invoice.invoicer.fiscal,
         '%TELEFON%': invoice.invoicer.telefon,
-        '%INVOICEEADRESS%': parse_address(invoice.invoicee.address) +
-        f'\\newline {invoiceeCountry}',
+        '%INVOICEEADRESS%': invoiceeAddress,
         '%INVOICEEICE%': invoicee_id,
         '%INVOICEENAME%': invoice.invoicee.name,
-        '%FACTURATIONYEAR%': str(invoice.facturationDate.year)
-        if invoice.facturationDate is not None
-        else date.today().year,
+        '%FACTURATIONYEAR%': facturationPeriod,
         '%DUEDATE%': str(invoice.dueDate),
         '%PAYMENTMODE%': _(paymentMethodLabel),
         '%NOTE%': textNote if isForeign else '',
         '%PATHTOLOGO%': str(invoice.invoicer.logo),
         '%INVOICEBLOCK%': invoiceBlock,
-        '%BANKBLOCK%': parse_bankdata(
-            invoice.invoicer, isDomestic=(
-                invoice.baseCurrency == invoice.invoicer.bookKeepingCurrency
-            )
-        ),
+        '%BANKBLOCK%': bankBlock,
         '%DUEDATEBLOCK%': dueDateBlock,
     }
+
+
+def generate_invoice_tex(invoice):
+    template = join(getcwd(), TEMPTEXFILESDIR, 'invoice.tex')
+    with open(template, 'r', encoding='utf-8') as texFile:
+        rawTex = texFile.read()
+    data = get_placeHolder_data(invoice)
     for key, value in data.items():
         rawTex = rawTex.replace(key, value)
     return rawTex

@@ -259,7 +259,10 @@ class InvoiceAdmin(ModelAdmin):
     def get_readonly_fields(self, request, invoice=None):
         fields = super().get_readonly_fields(request)
         if invoice:
-            if not request.user.is_superuser and invoice.paymentInvoice.count() > 0:
+            if (
+                not request.user.is_superuser
+                and invoice.paymentInvoice.count() > 0
+            ):
                 fields.append('draft')
         return set(fields)
 
@@ -422,20 +425,10 @@ class ProjectAdmin(ModelAdmin):
         ).order_by('-id')
 
     def delete_model(self, request, project):
-        for fee in project.fee_set.all():
-            project.invoice.owedAmount -= round(
-                fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100)
-            )
-            project.invoice.save()
         project.delete()
 
     def delete_query(self, request, projects):
         for project in projects:
-            for fee in project.fee_set.all():
-                project.invoice.owedAmount -= round(
-                    fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100)
-                )
-                project.invoice.save()
             project.delete()
 
     def has_view_permission(self, request, obj=None):
@@ -561,18 +554,10 @@ class FeeAdmin(ModelAdmin):
         return fields
 
     def delete_model(self, request, fee):
-        fee.project.invoice.owedAmount -= round(
-            fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100)
-        )
-        fee.project.invoice.save()
         fee.delete()
 
     def delete_query(self, request, fees):
         for fee in fees:
-            fee.project.invoice.owedAmount -= round(
-                fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100)
-            )
-            fee.project.invoice.save()
             fee.delete()
 
     def get_queryset(self, request):
@@ -627,7 +612,7 @@ class PaymentInvoiceeFilter(SimpleListFilter):
                 invoicer__in=Invoicer.objects.filter(
                     manager=request.user
                 )
-            )
+            ).order_by('name')
         ]
 
     def queryset(self, request, queryset):
@@ -652,7 +637,9 @@ class PaymentInvoicerFilter(SimpleListFilter):
             ]
         return [
             (invoicer.id, invoicer.name)
-            for invoicer in Invoicer.objects.filter(manager=request.user)
+            for invoicer in Invoicer.objects.filter(
+                manager=request.user
+            ).order_by('name')
         ]
 
     def queryset(self, request, queryset):
@@ -701,56 +688,13 @@ class PaymentAdmin(ModelAdmin):
         )
 
     def delete_model(self, request, payment):
-        invoices = payment.invoice.all()
-        coverage = Decimal(round(payment.paidAmount / invoices.count(), 2))
-        for invoice in invoices:
-            invoice.paidAmount -= coverage
-            invoice.save()
         payment.delete()
 
-    def delete_queryset(self, request, payments):
+    def delete_query(self, request, payments):
         for payment in payments:
-            invoices = payment.invoice.all()
-            coverage = Decimal(round(payment.paidAmount / invoices.count(), 2))
-            for invoice in invoices:
-                invoice.paidAmount -= coverage
-                invoice.save()
             payment.delete()
 
     def save_model(self, request, payment, form, change):
-        invoices = form.cleaned_data['invoice']
-        coverage = round(
-            form.cleaned_data['paidAmount'] / invoices.count(),
-            2,
-        )
-        if change:
-            coverage -= round(
-                form.initial['paidAmount'] / invoices.count(),
-                2,
-            )
-        for invoice in invoices:
-            if invoice.owedAmount < invoice.paidAmount + coverage:
-                excess = invoice.owedAmount - invoice.paidAmount + coverage
-                errorText = _(
-                    'PAIDAmountExceedsOwedAmountFor %(invoice)s WITH %(excess)s DIFFERENCE, CHECK'
-                ) % {'invoice': invoice.description, 'excess': excess}
-                error(
-                    request,
-                    errorText,
-                 )
-        if change and form.cleaned_data['paidAmount'] != form.initial['paidAmount']:
-            invoices = payment.invoice.all()
-            oldCoverage = round(
-                form.initial['paidAmount'] / invoices.count(),
-                2,
-            )
-            coverage = round(
-                form.cleaned_data['paidAmount'] / invoices.count(),
-                2,
-            )
-            for invoice in invoices:
-                invoice.paidAmount -= oldCoverage - coverage
-                invoice.save()
         payment.save()
 
     def has_view_permission(self, request, obj=None):

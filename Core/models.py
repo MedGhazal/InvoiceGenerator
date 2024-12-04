@@ -9,3 +9,8 @@ class PaymentMethod(TextChoices):
     CASH = 'CS', _('Cash Payment')
     CHECK = 'CK', _('Check')
     DIVERS = 'DV', _('Divers')
+
+
+class SystemCurrency(TextChoices):
+    MAD = 'MAD', _('MOROCCANDIRHAM')
+    EURO = 'EURO', _('EURO')

@@ -17,14 +17,18 @@ from django.db.models.lookups import LessThanOrEqual
 from django.core.validators import (
     MinValueValidator,
     MaxValueValidator,
-    RegexValidator,
 )
 from django.utils.translation import gettext_lazy as _
+from django.db.models.expressions import DatabaseDefault
 from django.core.exceptions import ValidationError
 from simple_history.models import HistoricalRecords
 
-from Core.utils import (
+from Core.models import (
     PaymentMethod,
+    SystemCurrency,
+)
+from Core.utils import (
+    get_currency_symbol,
 )
 
 
@@ -49,12 +53,8 @@ class Invoice(Model):
     baseCurrency = CharField(
         max_length=4,
         db_default='',
-        validators=[
-            RegexValidator(
-                regex=r'[A-Z]{2,4}',
-                message=_('PhoneNumberINVALID'),
-            ),
-        ],
+        choices=SystemCurrency,
+        default=SystemCurrency.MAD,
         verbose_name=_('BaseCurrency'),
     )
     description = CharField(
@@ -133,11 +133,24 @@ class Invoice(Model):
     )
 
     def __str__(self):
-        return f'{self.description}'
+        if self.draft:
+            return f'{self.invoicer}|{self.invoicee}:{_('Draft')}'
+        elif not self.draft:
+            if self.owedAmount == 0:
+                return f'{self.invoicer}|{self.invoicee}:F{self.count}'
+            else:
+                currencySymbol = get_currency_symbol(self.baseCurrency)
+                self.description += f':{self.owedAmount}{currencySymbol}'
+                return f'{self.invoicer}|{self.invoicee}:F{self.count}:{self.owedAmount}{currencySymbol}'
+        else:
+            return ''
 
     def clean(self):
         if (
-            self.dueDate is None or self.facturationDate is None
+            self.dueDate is None
+            or self.facturationDate is None
+            or isinstance(self.dueDate, DatabaseDefault)
+            or isinstance(self.facturationDate, DatabaseDefault)
         ) and not self.draft:
             raise ValidationError(
                 _('DueANDFacturationDATESareMANDATORYForINVOICES')
@@ -152,7 +165,11 @@ class Invoice(Model):
         if self.draft:
             self.count = None
             self.description += ':DEVIS'
-        else:
+        elif not self.draft and (
+                self.count is None
+                or isinstance(self.count, DatabaseDefault)
+                or self.count == 0
+        ):
             invoices = invoices.filter(
                 draft=False,
             ).filter(
@@ -198,17 +215,14 @@ class Fee(Model):
 
     count = IntegerField(db_default=0, verbose_name=_('COUNT'))
     vat = IntegerField(
-        validators=[
-            MinValueValidator(0),
-            MaxValueValidator(100),
-        ],
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
         db_default=0,
         verbose_name=_('VAT'),
     )
     rateUnit = DecimalField(
+        db_default=0,
         decimal_places=2,
         max_digits=8,
-        db_default=0,
         verbose_name=_('RateUnit')
     )
     description = CharField(
@@ -234,8 +248,6 @@ class Fee(Model):
         invoice.owedAmount += self.rateUnit * self.count * Decimal(
             round(1 + self.vat / 100, 2)
         )
-        currencySymbol = get_currency_symbol(invoice.baseCurrency)
-        invoice.description += f':{invoice.owedAmount}{currencySymbol}'
         invoice.save()
 
     def delete(self, *args, **kwargs):
@@ -256,6 +268,13 @@ class Fee(Model):
 
 class Payment(Model):
 
+    payor = ForeignKey(
+        'Invoicee.Invoicee',
+        on_delete=CASCADE,
+        verbose_name=_('PAYOR'),
+        related_name='Payor',
+        default=0,
+    )
     paymentDay = DateField(
         db_default=date.today(),
         verbose_name=_('PaymentDay'),
@@ -280,8 +299,32 @@ class Payment(Model):
     )
     history = HistoricalRecords()
 
-    def save(self):
+    def __str__(self):
+        return f'{self.payor}|{self.paymentDay}'
+
+    def save(self, *args, **kwargs):
+        lastPayment = self.history.last()
+        if lastPayment is not None:
+            coverage = round(
+                Decimal(lastPayment.paidAmount / self.invoice.count()),
+                2,
+            )
+            for invoice in self.invoice.all():
+                invoice.paidAmount -= coverage
+                invoice.save()
         super(Payment, self).save()
+        if self.invoice.count() > 0:
+            coverage = round(Decimal(self.paidAmount / self.invoice.count()), 2)
+            for invoice in self.invoice.all():
+                invoice.paidAmount += coverage
+                invoice.save()
+
+    def delete(self, *args, **kwargs):
+        coverage = round(self.paidAmount / self.invoice.count(), 2)
+        for invoice in self.invoice.all():
+            invoice.paidAmount -= coverage
+            invoice.save()
+        super(Payment, self).delete()
 
     class Meta:
         verbose_name = _('Payment')

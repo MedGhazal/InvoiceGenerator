@@ -1,0 +1,2 @@
+class LateXError(Exception):
+    pass
