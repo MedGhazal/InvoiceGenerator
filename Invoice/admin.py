@@ -163,7 +163,7 @@ class InvoiceInvoicerFilter(SimpleListFilter):
         if request.user.is_superuser:
             return [
                 (invoicer.id, invoicer.name)
-                for invoicer in Invoicer.objects.all()
+                for invoicer in Invoicer.objects.all().order_by('name')
             ]
         return [
             (invoicer.id, invoicer.name)
@@ -476,7 +476,9 @@ class InvoicerOfProjectItemsFilter(SimpleListFilter):
             ]
         return [
             (invoicer.id, invoicer.name)
-            for invoicer in Invoicer.objects.filter(manager=request.user)
+            for invoicer in Invoicer.objects.filter(
+                manager=request.user
+            ).order_by('name')
         ]
 
     def queryset(self, request, queryset):
@@ -506,7 +508,7 @@ class InvoiceeOfProjectItemsFilter(SimpleListFilter):
             (invoicee.id, invoicee.name)
             for invoicee in Invoicee.objects.filter(
                 invoicer__in=Invoicer.objects.filter(manager=request.user)
-            )
+            ).order_by('name')
         ]
 
     def queryset(self, request, queryset):
