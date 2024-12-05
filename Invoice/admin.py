@@ -147,7 +147,7 @@ class InvoiceInvoiceeFilter(SimpleListFilter):
                 invoicer__in=Invoicer.objects.filter(
                     manager=request.user
                 )
-            )
+            ).order_by('name')
         ]
 
     def queryset(self, request, queryset):
@@ -167,7 +167,9 @@ class InvoiceInvoicerFilter(SimpleListFilter):
             ]
         return [
             (invoicer.id, invoicer.name)
-            for invoicer in Invoicer.objects.filter(manager=request.user)
+            for invoicer in Invoicer.objects.filter(
+                manager=request.user
+            ).order_by('name')
         ]
 
     def queryset(self, request, queryset):
@@ -214,6 +216,8 @@ class InvoiceAdmin(ModelAdmin):
     readonly_fields = []
 
     def save_model(self, request, invoice, form, change):
+        if 'invoicer' not in form.fields:
+            invoice.invoicer = Invoicer.objects.get(manager=request.user)
         invoice.save()
 
     def get_queryset(self, request):
@@ -247,16 +251,13 @@ class InvoiceAdmin(ModelAdmin):
             )
         return True
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if not request.user.is_superuser and db_field.name == 'invoicer':
-            kwargs['queryset'] = Invoicer.objects.filter(manager=request.user)
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
     def get_fields(self, request, invoice=None):
         fields = super().get_fields(request)
         fields.remove('owedAmount')
         fields.remove('paidAmount')
         if not request.user.is_superuser:
+            if Invoicer.objects.filter(manager=request.user).count() == 1:
+                fields.remove('invoicer')
             fields.remove('count')
             fields.remove('salesAccount')
             fields.remove('vatAccount')
@@ -348,7 +349,9 @@ class InvoicerOfProjectFilter(SimpleListFilter):
             ]
         return [
             (invoicer.id, invoicer.name)
-            for invoicer in Invoicer.objects.filter(manager=request.user)
+            for invoicer in Invoicer.objects.filter(
+                manager=request.user
+            ).order_by('name')
         ]
 
     def queryset(self, request, queryset):
@@ -376,7 +379,7 @@ class InvoiceeOfProjectFilter(SimpleListFilter):
                 invoicer__in=Invoicer.objects.filter(
                     manager=request.user
                 )
-            )
+            ).order_by('name')
         ]
 
     def queryset(self, request, queryset):

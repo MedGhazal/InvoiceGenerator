@@ -131,17 +131,11 @@ class Invoice(Model):
         if self.draft:
             return f'{self.invoicer}|{self.invoicee}:D'.replace('\n', ' ')
         elif not self.draft:
-            if self.owedAmount == 0:
-                return f'{self.invoicer}|{self.invoicee}:F{self.count}'.replace(
-                    '\n',
-                    ' ',
-                )
-            else:
+            reper = f'{self.invoicer}|{self.invoicee}:F{self.count}'
+            if self.owedAmount > 0:
                 currencySymbol = get_currency_symbol(self.baseCurrency)
-                return f'{self.invoicer}|{self.invoicee}:F{self.count}:{self.owedAmount}{currencySymbol}'.replace(
-                    '\n',
-                    ' ',
-                )
+                reper += f':{self.owedAmount}{currencySymbol}'
+            return reper.replace('\n', ' ')
         else:
             return ''
 
