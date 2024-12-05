@@ -97,8 +97,8 @@ class InvoiceTestCase(TestCase):
     def test_description_draft(self):
         invoice = Invoice.objects.get(id=3)
         self.assertEqual(
-            invoice.description,
-            f'{invoice.invoicer.name}|{invoice.invoicee.name}:DEVIS',
+            str(invoice),
+            f'{invoice.invoicer.name}|{invoice.invoicee.name}:D',
         )
 
 

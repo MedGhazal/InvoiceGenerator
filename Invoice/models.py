@@ -129,10 +129,7 @@ class Invoice(Model):
 
     def __str__(self):
         if self.draft:
-            return f'{self.invoicer}|{self.invoicee}:{_('Draft')}'.replace(
-                '\n',
-                ' ',
-            )
+            return f'{self.invoicer}|{self.invoicee}:D'.replace('\n', ' ')
         elif not self.draft:
             if self.owedAmount == 0:
                 return f'{self.invoicer}|{self.invoicee}:F{self.count}'.replace(
@@ -167,7 +164,6 @@ class Invoice(Model):
         self.description = f'{self.invoicer}|{self.invoicee}'
         if self.draft:
             self.count = None
-            self.description += ':DEVIS'
         elif not self.draft and (
                 self.count is None
                 or isinstance(self.count, DatabaseDefault)
@@ -185,7 +181,6 @@ class Invoice(Model):
             self.count = 1 if invoices.count() == 0 else max(
                 invoice.count for invoice in invoices
             ) + 1
-            self.description += f':F{self.count}'
         super(Invoice, self).save()
 
     class Meta:
@@ -216,11 +211,10 @@ class Project(Model):
 
 class Fee(Model):
 
-    count = IntegerField(db_default=0, verbose_name=_('COUNT'))
-    vat = IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
-        db_default=0,
-        verbose_name=_('VAT'),
+    project = ForeignKey(
+        'Invoice.Project',
+        on_delete=CASCADE,
+        verbose_name=_('PROJECT'),
     )
     rateUnit = DecimalField(
         db_default=0,
@@ -228,15 +222,16 @@ class Fee(Model):
         max_digits=8,
         verbose_name=_('RateUnit')
     )
+    count = IntegerField(db_default=0, verbose_name=_('COUNT'))
+    vat = IntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        db_default=0,
+        verbose_name=_('VAT'),
+    )
     description = CharField(
         max_length=100,
         db_default='',
         verbose_name=_('Description'),
-    )
-    project = ForeignKey(
-        'Invoice.Project',
-        on_delete=CASCADE,
-        verbose_name=_('PROJECT'),
     )
     bookKeepingAmount = DecimalField(
         db_default=0,

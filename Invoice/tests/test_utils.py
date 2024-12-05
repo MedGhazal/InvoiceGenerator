@@ -82,7 +82,7 @@ TestFeeDescription& 10\\%& 2
         )[0]
         rawTEXActivities = '''
 \\begin{center}\\LARGE\\textbf{TitleOfProjectTest}\\end{center}
-\\begin{longtable}{p{10cm}p{1cm}p{1cm}p{2cm}p{2cm}}\\hline
+\\begin{longtable}{p{10cm}p{1cm}p{1cm}p{2cm}p{2cm}}\\\\\\hline
 \\multirow{2}{*}{\\textbf{Désignation}} &
 \\multirow{2}{*}{\\textbf{TVA}} &
 \\multirow{2}{*}{\\textbf{QTÉ}} &

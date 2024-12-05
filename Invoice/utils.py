@@ -42,7 +42,7 @@ def parse_project_header(project):
     title = split_description(project.title)
     return f'''
 \\begin{{center}}\\LARGE\\textbf{{{title}}}\\end{{center}}
-\\begin{{longtable}}{{p{{10cm}}p{{1cm}}p{{1cm}}p{{2cm}}p{{2cm}}}}\\\hline
+\\begin{{longtable}}{{p{{10cm}}p{{1cm}}p{{1cm}}p{{2cm}}p{{2cm}}}}\\\\\\hline
 \\multirow{{2}}{{*}}{{\\textbf{{Désignation}}}} &
 \\multirow{{2}}{{*}}{{\\textbf{{TVA}}}} &
 \\multirow{{2}}{{*}}{{\\textbf{{QTÉ}}}} &
@@ -94,10 +94,11 @@ def parse_activities(invoice):
     activities = ''
     totalSum = 0
     for project in invoice.project_set.all():
-        activities, fees = parse_project(
+        projectActivities, fees = parse_project(
             invoice,
             project,
         )
+        activities += projectActivities
         totalSum += fees
     return (
         activities,
