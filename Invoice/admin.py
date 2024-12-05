@@ -689,7 +689,7 @@ class PaymentAdmin(ModelAdmin):
             invoices += format_html(
                 '<li><a href="{}">{}</a></li>',
                 reverse('admin:Invoice_invoice_change', args=(invoice.id,)),
-                f'{invoice.description}',
+                f'{invoice}',
             )
         invoices += '</ul>'
         return mark_safe(invoices)
