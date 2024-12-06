@@ -11,7 +11,10 @@ from Invoicer.models import Invoicer
 
 from .forms import ContactDataForm, HomeControlForm
 
-from Core.utils import get_currency_symbol
+from Core.utils import (
+    get_currency_symbol,
+    lformat_decimal,
+)
 
 
 class DateConverter:
@@ -29,7 +32,7 @@ def printAmountWithCurrency(amount, currencySymbol):
     if amount == 0:
         return '-'
     else:
-        return f'{amount}{currencySymbol}'
+        return f'{lformat_decimal(amount)}{currencySymbol}'
 
 
 def getInvoiceInformation(invoice):
