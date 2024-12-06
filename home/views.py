@@ -11,6 +11,7 @@ from Invoicer.models import Invoicer
 
 from .forms import ContactDataForm, HomeControlForm
 
+from Core.utils import get_currency_symbol
 
 
 class DateConverter:
@@ -22,6 +23,13 @@ class DateConverter:
 
     def to_url(self, value):
         return value.strftime(self.format)
+
+
+def printAmountWithCurrency(amount, currencySymbol):
+    if amount == 0:
+        return '-'
+    else:
+        return f'{amount}{currencySymbol}'
 
 
 def getInvoiceInformation(invoice):
@@ -109,16 +117,37 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             invoicer__in=Invoicer.objects.filter(manager=request.user)
         )
     ]
+    currencySymbol = get_currency_symbol(
+        Invoicer.objects.get(manager=request.user).bookKeepingCurrency
+    )
     context = {
         'numInvoices': numInvoices,
         'numOutStandingInvoices': numOutStandingInvoices,
-        'sumVATPeriod': sumVATPeriod,
-        'sumBeforeVATPeriod': sumBeforeVATPeriod,
-        'sumAfterVATPeriod': sumAfterVATPeriod,
-        'amountPayedCash': amountPayedCash,
-        'amountPayedTransfer': amountPayedTransfer,
-        'amountPayedCheck': amountPayedCheck,
-        'amountPayedDivers': amountPayedDivers,
+        'sumVATPeriod': printAmountWithCurrency(sumVATPeriod, currencySymbol),
+        'sumBeforeVATPeriod': printAmountWithCurrency(
+            sumBeforeVATPeriod,
+            currencySymbol,
+        ),
+        'sumAfterVATPeriod': printAmountWithCurrency(
+            sumAfterVATPeriod,
+            currencySymbol,
+        ),
+        'amountPayedCash': printAmountWithCurrency(
+            amountPayedCash,
+            currencySymbol,
+        ),
+        'amountPayedTransfer': printAmountWithCurrency(
+            amountPayedTransfer,
+            currencySymbol,
+        ),
+        'amountPayedCheck': printAmountWithCurrency(
+            amountPayedCheck,
+            currencySymbol,
+        ),
+        'amountPayedDivers': printAmountWithCurrency(
+            amountPayedDivers,
+            currencySymbol,
+        ),
         'invoiceeSituation': invoiceesInformation,
         'form': homeControlForm,
     }
