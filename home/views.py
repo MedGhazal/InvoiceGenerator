@@ -57,6 +57,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
     ).filter(
         invoicer__in=Invoicer.objects.filter(manager=request.user)
     )
+    print(invoices)
     if request.method == 'POST':
         form = request.POST
         beginDate = form['beginDate']
@@ -65,17 +66,14 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             facturationDate__gte=beginDate
         ).filter(
             facturationDate__lte=endDate
-        ).filter(
-            status=0
         )
     elif request.method == 'GET':
         invoices = invoices.filter(
             facturationDate__gte=f'{date.today().year}-01-01'
         ).filter(
             facturationDate__lte=f'{date.today().year}-12-31'
-        ).filter(
-            status=0
         )
+    print(invoices)
     numInvoices = invoices.count()
     numOutStandingInvoices = invoices.filter(status=3).count()
     invoicesInformation = [
