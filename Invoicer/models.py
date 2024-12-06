@@ -3,7 +3,6 @@ from django.db.models import (
     Model,
     CharField,
     ImageField,
-    IntegerField,
     BooleanField,
     TextChoices,
     ForeignKey,
@@ -15,6 +14,8 @@ from django.core.validators import (
     RegexValidator,
 )
 from django.utils.translation import gettext_lazy as _
+
+from Core.models import SystemCurrency
 
 
 class Invoicer(Model):
@@ -164,15 +165,11 @@ class Invoicer(Model):
         verbose_name=_('TELEFONE'),
     )
     bookKeepingCurrency = CharField(
-        validators=[
-            RegexValidator(
-                regex=r'[A-Z]{2,4}',
-                message=_('PhoneNumberINVALID'),
-            ),
-        ],
-        db_default='',
         max_length=4,
-        verbose_name=_('BookKeepingCurrency'),
+        db_default='',
+        choices=SystemCurrency,
+        default=SystemCurrency.MAD,
+        verbose_name=_('BaseCurrency'),
     )
 
     def __str__(self):
