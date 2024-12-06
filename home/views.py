@@ -84,11 +84,21 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         form = request.POST
         beginDate = form['beginDate']
         endDate = form['endDate']
-        invoices = invoices.filter(
-            facturationDate__gte=beginDate
-        ).filter(
-            facturationDate__lte=endDate
-        )
+        if form.get('invoicer'):
+            invoicer = form['invoicer']
+            invoices = invoices.filter(
+                facturationDate__gte=beginDate
+            ).filter(
+                facturationDate__lte=endDate
+            ).filer(
+                invoicer=invoicer
+            )
+        else:
+            invoices = invoices.filter(
+                facturationDate__gte=beginDate
+            ).filter(
+                facturationDate__lte=endDate
+            )
     elif request.method == 'GET':
         invoices = invoices.filter(
             facturationDate__gte=f'{date.today().year}-01-01'
