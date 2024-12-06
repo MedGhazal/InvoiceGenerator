@@ -44,6 +44,30 @@
             <div class="home-main-text">{% translate "HomeMAINText" %}</div>
             <table class="StateTable"><thead>
               <tr>
+                <th class="HeaderColumn">{% translate "PaymentMode" %}</th>
+                <th>{% translate "Amount" %}</th>
+              </tr></thead>
+            <tbody>
+              <tr>
+                <td class="HeaderColumn">{% translate "CASH" %}</td>
+                <td>{{ amountPayedCash }}</td>
+              </tr>
+              <tr>
+                <td class="HeaderColumn">{% translate "TRANSFER" %}</td>
+                <td>{{ amountPayedTransfer }}</td>
+              </tr>
+              <tr>
+                <td class="HeaderColumn">{% translate "CHEQUE" %}</td>
+                <td>{{ amountPayedCheque }}</td>
+              </tr>
+              <tr>
+                <td class="HeaderColumn">{% translate "DIVERS" %}</td>
+                <td>{{ acountPayedDivers }}</td>
+              </tr>
+            </tbody>
+            </table>
+            <table class="StateTable"><thead>
+              <tr>
                 <th>{% translate "NumInvoices" %}</th>
                 <th>{% translate "OutStandingInvoices" %}</th>
                 <th>{% translate "SumVATPeriode" %}</th>
@@ -59,6 +83,19 @@
                 <td>{{ sumAfterVATPeriod }}</td>
               </tr>
             </tbody>
+            <table class="StateTable"><thead>
+              <tr>
+                <th>{% translate "INVOICEE" %}</th>
+                <th>{% translate "OutSTANDING" %}</th>
+              </tr></thead>
+            <tbody>
+              <tr>
+                {% for invoiceeInformation in invoiceesInformation %}
+                <td>{{ name }}</td> <td>{{ owedAmount }}</td>
+                {% endfor %}
+              </tr>
+            </tbody>
+            </table>
             </table>
             <div class="home-main-text-muted">{% translate "HomeMAINTextFooter" %}</div>
         </div>

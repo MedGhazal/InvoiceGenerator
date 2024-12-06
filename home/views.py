@@ -1,11 +1,13 @@
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, date
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils.translation import gettext as _
 
 from Invoice.models import Invoice
+from Invoicee.models import Invoicee
+from Invoicer.models import Invoicer
 
 from .forms import ContactDataForm, HomeControlForm
 
@@ -32,24 +34,48 @@ def getInvoiceInformation(invoice):
             afterVAT += round(
                 fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100), 2
             )
-    return vat, beforeVAT, afterVAT
+    return vat, beforeVAT, afterVAT, invoice.paymentMethod
+
+
+def getOutstandingAmountOfInvoicee(invoicee):
+    outStandingAmount = 0
+    for invoice in Invoice.objects.filter(invoicee=invoicee):
+        for project in invoice.project_set.all():
+            for fee in project.fee_set.all():
+                outStandingAmount += round(
+                    fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100), 2
+                )
+    return outStandingAmount
 
 
 @login_required()
 def index(request, invoicer=None, beginDate=None, endDate=None):
     homeControlForm = HomeControlForm()
     context = {}
-    invoices = Invoice.objects.exclude(status=0)
+    invoices = Invoice.objects.exclude(
+        status=0
+    ).filter(
+        invoicer__in=Invoicer.objects.filter(manager=request.user)
+    )
     if request.method == 'POST':
         form = request.POST
         beginDate = form['beginDate']
         endDate = form['endDate']
-        invoices = Invoice.objects.filter(
+        invoices = invoices.filter(
             facturationDate__gte=beginDate
         ).filter(
             facturationDate__lte=endDate
+        ).filter(
+            status=0
         )
-    # elif request.method == 'GET':
+    elif request.method == 'GET':
+        invoices = invoices.filter(
+            facturationDate__gte=f'{date.today().year}-01-01'
+        ).filter(
+            facturationDate__lte=f'{date.today().year}-12-31'
+        ).filter(
+            status=0
+        )
     numInvoices = invoices.count()
     numOutStandingInvoices = invoices.filter(status=3).count()
     invoicesInformation = [
@@ -64,12 +90,39 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
     sumAfterVATPeriod = sum(
         invoiceInformation[2] for invoiceInformation in invoicesInformation
     )
+    sumPayedCash = sum(
+        invoiceInformation[2] for invoiceInformation in invoicesInformation
+        if invoiceInformation[3] == 'CS'
+    )
+    sumPayedTransfer = sum(
+        invoiceInformation[2] for invoiceInformation in invoicesInformation
+        if invoiceInformation[3] == 'TR'
+    )
+    sumPayedCheck = sum(
+        invoiceInformation[2] for invoiceInformation in invoicesInformation
+        if invoiceInformation[3] == 'CK'
+    )
+    sumPayedDivers = sum(
+        invoiceInformation[2] for invoiceInformation in invoicesInformation
+        if invoiceInformation[3] == 'DV'
+    )
+    invoiceesInformation = [
+        (invoicee.name, getOutstandingAmountOfInvoicee(invoicee))
+        for invoicee in Invoicee.objects.filter(
+            invoicer__in=Invoicer.objects.filter(manager=request.user)
+        )
+    ]
     context = {
         'numInvoices': numInvoices,
         'numOutStandingInvoices': numOutStandingInvoices,
         'sumVATPeriod': sumVATPeriod,
         'sumBeforeVATPeriod': sumBeforeVATPeriod,
         'sumAfterVATPeriod': sumAfterVATPeriod,
+        'amountPayedCash': sumPayedCash,
+        'amountPayedTransfer': sumPayedTransfer,
+        'amountPayedCheck': sumPayedCheck,
+        'amountPayedDivers': sumPayedDivers,
+        'invoiceeSituation': invoiceesInformation,
         'form': homeControlForm,
     }
     return render(request, 'home-index.html', context)

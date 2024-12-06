@@ -3,6 +3,8 @@ table.StateTable {
   background-color: #C3ECEF;
   text-align: left;
   border-collapse: collapse;
+  margin: 10px;
+  display: inline-table;
 }
 table.StateTable td, table.StateTable th {
   padding: 6px 6px;
@@ -43,4 +45,11 @@ table.StateTable tfoot .links a{
   color: #FFFFFF;
   padding: 2px 8px;
   border-radius: 5px;
+}
+table.StateTable .HeaderColumn {
+  background: #072352;
+  font-size: 14px;
+  font-weight: bold;
+  color: #C3ECEF;
+  text-align: center;
 }
