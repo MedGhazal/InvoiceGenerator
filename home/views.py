@@ -90,7 +90,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
                 facturationDate__gte=beginDate
             ).filter(
                 facturationDate__lte=endDate
-            ).filer(
+            ).filter(
                 invoicer=invoicer
             )
         else:
