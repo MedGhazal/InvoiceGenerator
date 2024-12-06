@@ -10,12 +10,20 @@
             <ul>
                 <li><a href={% url 'home:index' %}>{% translate 'Home' %}</a></li>
                 {% if user.is_staff %}
-                {% if user.is_superuser %}
-                <li><a href={% url 'admin:Invoicer_invoicer_changelist' %}>{% translate 'INVOICERS' %}</a></li>
+                <li> {% translate 'ADMINSHORTCUTS' %}
+                    <ul>
+                        {% if user.is_superuser %}
+                        <li><a href={% url 'admin:Invoicer_invoicer_changelist' %}>{% translate 'INVOICERS' %}</a></li>
+                        {% endif %}
+                        <li><a href={% url 'admin:Invoicee_invoicee_changelist' %}>{% translate 'INVOICEES' %}</a></li>
+                        <li><a href={% url 'admin:Invoice_invoice_changelist' %}>{% translate 'INVOICES' %}</a></li>
+                    </ul>
+                </li>
                 {% endif %}
-                <li><a href={% url 'admin:Invoicee_invoicee_changelist' %}>{% translate 'INVOICEES' %}</a></li>
-                <li><a href={% url 'admin:Invoice_invoice_changelist' %}>{% translate 'INVOICES' %}</a></li>
-                {% endif %}
+                {# <li><a href={% url 'home:FacturationState' %}>{% translate 'FacturationState' %}</a></li> #}
+                {# <li><a href={% url 'home:OutstandingInvoices' %}>{% translate 'OutstandingInvoices' %}</a></li> #}
+                {# <li><a href={% url 'home:NewInvoice' %}>{% translate 'NewInvoice' %}</a></li> #}
+                {# <li><a href={% url 'home:NewPayment' %}>{% translate 'NewPayment' %}</a></li> #}
             </ul>
         </div>
     </aside>
@@ -23,4 +31,36 @@
     {% endblock %}
     {% block content %}
     <h1>Home</h1>
+    <div class="home-content">
+        <div class="home-controls">
+            <div class="home-controls-text">{% translate "HomeCONTROLSText" %}</div>
+            <form action="{% url 'home:index' %}" method="POST">
+            {% csrf_token %}
+            {{ form }}
+            <input type="{% translate "submit" %}" value="{% translate "Submit" %}">
+        </form>
+        </div>
+        <div class="home-main">
+            <div class="home-main-text">{% translate "HomeMAINText" %}</div>
+            <table class="StateTable"><thead>
+              <tr>
+                <th>{% translate "NumInvoices" %}</th>
+                <th>{% translate "OutStandingInvoices" %}</th>
+                <th>{% translate "SumVATPeriode" %}</th>
+                <th>{% translate "SumBeforeVATPeriode" %}</th>
+                <th>{% translate "SumAfterVATPeriod" %}</th>
+              </tr></thead>
+            <tbody>
+              <tr>
+                <td>{{ numInvoices }}</td>
+                <td>{{ numOutStandingInvoices }}</td>
+                <td>{{ sumVATPeriod }}</td>
+                <td>{{ sumBeforeVATPeriod }}</td>
+                <td>{{ sumAfterVATPeriod }}</td>
+              </tr>
+            </tbody>
+            </table>
+            <div class="home-main-text-muted">{% translate "HomeMAINTextFooter" %}</div>
+        </div>
+    </div>
     {% endblock %}

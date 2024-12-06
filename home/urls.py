@@ -14,12 +14,23 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path
-from .views import index, register_user, register_success
+from django.urls import path, register_converter
+from .views import (
+    index,
+    register_user,
+    register_success,
+    DateConverter,
+)
 
+register_converter(DateConverter, 'date')
 app_name = 'home'
 urlpatterns = [
     path('', index, name='index'),
+    path(
+        '<int:invoicer>/<date:beginDate>/<date:endDate>',
+        index,
+        name='index',
+    ),
     path('register/', register_user, name='register'),
     path('registerSuccess/', register_success, name='registerSuccess')
 ]

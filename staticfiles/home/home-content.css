@@ -1,0 +1,58 @@
+.home-content {
+	display: grid;
+	grid-template-columns: 20% 80%;
+	padding: 10px;
+	margin: 10px;
+}
+.home-main {
+	display: block;
+	padding: 10px;
+	margin: 10px;
+}
+.home-controls {
+	color: var(--secondary-color);
+	display: block;
+	padding: 10px;
+	margin: 10px;
+	align-content: center;
+	border-radius: 10px;
+	background-color: var(--primary-color);
+	margin: auto;
+	padding: 2%;
+	height: max-content;
+	width: 80%;
+}
+.home-controls form {
+	align-items: center;
+}
+.home-controls input {
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+	border: 0px;
+	border-radius: 5px;
+	padding: 0.6rem;
+	width: max-content;
+}
+.home-controls input:active {
+	border: 2px;
+	border-color: var(--primary-color);
+}
+.home-controls input[type="submit"] {
+	border: 0;
+	padding: 0.5rem;
+	color: var(--primary-color);
+	background-color: var(--secondary-color);
+	margin: 5% 0  5% 70%;
+}
+.home-controls input[type="submit"]:hover {
+	border-radius: 10px 20px;
+	color: var(--secondary-color);
+	background-color: var(--primary-color);
+}
+.home-controls div {
+	padding: 0.6rem;
+}
+.home-controls label {
+	margin: auto;
+	padding: 0.6rem;
+}

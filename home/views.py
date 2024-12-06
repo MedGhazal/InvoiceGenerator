@@ -1,37 +1,76 @@
+from decimal import Decimal
+from datetime import datetime
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils.translation import gettext as _
 
 from Invoice.models import Invoice
 
-from bokeh.plotting import figure, show
-from bokeh.document import Document
-from bokeh.layouts import column
-from bokeh.models import Slider
-from bokeh.embed import server_document, components
+from .forms import ContactDataForm, HomeControlForm
 
-from .forms import ContactDataForm
+
+class DateConverter:
+    regex = '[0-9]{4}-[0-9]{2}-[0-9]{2}'
+    format = '%Y-%m-%d'
+
+    def to_python(self, value):
+        return datetime.strftime(value, self.format).date()
+
+    def to_url(self, value):
+        return value.strftime(self.format)
+
+
+def getInvoiceInformation(invoice):
+    vat, beforeVAT, afterVAT = 0, 0, 0
+    for project in invoice.project_set.all():
+        for fee in project.fee_set.all():
+            vat += round(
+                fee.rateUnit * fee.count * fee.vat / 100, 2
+            )
+            beforeVAT += fee.rateUnit * fee.count
+            afterVAT += round(
+                fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100), 2
+            )
+    return vat, beforeVAT, afterVAT
 
 
 @login_required()
-def index(request):
-    # script = create_dashboard(request.build_absolute_uri())
-    x = [invoice.id for invoice in Invoice.objects.all()]
-    y = [float(invoice.owedAmount) for invoice in Invoice.objects.all()]
-    z = [float(invoice.paidAmount) for invoice in Invoice.objects.all()]
-    dashboard = figure(
-        title=_('DASHBOAD'),
-        x_axis_label=_('TEXT'),
-        y_axis_label=_('TEXT'),
-        width=300,
-        height=300,
+def index(request, invoicer=None, beginDate=None, endDate=None):
+    homeControlForm = HomeControlForm()
+    context = {}
+    invoices = Invoice.objects.exclude(status=0)
+    if request.method == 'POST':
+        form = request.POST
+        beginDate = form['beginDate']
+        endDate = form['endDate']
+        invoices = Invoice.objects.filter(
+            facturationDate__gte=beginDate
+        ).filter(
+            facturationDate__lte=endDate
+        )
+    # elif request.method == 'GET':
+    numInvoices = invoices.count()
+    numOutStandingInvoices = invoices.filter(status=3).count()
+    invoicesInformation = [
+        getInvoiceInformation(invoice) for invoice in invoices
+    ]
+    sumVATPeriod = sum(
+        invoiceInformation[0] for invoiceInformation in invoicesInformation
     )
-    dashboard.line(x, y, line_width=2)
-    dashboard.line(x, z, line_width=2)
-    scripts, dashboard = components(dashboard)
+    sumBeforeVATPeriod = sum(
+        invoiceInformation[1] for invoiceInformation in invoicesInformation
+    )
+    sumAfterVATPeriod = sum(
+        invoiceInformation[2] for invoiceInformation in invoicesInformation
+    )
     context = {
-        'scripts': scripts,
-        'dashboard': dashboard,
+        'numInvoices': numInvoices,
+        'numOutStandingInvoices': numOutStandingInvoices,
+        'sumVATPeriod': sumVATPeriod,
+        'sumBeforeVATPeriod': sumBeforeVATPeriod,
+        'sumAfterVATPeriod': sumAfterVATPeriod,
+        'form': homeControlForm,
     }
     return render(request, 'home-index.html', context)
 
@@ -53,8 +92,3 @@ def register_user(request):
         'registration/register.html',
         {'form': userCreationForm},
     )
-
-
-def create_dashboard(document) -> None:
-    slider = Slider(start=0, end=30, value=0, step=1, title="Example")
-    document.add_root(column(slider))
