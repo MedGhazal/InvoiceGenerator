@@ -63,6 +63,17 @@ def getOutstandingAmountOfInvoicee(invoicee):
 @login_required()
 def index(request, invoicer=None, beginDate=None, endDate=None):
     homeControlForm = HomeControlForm()
+
+    if Invoicer.objects.filter(manager=request.user).count() == 0:
+        currencySymbol = ''
+
+    elif Invoicer.objects.filter(manager=request.user).count() == 1:
+        currencySymbol = get_currency_symbol(
+            Invoicer.objects.get(manager=request.user).bookKeepingCurrency
+        )
+        if not request.user.is_superuser:
+            homeControlForm.fields.pop('invoicer')
+
     context = {}
     invoices = Invoice.objects.exclude(
         status=0
@@ -120,12 +131,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             invoicer__in=Invoicer.objects.filter(manager=request.user)
         )
     ]
-    if Invoicer.objects.filter(manager=request.user).count() == 0:
-        currencySymbol = ''
-    elif Invoicer.objects.filter(manager=request.user).count() == 1:
-        currencySymbol = get_currency_symbol(
-            Invoicer.objects.get(manager=request.user).bookKeepingCurrency
-        )
+
     context = {
         'numInvoices': numInvoices,
         'numOutStandingInvoices': numOutStandingInvoices,
