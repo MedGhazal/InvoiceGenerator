@@ -120,9 +120,12 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             invoicer__in=Invoicer.objects.filter(manager=request.user)
         )
     ]
-    currencySymbol = get_currency_symbol(
-        Invoicer.objects.get(manager=request.user).bookKeepingCurrency
-    )
+    if Invoicer.objects.filter(manager=request.user).count() == 0:
+        currencySymbol = ''
+    elif Invoicer.objects.filter(manager=request.user).count() == 1:
+        currencySymbol = get_currency_symbol(
+            Invoicer.objects.get(manager=request.user).bookKeepingCurrency
+        )
     context = {
         'numInvoices': numInvoices,
         'numOutStandingInvoices': numOutStandingInvoices,
