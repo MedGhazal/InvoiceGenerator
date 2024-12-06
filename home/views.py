@@ -11,8 +11,6 @@ from Invoicer.models import Invoicer
 
 from .forms import ContactDataForm, HomeControlForm
 
-from bokeh.plotting import figure
-from bokeh.embed import components
 
 
 class DateConverter:
@@ -24,33 +22,6 @@ class DateConverter:
 
     def to_url(self, value):
         return value.strftime(self.format)
-
-
-def plotInvoices(invoices):
-    invoiceesPaidAmounts = {}
-    for invoice in invoices:
-        if invoiceesPaidAmounts.get(invoice.invoicee.name):
-            invoiceesPaidAmounts[invoice.invoicee.name] += float(
-                invoice.paidAmount
-            )
-        else:
-            invoiceesPaidAmounts[invoice.invoicee.name] = float(
-                invoice.paidAmount
-            )
-    overview = figure(
-        title='Test',
-        x_range=list(invoiceesPaidAmounts.keys()),
-        x_axis_label='TestXAxisLabel',
-        y_axis_label='TestYAxisLabel',
-        # width='fit_content',
-        # height=70,
-    )
-    overview.vbar(
-        x=list(invoiceesPaidAmounts.values()),
-        top=list(invoiceesPaidAmounts.keys()),
-        legend_field='TestLegendField',
-    )
-    return components(overview)
 
 
 def getInvoiceInformation(invoice):
@@ -102,8 +73,6 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         ).filter(
             facturationDate__lte=f'{date.today().year}-12-31'
         )
-    scripts, overview = plotInvoices(invoices)
-    print(overview)
     numInvoices = invoices.count()
     numOutStandingInvoices = invoices.filter(status=3).count()
     invoicesInformation = [
@@ -152,8 +121,6 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         'amountPayedDivers': amountPayedDivers,
         'invoiceeSituation': invoiceesInformation,
         'form': homeControlForm,
-        'scripts': scripts,
-        'overview': overview,
     }
     return render(request, 'home-index.html', context)
 
