@@ -297,7 +297,7 @@ class InvoiceAdmin(ModelAdmin):
         if invoice.draft:
             return _('IsDraft')
         balance = invoice.owedAmount - invoice.paidAmount
-        if balance == 0:
+        if balance <= 0:
             return '-'
         elif invoice.invoicee.country.lower() == 'mar':
             return f'{balance}DH'
