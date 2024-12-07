@@ -6,6 +6,7 @@ from django.forms import (
     ModelChoiceField,
     DateInput,
 )
+from django.forms.widgets import Select
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.utils.translation import gettext as _
@@ -31,9 +32,19 @@ class ContactDataForm(UserCreationForm):
 
 class HomeControlForm(Form):
 
-    invoicer = ModelChoiceField(queryset=Invoicer.objects.all())
+    invoicer = ModelChoiceField(
+        label='',
+        help_text=_('Invoicee'),
+        queryset=Invoicer.objects.all(),
+        widget=Select(
+            attrs={
+                'type': 'date',
+                'pattern': r'\d{4}-\d{2}-\d{2}',
+            }
+        ),
+    )
     beginDate = DateField(
-        label="",
+        label='',
         widget=DateInput(
             attrs={'type': 'date', 'pattern': r'\d{4}-\d{2}-\d{2}'}
         ),
@@ -41,7 +52,7 @@ class HomeControlForm(Form):
         initial=now,
     )
     endDate = DateField(
-        label="",
+        label='',
         widget=DateInput(
             attrs={'type': 'date', 'pattern': r'\d{4}-\d{2}-\d{2}'}
         ),

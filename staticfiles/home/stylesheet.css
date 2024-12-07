@@ -10,6 +10,9 @@
 	--a-background-color: rgba(7, 35, 82, .2);
 	--a-background-color-focus: rgba(7, 35, 82, .3);
 	--box-shadow-color: rgba( 31, 38, 135, 0.3 );
+	--select-border: #777;
+	--select-focus: blue;
+	--select-arrow: var(--select-border);
 	--font-family-primary:
 		"Segoe UI",
 		system-ui,
