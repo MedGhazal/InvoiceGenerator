@@ -8,16 +8,16 @@
     <aside>
         <div class="nav-box column">
             <ul>
-                <li><a href={% url 'home:index' %}>{% translate 'Home' %}</a></li>
+                <li><a href="{% url 'home:index' %}" class="MainItem">{% translate 'Home' %}</a></li>
                 {% if user.is_staff %}
-                <li> {% translate 'ADMINSHORTCUTS' %}
-                    <ul>
-                        {% if user.is_superuser %}
-                        <li><a href={% url 'admin:Invoicer_invoicer_changelist' %}>{% translate 'INVOICERS' %}</a></li>
-                        {% endif %}
-                        <li><a href={% url 'admin:Invoicee_invoicee_changelist' %}>{% translate 'INVOICEES' %}</a></li>
-                        <li><a href={% url 'admin:Invoice_invoice_changelist' %}>{% translate 'INVOICES' %}</a></li>
-                    </ul>
+                <li><a href="{% url 'admin:index' %}" class="MainItem">{% translate 'ADMINSHORTCUTS' %}</a></li>
+                {% if user.is_superuser %}
+                <li><a href="{% url 'admin:Invoicer_invoicer_changelist' %}" class="SubItem">- {% translate 'INVOICERS' %}</a></li>
+                {% endif %}
+                <li><a href="{% url 'admin:Invoicee_invoicee_changelist' %}" class="SubItem">- {% translate 'INVOICEES' %}</a></li>
+                <li><a href="{% url 'admin:Invoice_invoice_changelist' %}" class="SubItem">- {% translate 'INVOICES' %}</a></li>
+                <li><a href="{% url 'admin:Invoice_project_changelist' %}" class="SubItem">- {% translate 'PROJECTS' %}</a></li>
+                <li><a href="{% url 'admin:Invoice_fee_changelist' %}" class="SubItem">- {% translate 'FEES' %}</a></li>
                 </li>
                 {% endif %}
                 {# <li><a href={% url 'home:FacturationState' %}>{% translate 'FacturationState' %}</a></li> #}
@@ -68,6 +68,7 @@
             </table>
             <table class="StateTable"><thead>
               <tr>
+                <th>{% translate "Currency" %}</th>
                 <th>{% translate "NumInvoices" %}</th>
                 <th>{% translate "OutStandingInvoices" %}</th>
                 <th>{% translate "SumVATPeriode" %}</th>
@@ -75,25 +76,33 @@
                 <th>{% translate "SumAfterVATPeriod" %}</th>
               </tr></thead>
             <tbody>
+              {% for invoiceInformation in invoicesInformation %}
               <tr>
-                <td>{{ numInvoices }}</td>
-                <td>{{ numOutStandingInvoices }}</td>
-                <td>{{ sumVATPeriod }}</td>
-                <td>{{ sumBeforeVATPeriod }}</td>
-                <td>{{ sumAfterVATPeriod }}</td>
+                <td>{{ invoiceInformation.0 }}</td>
+                <td>{{ invoiceInformation.1 }}</td>
+                <td>{{ invoiceInformation.2 }}</td>
+                <td>{{ invoiceInformation.3 }}</td>
+                <td>{{ invoiceInformation.4 }}</td>
+                <td>{{ invoiceInformation.5 }}</td>
               </tr>
+              {% endfor %}
             </tbody>
             <table class="StateTable"><thead>
               <tr>
                 <th>{% translate "INVOICEE" %}</th>
-                <th>{% translate "OutSTANDING" %}</th>
+                <th>{% translate "Country" %}</th>
+                <th>{% translate "OutStanding" %}</th>
+                <th>{% translate "TotalPaidAmoint" %}</th>
               </tr></thead>
             <tbody>
+              {% for invoiceeInformation in invoiceesInformation %}
               <tr>
-                {% for invoiceeInformation in invoiceesInformation %}
-                <td>{{ name }}</td> <td>{{ owedAmount }}</td>
-                {% endfor %}
+                <td>{{ invoiceeInformation.0 }}</td>
+                <td>{{ invoiceeInformation.1 }}</td>
+                <td>{{ invoiceeInformation.2 }}</td>
+                <td>{{ invoiceeInformation.3 }}</td>
               </tr>
+              {% endfor %}
             </tbody>
             </table>
             </table>

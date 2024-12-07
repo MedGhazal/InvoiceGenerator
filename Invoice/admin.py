@@ -433,12 +433,12 @@ class ProjectAdmin(ModelAdmin):
             )
         ).order_by('-id')
 
-    def delete_model(self, request, project):
-        project.delete()
+    # def delete_model(self, request, project):
+    #     project.delete()
 
-    def delete_query(self, request, projects):
-        for project in projects:
-            project.delete()
+    # def delete_query(self, request, projects):
+    #     for project in projects:
+    #         project.delete()
 
     def has_view_permission(self, request, obj=None):
         if obj is not None:
@@ -562,19 +562,19 @@ class FeeAdmin(ModelAdmin):
             fields.remove('bookKeepingAmount')
         return fields
 
-    def delete_model(self, request, fee):
-        fee.delete()
+    # def delete_model(self, request, fee):
+    #     fee.delete()
 
-    def delete_queryset(self, request, fees):
-        for fee in fees:
-            invoice = fee.project.invoice
-            print(invoice.owedAmount)
-            invoice.owedAmount -= fee.rateUnit * fee.count * Decimal(
-                round(1 + fee.vat / 100, 2)
-            )
-            print(invoice.owedAmount)
-            invoice.save()
-            fee.delete()
+    # def delete_queryset(self, request, fees):
+    #     for fee in fees:
+    #         invoice = fee.project.invoice
+    #         print(invoice.owedAmount)
+    #         invoice.owedAmount -= fee.rateUnit * fee.count * Decimal(
+    #             round(1 + fee.vat / 100, 2)
+    #         )
+    #         print(invoice.owedAmount)
+    #         invoice.save()
+    #         fee.delete()
 
     def get_queryset(self, request):
         querySet = super().get_queryset(request)
@@ -718,16 +718,16 @@ class PaymentAdmin(ModelAdmin):
             )
         )
 
-    def delete_model(self, request, payment):
-        payment.delete()
+    # def delete_model(self, request, payment):
+    #     payment.delete()
 
-    def delete_queryset(self, request, payments):
-        for payment in payments:
-            coverage = round(payment.paidAmount / payment.invoice.count(), 2)
-            for invoice in payment.invoice.all():
-                invoice.paidAmount -= coverage
-                invoice.save()
-            payment.delete()
+    # def delete_queryset(self, request, payments):
+    #     for payment in payments:
+    #         coverage = round(payment.paidAmount / payment.invoice.count(), 2)
+    #         for invoice in payment.invoice.all():
+    #             invoice.paidAmount -= coverage
+    #             invoice.save()
+    #         payment.delete()
 
     def save_model(self, request, payment, form, change):
         payment.save()

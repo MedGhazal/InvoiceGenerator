@@ -127,38 +127,42 @@ header {
 /* aside */
 aside {
 	padding: 1% 1vh;
-	width: 10%;
 	margin: 2.5vh 2.5% 0;
 	display: inline-flex;
 	flex-direction: column;
 	border-radius: 10px;
-	background-color: var(--light-color);
 	position: fixed;
+	border: 0;
+	background-color: var(--light-color);
 }
 aside .nav-box ul {
 	flex-direction: column;
-	align-item: center;
-	width: 95%;
 }
 aside .nav-box ul li {
 	width: 100%;
 }
-aside .nav-box ul li a {
+aside .nav-box ul li .MainItem {
 	width: 100%;
-	text-align: center;
+	border: 2px;
+	text-align: left;
+	border: 1px solid var(--light-color);
 }
-aside .nav-box ul li:hover {
-	align-items: center;
-	flex-direction: column;
+aside .nav-box ul li .SubItem {
+	width: 100%;
+	font-size: .8rem;
+	border: 10px;
 	color: var(--light-color);
-	border-color: var(--primary-color);
 	background-color: var(--primary-color);
+	border: 1px solid var(--primary-color);
 }
-aside .nav-box ul li a:hover {
-	align-items: center;
+aside .nav-box ul li .MainItem:hover {
 	color: var(--light-color);
-	border-color: var(--primary-color);
 	background-color: var(--primary-color);
+	border: 1px solid var(--primary-color);
+}
+aside .nav-box ul li .SubItem:hover {
+	color: var(--primary-color);
+	background-color: var(--light-color);
 }
 
 /* main */

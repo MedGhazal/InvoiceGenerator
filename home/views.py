@@ -1,11 +1,12 @@
 from decimal import Decimal
+from itertools import chain
 from datetime import datetime, date
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils.translation import gettext as _
 
-from Invoice.models import Invoice
+from Invoice.models import Invoice, Fee, Project
 from Invoicee.models import Invoicee
 from Invoicer.models import Invoicer
 
@@ -35,29 +36,92 @@ def printAmountWithCurrency(amount, currencySymbol):
         return f'{lformat_decimal(amount)}{currencySymbol}'
 
 
-def getInvoiceInformation(invoice):
-    vat, beforeVAT, afterVAT = 0, 0, 0
-    for project in invoice.project_set.all():
-        for fee in project.fee_set.all():
-            vat += round(
-                fee.rateUnit * fee.count * fee.vat / 100, 2
+def getVATOfInvoices(invoices):
+    return sum(
+        fee.rateUnit * fee.count * Decimal(fee.vat / 100)
+        for fee in Fee.objects.filter(
+            project__in=Project.objects.filter(
+                invoice__in=invoices
             )
-            beforeVAT += fee.rateUnit * fee.count
-            afterVAT += round(
-                fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100), 2
-            )
-    return vat, beforeVAT, afterVAT, invoice.paymentMethod
+        )
+    )
 
 
-def getOutstandingAmountOfInvoicee(invoicee):
-    outStandingAmount = 0
-    for invoice in Invoice.objects.filter(invoicee=invoicee):
-        for project in invoice.project_set.all():
-            for fee in project.fee_set.all():
-                outStandingAmount += round(
-                    fee.rateUnit * fee.count * Decimal(1 + fee.vat / 100), 2
-                )
+def getBeforeVATOfInvoices(invoices):
+    return sum(
+        fee.rateUnit * fee.count
+        for fee in Fee.objects.filter(
+            project__in=Project.objects.filter(
+                invoice__in=invoices
+            )
+        )
+    )
+
+
+def getAfterVATOfInvoices(invoices):
+    return sum(invoices.values_list('owedAmount', flat=True))
+
+
+def getOutstandingAmountOfInvoicee(invoicee, beginDate, endDate):
+    outStandingAmount = {}
+    for invoice in Invoice.objects.filter(
+        invoicee=invoicee
+    ).filter(
+        facturationDate__gte=beginDate
+    ).filter(
+        facturationDate__lte=endDate
+    ):
+        if invoice.owedAmount < invoice.paidAmount:
+            if outStandingAmount.get(invoice.baseCurrency):
+                outStandingAmount[
+                    get_currency_symbol(invoice.baseCurrency)
+                ] += invoice.owedAmount - invoice.paidAmount
+            else:
+                outStandingAmount[
+                    get_currency_symbol(invoice.baseCurrency)
+                ] = invoice.owedAmount - invoice.paidAmount
     return outStandingAmount
+
+
+def getPaidAmountOfInvoicee(invoicee, beginDate, endDate):
+    paidAmount = {}
+    for invoice in Invoice.objects.filter(
+        invoicee=invoicee
+    ).filter(
+        facturationDate__gte=beginDate
+    ).filter(
+        facturationDate__lte=endDate
+    ):
+        if paidAmount.get(invoice.baseCurrency):
+            paidAmount[
+                get_currency_symbol(invoice.baseCurrency)
+            ] += invoice.paidAmount
+        else:
+            paidAmount[
+                get_currency_symbol(invoice.baseCurrency)
+            ] = invoice.paidAmount
+    return paidAmount
+
+
+def packageInvoiceeInformation(invoicee, beginDate, endDate):
+    paid = getPaidAmountOfInvoicee(invoicee, beginDate, endDate)
+    outStanding = getOutstandingAmountOfInvoicee(invoicee, beginDate, endDate)
+    currencies = set(paid.keys()).union(set(outStanding.keys()))
+    return [
+        (
+            invoicee.name,
+            invoicee.country,
+            printAmountWithCurrency(
+                paid[currency] if paid.get(currency) else '0',
+                currency,
+            ),
+            printAmountWithCurrency(
+                outStanding[currency] if outStanding.get(currency) else '0',
+                currency,
+            ),
+        )
+        for currency in currencies
+    ]
 
 
 @login_required()
@@ -66,7 +130,6 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
 
     if Invoicer.objects.filter(manager=request.user).count() == 0:
         currencySymbol = ''
-
     elif Invoicer.objects.filter(manager=request.user).count() == 1:
         currencySymbol = get_currency_symbol(
             Invoicer.objects.get(manager=request.user).bookKeepingCurrency
@@ -80,6 +143,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
     ).filter(
         invoicer__in=Invoicer.objects.filter(manager=request.user)
     )
+
     if request.method == 'POST':
         form = request.POST
         beginDate = form['beginDate']
@@ -100,60 +164,48 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
                 facturationDate__lte=endDate
             )
     elif request.method == 'GET':
+        beginDate = f'{date.today().year}-01-01'
+        endDate = f'{date.today().year}-12-31'
         invoices = invoices.filter(
-            facturationDate__gte=f'{date.today().year}-01-01'
+            facturationDate__gte=beginDate
         ).filter(
-            facturationDate__lte=f'{date.today().year}-12-31'
+            facturationDate__lte=endDate
         )
-    numInvoices = invoices.count()
-    numOutStandingInvoices = invoices.filter(status=3).count()
+
     invoicesInformation = [
-        getInvoiceInformation(invoice) for invoice in invoices
+        (
+            currency,
+            invoices.filter(baseCurrency=currency).count(),
+            invoices.filter(baseCurrency=currency).filter(status=3).count(),
+            getVATOfInvoices(invoices.filter(baseCurrency=currency)),
+            getBeforeVATOfInvoices(invoices.filter(baseCurrency=currency)),
+            getAfterVATOfInvoices(invoices.filter(baseCurrency=currency)),
+        )
+        for currency in set(invoices.values_list('baseCurrency', flat=True))
     ]
-    sumVATPeriod = sum(
-        invoiceInformation[0] for invoiceInformation in invoicesInformation
-    )
-    sumBeforeVATPeriod = sum(
-        invoiceInformation[1] for invoiceInformation in invoicesInformation
-    )
-    sumAfterVATPeriod = sum(
-        invoiceInformation[2] for invoiceInformation in invoicesInformation
-    )
-    amountPayedCash = sum(
-        invoiceInformation[2] for invoiceInformation in invoicesInformation
-        if invoiceInformation[3] == 'CS'
-    )
-    amountPayedTransfer = sum(
-        invoiceInformation[2] for invoiceInformation in invoicesInformation
-        if invoiceInformation[3] == 'TR'
-    )
-    amountPayedCheck = sum(
-        invoiceInformation[2] for invoiceInformation in invoicesInformation
-        if invoiceInformation[3] == 'CK'
-    )
-    amountPayedDivers = sum(
-        invoiceInformation[2] for invoiceInformation in invoicesInformation
-        if invoiceInformation[3] == 'DV'
-    )
-    invoiceesInformation = [
-        (invoicee.name, getOutstandingAmountOfInvoicee(invoicee))
+    print('invoicesInformation', invoicesInformation)
+
+    invoiceesInformation = list(chain.from_iterable([
+        packageInvoiceeInformation(invoicee, beginDate, endDate)
         for invoicee in Invoicee.objects.filter(
             invoicer__in=Invoicer.objects.filter(manager=request.user)
         )
-    ]
+    ]))
+
+    amountPayedCash = sum(
+        invoices.filter(paymentMethod='CS').values_list('paidAmount', flat=True)
+    )
+    amountPayedTransfer = sum(
+        invoices.filter(paymentMethod='TR').values_list('paidAmount', flat=True)
+    )
+    amountPayedCheck = sum(
+        invoices.filter(paymentMethod='CK').values_list('paidAmount', flat=True)
+    )
+    amountPayedDivers = sum(
+        invoices.filter(paymentMethod='DV').values_list('paidAmount', flat=True)
+    )
 
     context = {
-        'numInvoices': numInvoices,
-        'numOutStandingInvoices': numOutStandingInvoices,
-        'sumVATPeriod': printAmountWithCurrency(sumVATPeriod, currencySymbol),
-        'sumBeforeVATPeriod': printAmountWithCurrency(
-            sumBeforeVATPeriod,
-            currencySymbol,
-        ),
-        'sumAfterVATPeriod': printAmountWithCurrency(
-            sumAfterVATPeriod,
-            currencySymbol,
-        ),
         'amountPayedCash': printAmountWithCurrency(
             amountPayedCash,
             currencySymbol,
@@ -170,7 +222,8 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             amountPayedDivers,
             currencySymbol,
         ),
-        'invoiceeSituation': invoiceesInformation,
+        'invoicesInformation': invoicesInformation,
+        'invoiceesInformation': invoiceesInformation,
         'form': homeControlForm,
     }
     return render(request, 'home-index.html', context)
