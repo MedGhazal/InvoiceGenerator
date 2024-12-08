@@ -170,15 +170,15 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             invoices.filter(baseCurrency=currency).filter(status=3).count(),
             printAmountWithCurrency(
                 getVATOfInvoices(invoices.filter(baseCurrency=currency)),
-                get_currency_symbol(currencySymbol),
+                get_currency_symbol(currency),
             ),
             printAmountWithCurrency(
                 getBeforeVATOfInvoices(invoices.filter(baseCurrency=currency)),
-                get_currency_symbol(currencySymbol),
+                get_currency_symbol(currency),
             ),
             printAmountWithCurrency(
                 getAfterVATOfInvoices(invoices.filter(baseCurrency=currency)),
-                get_currency_symbol(currencySymbol),
+                get_currency_symbol(currency),
             ),
         )
         for currency in set(invoices.values_list('baseCurrency', flat=True))
