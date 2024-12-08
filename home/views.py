@@ -117,12 +117,14 @@ def packageInvoiceeInformation(invoicee, beginDate, endDate):
 
 
 def getInvoiceesInformation(user, beginDate, endDate):
-    return list(chain.from_iterable([
-        packageInvoiceeInformation(invoicee, beginDate, endDate)
-        for invoicee in Invoicee.objects.filter(
-            invoicer__in=Invoicer.objects.filter(manager=user)
+    return list(
+        chain.from_iterable(
+            packageInvoiceeInformation(invoicee, beginDate, endDate)
+            for invoicee in Invoicee.objects.filter(
+                invoicer__in=Invoicer.objects.filter(manager=user)
+            )
         )
-    ]))
+    )
 
 
 def getInvoicesInformation(invoices, currencies):
@@ -237,26 +239,28 @@ def getProjectsInformation(invoices, currencies):
             'title', flat=True
         )
     )
-    return [
-        [
+    return list(
+        chain.from_iterable(
             [
-                nature,
-                printAmountWithCurrency(
-                    sum(
-                        invoice.owedAmount
-                        for invoice in invoices.filter(
-                            project__title=nature
-                        ).filter(
-                            baseCurrency=currency
-                        )
-                    ),
-                    get_currency_symbol(currency)
-                )
+                [
+                    nature,
+                    printAmountWithCurrency(
+                        sum(
+                            invoice.owedAmount
+                            for invoice in invoices.filter(
+                                project__title=nature
+                            ).filter(
+                                baseCurrency=currency
+                            )
+                        ),
+                        get_currency_symbol(currency)
+                    )
+                ]
+                for currency in currencies
             ]
-            for currency in currencies
-        ]
-        for nature in natures
-    ]
+            for nature in natures
+        )
+    )
 
 
 @login_required()
