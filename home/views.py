@@ -230,17 +230,31 @@ def getPaymentMethodDistribution(invoices, currencies):
 
 
 def getProjectsInformation(invoices, currencies):
-    natures = set(Project.objects.values_list('title', flat=True))
-    return [
-        (
-            nature,
-            sum(
-                invoice.owedAmount
-                for invoice in invoices.filter(
-                    project__title=nature
-                )
-            )
+    natures = set(
+        Project.objects.filter(
+            invoice__in=invoices
+        ).values_list(
+            'title', flat=True
         )
+    )
+    return [
+        [
+            [
+                nature,
+                printAmountWithCurrency(
+                    sum(
+                        invoice.owedAmount
+                        for invoice in invoices.filter(
+                            project__title=nature
+                        ).filter(
+                            baseCurrency=currency
+                        )
+                    ),
+                    get_currency_symbol(currency)
+                )
+            ]
+            for currency in currencies
+        ]
         for nature in natures
     ]
 
