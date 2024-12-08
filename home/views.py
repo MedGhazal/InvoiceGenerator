@@ -172,7 +172,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             printAmountWithCurrency(
                 sum(
                     owedAmount - paidAmount
-                    for owedAmount, paidAmount in invoices.filter(
+                    for owedAmount, paidAmount in Invoice.objects.filter(
                         baseCurrency=currency
                     ).filter(
                         status__in=[3, 1]
