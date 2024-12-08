@@ -236,7 +236,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         for currency in set(invoices.values_list('baseCurrency', flat=True))
     ]
     paymentMethodDistribution = {
-        'CK': [
+        paymentMethod: [
             distributionAmountsPaid[i]
             for distributionAmountsPaid in distributionAmountsPaidOnPaymentMethod
         ]
