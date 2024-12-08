@@ -90,9 +90,11 @@
                 {% endfor %}
               </tbody>
               <tfoot>
-              {% for totalTurnover in totalTurnovers %}
+              {% for i, totalTurnover in enumerate(totalTurnovers) %}
                 <tr>
+                  {% if i == 0 %}
                   <th>{% translate "TotalTurnover" %}</th>
+                  {% endif %}
                   <td>{{ totalTurnover }}</td>
                 </tr>
               {% endfor %}
