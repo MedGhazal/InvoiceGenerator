@@ -116,55 +116,17 @@ def packageInvoiceeInformation(invoicee, beginDate, endDate):
     ]
 
 
-@login_required()
-def index(request, invoicer=None, beginDate=None, endDate=None):
-    homeControlForm = HomeControlForm()
-
-    if Invoicer.objects.filter(manager=request.user).count() <= 1:
-        if not request.user.is_superuser:
-            homeControlForm.fields.pop('invoicer')
-
-    context = {}
-    if request.user.is_superuser:
-        invoices = Invoice.objects
-    else:
-        invoices = Invoice.objects.exclude(
-            status=0
-        ).filter(
-            invoicer__in=Invoicer.objects.filter(manager=request.user)
+def getInvoiceesInformation(user, beginDate, endDate):
+    return list(chain.from_iterable([
+        packageInvoiceeInformation(invoicee, beginDate, endDate)
+        for invoicee in Invoicee.objects.filter(
+            invoicer__in=Invoicer.objects.filter(manager=user)
         )
+    ]))
 
-    if request.method == 'POST':
-        form = request.POST
-        beginDate = form['beginDate']
-        endDate = form['endDate']
-        if form.get('invoicer'):
-            invoicer = form['invoicer']
-            invoices = invoices.filter(
-                facturationDate__gte=beginDate
-            ).filter(
-                facturationDate__lte=endDate
-            ).filter(
-                invoicer=invoicer
-            )
-        else:
-            invoices = invoices.filter(
-                facturationDate__gte=beginDate
-            ).filter(
-                facturationDate__lte=endDate
-            )
-    elif request.method == 'GET':
-        beginDate = f'{date.today().year}-01-01'
-        endDate = f'{date.today().year}-12-31'
-        invoices = invoices.filter(
-            facturationDate__gte=beginDate
-        ).filter(
-            facturationDate__lte=endDate
-        )
 
-    currencies = set(invoices.values_list('baseCurrency', flat=True))
-
-    invoicesInformation = [
+def getInvoicesInformation(invoices, currencies):
+    return [
         (
             currency,
             invoices.filter(baseCurrency=currency).count(),
@@ -199,13 +161,8 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         for currency in currencies
     ]
 
-    invoiceesInformation = list(chain.from_iterable([
-        packageInvoiceeInformation(invoicee, beginDate, endDate)
-        for invoicee in Invoicee.objects.filter(
-            invoicer__in=Invoicer.objects.filter(manager=request.user)
-        )
-    ]))
 
+def getPaymentMethodDistribution(invoices, currencies):
     distributionAmountsPaidOnPaymentMethod = [
         (
             printAmountWithCurrency(
@@ -263,7 +220,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         )
         for currency in currencies
     ]
-    paymentMethodDistribution = {
+    return {
         paymentMethod: [
             distributionAmountsPaid[i]
             for distributionAmountsPaid in distributionAmountsPaidOnPaymentMethod
@@ -271,11 +228,88 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         for i, paymentMethod in enumerate(['CS', 'TR', 'CK', 'DV'])
     }
 
+
+def getProjectsInformation(invoices, currencies):
+    natures = set(Project.objects.values_list('title'))
+    return {
+        nature: sum(
+            invoice.owedAmount
+            for invoice in invoices.filter(
+                project__title=nature
+            )
+        )
+        for nature in natures
+    }
+
+
+@login_required()
+def index(request, invoicer=None, beginDate=None, endDate=None):
+    homeControlForm = HomeControlForm()
+
+    if Invoicer.objects.filter(manager=request.user).count() <= 1:
+        if not request.user.is_superuser:
+            homeControlForm.fields.pop('invoicer')
+
+    context = {}
+    if request.user.is_superuser:
+        invoices = Invoice.objects
+    else:
+        invoices = Invoice.objects.exclude(
+            status=0
+        ).filter(
+            invoicer__in=Invoicer.objects.filter(manager=request.user)
+        )
+
+    if request.method == 'POST':
+        form = request.POST
+        beginDate = form['beginDate']
+        endDate = form['endDate']
+        if form.get('invoicer'):
+            invoicer = form['invoicer']
+            invoices = invoices.filter(
+                facturationDate__gte=beginDate
+            ).filter(
+                facturationDate__lte=endDate
+            ).filter(
+                invoicer=invoicer
+            )
+        else:
+            invoices = invoices.filter(
+                facturationDate__gte=beginDate
+            ).filter(
+                facturationDate__lte=endDate
+            )
+    elif request.method == 'GET':
+        beginDate = f'{date.today().year}-01-01'
+        endDate = f'{date.today().year}-12-31'
+        invoices = invoices.filter(
+            facturationDate__gte=beginDate
+        ).filter(
+            facturationDate__lte=endDate
+        )
+
+    currencies = set(invoices.values_list('baseCurrency', flat=True))
+
+    invoicesInformation = getInvoicesInformation(invoices, currencies)
+    invoiceesInformation = getInvoiceesInformation(
+        request.user,
+        beginDate,
+        endDate,
+    )
+
+    paymentMethodDistribution = getPaymentMethodDistribution(
+        invoices,
+        currencies,
+    )
+
+    projectsInformation = getProjectsInformation(invoices, currencies)
+
     context = {
         'numCurrencies': len(currencies),
         'paymentMethodDistribution': paymentMethodDistribution,
         'invoicesInformation': invoicesInformation,
         'invoiceesInformation': invoiceesInformation,
+        'projectsInformation': projectsInformation,
         'form': homeControlForm,
     }
     return render(request, 'home-index.html', context)

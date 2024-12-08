@@ -76,6 +76,20 @@
             </table>
             <table class="StateTable"><thead>
               <tr>
+                <th>{% translate "Nature" %}</th>
+                <th>{% translate "Amount" %}</th>
+              </tr></thead>
+            <tbody>
+              {% for projectInformation in projectsInformation %}
+              <tr>
+                <td>{{ projectInformation.0 }}</td>
+                <td>{{ projectInformation.1 }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            </table>
+            <table class="StateTable"><thead>
+              <tr>
                 <th>{% translate "INVOICEE" %}</th>
                 <th>{% translate "Country" %}</th>
                 <th>{% translate "OutStanding" %}</th>
