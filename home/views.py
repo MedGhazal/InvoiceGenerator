@@ -179,6 +179,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
                     ).values_list(
                         'paidAmount', 'owedAmount'
                     )
+                    if paidAmount >= 0
                 ),
                 get_currency_symbol(currency),
             ),
