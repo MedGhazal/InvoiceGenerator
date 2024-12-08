@@ -30,7 +30,7 @@ class DateConverter:
 
 
 def printAmountWithCurrency(amount, currencySymbol):
-    if amount is None or amount == 0:
+    if amount is None or amount <= 0:
         return '-'
     else:
         return f'{lformat_decimal(amount)}{currencySymbol}'
