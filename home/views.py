@@ -120,12 +120,7 @@ def packageInvoiceeInformation(invoicee, beginDate, endDate):
 def index(request, invoicer=None, beginDate=None, endDate=None):
     homeControlForm = HomeControlForm()
 
-    if Invoicer.objects.filter(manager=request.user).count() == 0:
-        currencySymbol = ''
-    elif Invoicer.objects.filter(manager=request.user).count() == 1:
-        currencySymbol = get_currency_symbol(
-            Invoicer.objects.get(manager=request.user).bookKeepingCurrency
-        )
+    if Invoicer.objects.filter(manager=request.user).count() <= 1:
         if not request.user.is_superuser:
             homeControlForm.fields.pop('invoicer')
 
@@ -174,6 +169,19 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             currency,
             invoices.filter(baseCurrency=currency).count(),
             invoices.filter(baseCurrency=currency).filter(status=3).count(),
+            printAmountWithCurrency(
+                sum(
+                    owedAmount - paidAmount
+                    for owedAmount, paidAmount in invoices.filter(
+                        baseCurrency=currency
+                    ).filter(
+                        status=1
+                    ).values_list(
+                        'paidAmount', 'owedAmount'
+                    )
+                ),
+                get_currency_symbol(currency),
+            ),
             printAmountWithCurrency(
                 getVATOfInvoices(invoices.filter(baseCurrency=currency)),
                 get_currency_symbol(currency),
