@@ -109,11 +109,11 @@ def packageInvoiceeInformation(invoicee, beginDate, endDate):
             invoicee.name,
             invoicee.country,
             printAmountWithCurrency(
-                paid[currency] if paid.get(currency) else '0',
+                outStanding[currency] if outStanding.get(currency) else '0',
                 currency,
             ),
             printAmountWithCurrency(
-                outStanding[currency] if outStanding.get(currency) else '0',
+                paid[currency] if paid.get(currency) else '0',
                 currency,
             ),
         )
