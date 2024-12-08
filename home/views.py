@@ -263,6 +263,22 @@ def getProjectsInformation(invoices, currencies):
     )
 
 
+def getTotalTurnoversInvoices(invoices, currencies):
+    return [
+        (
+            printAmountWithCurrency(
+                sum(
+                    owedAmount for owedAmount in invoices.filter(
+                        baseCurrency=currency
+                    ).values_list('owedAmount', flat=True)
+                ),
+                get_currency_symbol(currency),
+            )
+        )
+        for currency in currencies
+    ]
+
+
 @login_required()
 def index(request, invoicer=None, beginDate=None, endDate=None):
     homeControlForm = HomeControlForm()
@@ -324,10 +340,11 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
     )
 
     projectsInformation = getProjectsInformation(invoices, currencies)
-    print(projectsInformation)
+    totalTurnovers = getTotalTurnoversInvoices(invoices, currencies)
 
     context = {
         'numCurrencies': len(currencies),
+        'totalTurnovers': totalTurnovers,
         'paymentMethodDistribution': paymentMethodDistribution,
         'invoicesInformation': invoicesInformation,
         'invoiceesInformation': invoiceesInformation,

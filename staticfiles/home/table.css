@@ -29,7 +29,6 @@ table.StateTable thead th {
 table.StateTable tfoot {
   font-size: 14px;
   font-weight: bold;
-  color: #FFFFFF;
   background: #D0E4F5;
   border-top: 2px solid #444444;
 }
@@ -39,10 +38,9 @@ table.StateTable tfoot td {
 table.StateTable tfoot .links {
   text-align: right;
 }
-table.StateTable tfoot .links a{
+table.StateTable tfoot .links a {
   display: inline-block;
   background: #1C6EA4;
-  color: #FFFFFF;
   padding: 2px 8px;
   border-radius: 5px;
 }

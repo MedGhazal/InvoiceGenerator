@@ -1,94 +1,102 @@
-{% extends 'base.html' %}
-{% load i18n %}
-    {% block title %}
-    <title>LAMOME Business | {% translate 'Home' %}</title>
-    {% endblock %}
-    {% block aside %}
-    {% if user.is_authenticated %}
-    <aside>
-        <div class="nav-box column">
-            <ul>
-                <li><a href="{% url 'home:index' %}" class="MainItem">{% translate 'Home' %}</a></li>
-                {% if user.is_staff %}
-                <li><a href="{% url 'admin:index' %}" class="MainItem">{% translate 'ADMINSHORTCUTS' %}</a></li>
-                {% if user.is_superuser %}
-                <li><a href="{% url 'admin:Invoicer_invoicer_changelist' %}" class="SubItem">- {% translate 'INVOICERS' %}</a></li>
+  {% extends 'base.html' %}
+  {% load i18n %}
+      {% block title %}
+      <title>LAMOME Business | {% translate 'Home' %}</title>
+      {% endblock %}
+      {% block aside %}
+      {% if user.is_authenticated %}
+      <aside>
+          <div class="nav-box column">
+              <ul>
+                  <li><a href="{% url 'home:index' %}" class="MainItem">{% translate 'Home' %}</a></li>
+                  {% if user.is_staff %}
+                  <li><a href="{% url 'admin:index' %}" class="MainItem">{% translate 'ADMINSHORTCUTS' %}</a></li>
+                  {% if user.is_superuser %}
+                  <li><a href="{% url 'admin:Invoicer_invoicer_changelist' %}" class="SubItem">- {% translate 'INVOICERS' %}</a></li>
+                  {% endif %}
+                  <li><a href="{% url 'admin:Invoicee_invoicee_changelist' %}" class="SubItem">- {% translate 'INVOICEES' %}</a></li>
+                  <li><a href="{% url 'admin:Invoice_invoice_changelist' %}" class="SubItem">- {% translate 'INVOICES' %}</a></li>
+                  <li><a href="{% url 'admin:Invoice_project_changelist' %}" class="SubItem">- {% translate 'PROJECTS' %}</a></li>
+                  <li><a href="{% url 'admin:Invoice_fee_changelist' %}" class="SubItem">- {% translate 'FEES' %}</a></li>
+                  </li>
+                  {% endif %}
+                  {# <li><a href={% url 'home:FacturationState' %}>{% translate 'FacturationState' %}</a></li> #}
+                  {# <li><a href={% url 'home:OutstandingInvoices' %}>{% translate 'OutstandingInvoices' %}</a></li> #}
+                  {# <li><a href={% url 'home:NewInvoice' %}>{% translate 'NewInvoice' %}</a></li> #}
+                  {# <li><a href={% url 'home:NewPayment' %}>{% translate 'NewPayment' %}</a></li> #}
+              </ul>
+          </div>
+      </aside>
+      {% endif %}
+      {% endblock %}
+      {% block content %}
+      <h1>Home</h1>
+      <div class="home-content">
+          <div class="home-controls">
+              <div class="home-controls-text">{% translate "HomeCONTROLSText" %}</div>
+              <form action="{% url 'home:index' %}" method="POST">
+              {% csrf_token %}
+              {{ form }}
+              <input type="{% translate "submit" %}" value="{% translate "Submit" %}">
+          </form>
+          </div>
+          <div class="home-main">
+              <div class="home-main-text">{% translate "HomeMAINText" %}</div>
+              <table class="StateTable"><thead>
+                <tr>
+                  <th class="HeaderColumn">{% translate "PaymentMode" %}</th>
+                  <th colspan="{{ numCurrencies }}">{% translate "Amount" %}</th>
+                </tr></thead>
+              <tbody>
+                <tr>
+                  <td class="HeaderColumn">{% translate "CASH" %}</td>
+                  {% for amountPayedCash in paymentMethodDistribution.CS %}
+                  <td>{{ amountPayedCash }}</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td class="HeaderColumn">{% translate "TRANSFER" %}</td>
+                  {% for amountPayedTransfer in paymentMethodDistribution.TR %}
+                  <td>{{ amountPayedTransfer }}</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td class="HeaderColumn">{% translate "CHEQUE" %}</td>
+                  {% for amountPayedCheck in paymentMethodDistribution.CK %}
+                  <td>{{ amountPayedCheck }}</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td class="HeaderColumn">{% translate "DIVERS" %}</td>
+                  {% for amountPayedDivers in paymentMethodDistribution.DV %}
+                  <td>{{ amountPayedDivers }}</td>
+                  {% endfor %}
+                </tr>
+              </tbody>
+              </table>
+              <table class="StateTable"><thead>
+                <tr>
+                  <th>{% translate "Nature" %}</th>
+                  <th>{% translate "Amount" %}</th>
+                </tr></thead>
+              <tbody>
+                {% for projectInformation in projectsInformation %}
+                {% if projectInformation.1 != '-' %}   
+                <tr>
+                  <td>{{ projectInformation.0 }}</td>
+                  <td>{{ projectInformation.1 }}</td>
+                </tr>
                 {% endif %}
-                <li><a href="{% url 'admin:Invoicee_invoicee_changelist' %}" class="SubItem">- {% translate 'INVOICEES' %}</a></li>
-                <li><a href="{% url 'admin:Invoice_invoice_changelist' %}" class="SubItem">- {% translate 'INVOICES' %}</a></li>
-                <li><a href="{% url 'admin:Invoice_project_changelist' %}" class="SubItem">- {% translate 'PROJECTS' %}</a></li>
-                <li><a href="{% url 'admin:Invoice_fee_changelist' %}" class="SubItem">- {% translate 'FEES' %}</a></li>
-                </li>
-                {% endif %}
-                {# <li><a href={% url 'home:FacturationState' %}>{% translate 'FacturationState' %}</a></li> #}
-                {# <li><a href={% url 'home:OutstandingInvoices' %}>{% translate 'OutstandingInvoices' %}</a></li> #}
-                {# <li><a href={% url 'home:NewInvoice' %}>{% translate 'NewInvoice' %}</a></li> #}
-                {# <li><a href={% url 'home:NewPayment' %}>{% translate 'NewPayment' %}</a></li> #}
-            </ul>
-        </div>
-    </aside>
-    {% endif %}
-    {% endblock %}
-    {% block content %}
-    <h1>Home</h1>
-    <div class="home-content">
-        <div class="home-controls">
-            <div class="home-controls-text">{% translate "HomeCONTROLSText" %}</div>
-            <form action="{% url 'home:index' %}" method="POST">
-            {% csrf_token %}
-            {{ form }}
-            <input type="{% translate "submit" %}" value="{% translate "Submit" %}">
-        </form>
-        </div>
-        <div class="home-main">
-            <div class="home-main-text">{% translate "HomeMAINText" %}</div>
-            <table class="StateTable"><thead>
-              <tr>
-                <th class="HeaderColumn">{% translate "PaymentMode" %}</th>
-                <th colspan="{{ numCurrencies }}">{% translate "Amount" %}</th>
-              </tr></thead>
-            <tbody>
-              <tr>
-                <td class="HeaderColumn">{% translate "CASH" %}</td>
-                {% for amountPayedCash in paymentMethodDistribution.CS %}
-                <td>{{ amountPayedCash }}</td>
                 {% endfor %}
-              </tr>
-              <tr>
-                <td class="HeaderColumn">{% translate "TRANSFER" %}</td>
-                {% for amountPayedTransfer in paymentMethodDistribution.TR %}
-                <td>{{ amountPayedTransfer }}</td>
-                {% endfor %}
-              </tr>
-              <tr>
-                <td class="HeaderColumn">{% translate "CHEQUE" %}</td>
-                {% for amountPayedCheck in paymentMethodDistribution.CK %}
-                <td>{{ amountPayedCheck }}</td>
-                {% endfor %}
-              </tr>
-              <tr>
-                <td class="HeaderColumn">{% translate "DIVERS" %}</td>
-                {% for amountPayedDivers in paymentMethodDistribution.DV %}
-                <td>{{ amountPayedDivers }}</td>
-                {% endfor %}
-              </tr>
-            </tbody>
-            </table>
-            <table class="StateTable"><thead>
-              <tr>
-                <th>{% translate "Nature" %}</th>
-                <th>{% translate "Amount" %}</th>
-              </tr></thead>
-            <tbody>
-              {% for projectInformation in projectsInformation %}
-              {% if projectInformation.1 != '-' %}   
-              <tr>
-                <td>{{ projectInformation.0 }}</td>
-                <td>{{ projectInformation.1 }}</td>
-              </tr>
-              {% endif %}
+              </tbody>
+              <tfoot>
+              {% for totalTurnover in totalTurnovers %}
+                <tr>
+                  <th>{% translate "TotalTurnover" %}</th>
+                  <td>{{ totalTurnover }}</td>
+                </tr>
               {% endfor %}
-            </tbody>
+            </tfoot>
             </table>
             <table class="StateTable"><thead>
               <tr>
