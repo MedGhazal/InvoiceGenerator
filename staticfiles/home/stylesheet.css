@@ -127,7 +127,7 @@ header {
 /* aside */
 aside {
 	padding: 1% 1vh;
-	margin: 2.5vh 2.5% 0;
+	margin: 2.5vh 1.5% 0;
 	display: inline-flex;
 	flex-direction: column;
 	border-radius: 10px;
