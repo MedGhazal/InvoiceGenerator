@@ -30,7 +30,7 @@ class DateConverter:
 
 
 def printAmountWithCurrency(amount, currencySymbol):
-    if amount == 0:
+    if amount is None or amount == 0:
         return '-'
     else:
         return f'{lformat_decimal(amount)}{currencySymbol}'
@@ -108,14 +108,8 @@ def packageInvoiceeInformation(invoicee, beginDate, endDate):
         (
             invoicee.name,
             invoicee.country,
-            printAmountWithCurrency(
-                outStanding[currency] if outStanding.get(currency) else '0',
-                currency,
-            ),
-            printAmountWithCurrency(
-                paid[currency] if paid.get(currency) else '0',
-                currency,
-            ),
+            printAmountWithCurrency(outStanding.get(currency), currency),
+            printAmountWithCurrency(paid.get(currency), currency),
         )
         for currency in currencies
     ]
