@@ -94,6 +94,8 @@
                 <tr>
                   {% if forloop.counter0 == 0 %}
                   <th>{% translate "TotalTurnover" %}</th>
+                  {% else %}
+                  <th></th>
                   {% endif %}
                   <td>{{ totalTurnover }}</td>
                 </tr>
