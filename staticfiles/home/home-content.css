@@ -17,7 +17,7 @@
 	align-content: center;
 	border-radius: 10px;
 	background-color: var(--primary-color);
-	margin: auto;
+	margin: 0 auto;
 	padding: 2%;
 	height: max-content;
 	width: 80%;
