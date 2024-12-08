@@ -71,7 +71,7 @@ def getOutstandingAmountOfInvoicee(invoicee, beginDate, endDate):
     ).filter(
         facturationDate__lte=endDate
     ):
-        if invoice.owedAmount < invoice.paidAmount:
+        if invoice.owedAmount > invoice.paidAmount:
             currency = get_currency_symbol(invoice.baseCurrency)
             if outStandingAmount.get(currency):
                 outStandingAmount[
