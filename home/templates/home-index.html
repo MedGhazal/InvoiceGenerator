@@ -81,10 +81,12 @@
               </tr></thead>
             <tbody>
               {% for projectInformation in projectsInformation %}
+              {% if projectInformation.1 != '-' %}   
               <tr>
                 <td>{{ projectInformation.0 }}</td>
                 <td>{{ projectInformation.1 }}</td>
               </tr>
+              {% endif %}
               {% endfor %}
             </tbody>
             </table>
