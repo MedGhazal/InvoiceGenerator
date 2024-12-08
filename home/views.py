@@ -92,14 +92,11 @@ def getPaidAmountOfInvoicee(invoicee, beginDate, endDate):
     ).filter(
         facturationDate__lte=endDate
     ):
-        if paidAmount.get(invoice.baseCurrency):
-            paidAmount[
-                get_currency_symbol(invoice.baseCurrency)
-            ] += invoice.paidAmount
+        currencySymbol = get_currency_symbol(invoice.baseCurrency)
+        if paidAmount.get(currencySymbol):
+            paidAmount[currencySymbol] += invoice.paidAmount
         else:
-            paidAmount[
-                get_currency_symbol(invoice.baseCurrency)
-            ] = invoice.paidAmount
+            paidAmount[currencySymbol] = invoice.paidAmount
     return paidAmount
 
 
