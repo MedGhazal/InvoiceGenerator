@@ -198,7 +198,11 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         (
             printAmountWithCurrency(
                 sum(
-                    invoices.filter(paymentMethod='CS').values_list(
+                    invoices.filter(
+                        paymentMethod='CS'
+                    ).filter(
+                        baseCurrency=currency
+                    ).values_list(
                         'paidAmount',
                         flat=True,
                     )
@@ -207,7 +211,11 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             ),
             printAmountWithCurrency(
                 sum(
-                    invoices.filter(paymentMethod='TR').values_list(
+                    invoices.filter(
+                        paymentMethod='TR'
+                    ).filter(
+                        baseCurrency=currency
+                    ).values_list(
                         'paidAmount',
                         flat=True,
                     )
@@ -216,7 +224,11 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             ),
             printAmountWithCurrency(
                 sum(
-                    invoices.filter(paymentMethod='CK').values_list(
+                    invoices.filter(
+                        paymentMethod='CK'
+                    ).filter(
+                        baseCurrency=currency
+                    ).values_list(
                         'paidAmount',
                         flat=True,
                     )
@@ -225,7 +237,11 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             ),
             printAmountWithCurrency(
                 sum(
-                    invoices.filter(paymentMethod='DV').values_list(
+                    invoices.filter(
+                        paymentMethod='DV'
+                    ).filter(
+                        baseCurrency=currency
+                    ).values_list(
                         'paidAmount',
                         flat=True,
                     )
