@@ -175,7 +175,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
                     for owedAmount, paidAmount in invoices.filter(
                         baseCurrency=currency
                     ).filter(
-                        status=1
+                        status=3
                     ).values_list(
                         'paidAmount', 'owedAmount'
                     )
