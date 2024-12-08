@@ -38,7 +38,7 @@ def printAmountWithCurrency(amount, currencySymbol):
 
 def getVATOfInvoices(invoices):
     return sum(
-        fee.rateUnit * fee.count * Decimal(fee.vat / 100)
+        round(fee.rateUnit * fee.count * Decimal(fee.vat / 100), 2)
         for fee in Fee.objects.filter(
             project__in=Project.objects.filter(
                 invoice__in=invoices
