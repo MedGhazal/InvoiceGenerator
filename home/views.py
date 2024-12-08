@@ -166,6 +166,8 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             facturationDate__lte=endDate
         )
 
+    currencies = set(invoices.values_list('baseCurrency', flat=True))
+
     invoicesInformation = [
         (
             currency,
@@ -184,7 +186,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
                 get_currency_symbol(currency),
             ),
         )
-        for currency in set(invoices.values_list('baseCurrency', flat=True))
+        for currency in currencies
     ]
 
     invoiceesInformation = list(chain.from_iterable([
@@ -249,7 +251,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
                 get_currency_symbol(currency),
             ),
         )
-        for currency in set(invoices.values_list('baseCurrency', flat=True))
+        for currency in currencies
     ]
     paymentMethodDistribution = {
         paymentMethod: [
@@ -260,6 +262,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
     }
 
     context = {
+        'numCurrencies': len(currencies),
         'paymentMethodDistribution': paymentMethodDistribution,
         'invoicesInformation': invoicesInformation,
         'invoiceesInformation': invoiceesInformation,
