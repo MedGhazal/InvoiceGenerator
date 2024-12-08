@@ -106,7 +106,7 @@
               </tr></thead>
             <tbody>
               {% for invoiceeInformation in invoiceesInformation %}
-              {% if invoiceeInformation.2 == '-' %}
+              {% if invoiceeInformation.2 != '-' %}
               <tr>
                 <td>{{ invoiceeInformation.0 }}</td>
                 <td>{{ invoiceeInformation.1 }}</td>
