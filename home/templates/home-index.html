@@ -50,19 +50,27 @@
             <tbody>
               <tr>
                 <td class="HeaderColumn">{% translate "CASH" %}</td>
+                {% for amountPayedCash in paymentMethodDistribution.CS %}
                 <td>{{ amountPayedCash }}</td>
+                {% endfor %}
               </tr>
               <tr>
                 <td class="HeaderColumn">{% translate "TRANSFER" %}</td>
+                {% for amountPayedTransfer in paymentMethodDistribution.TR %}
                 <td>{{ amountPayedTransfer }}</td>
+                {% endfor %}
               </tr>
               <tr>
                 <td class="HeaderColumn">{% translate "CHEQUE" %}</td>
+                {% for amountPayedCheck in paymentMethodDistribution.CK %}
                 <td>{{ amountPayedCheck }}</td>
+                {% endfor %}
               </tr>
               <tr>
                 <td class="HeaderColumn">{% translate "DIVERS" %}</td>
+                {% for amountPayedDivers in paymentMethodDistribution.DV %}
                 <td>{{ amountPayedDivers }}</td>
+                {% endfor %}
               </tr>
             </tbody>
             </table>

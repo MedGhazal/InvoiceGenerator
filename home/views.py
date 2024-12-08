@@ -129,11 +129,14 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             homeControlForm.fields.pop('invoicer')
 
     context = {}
-    invoices = Invoice.objects.exclude(
-        status=0
-    ).filter(
-        invoicer__in=Invoicer.objects.filter(manager=request.user)
-    )
+    if request.user.is_superuser:
+        invoices = Invoice.objects
+    else:
+        invoices = Invoice.objects.exclude(
+            status=0
+        ).filter(
+            invoicer__in=Invoicer.objects.filter(manager=request.user)
+        )
 
     if request.method == 'POST':
         form = request.POST
@@ -183,7 +186,6 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         )
         for currency in set(invoices.values_list('baseCurrency', flat=True))
     ]
-    print('invoicesInformation', invoicesInformation)
 
     invoiceesInformation = list(chain.from_iterable([
         packageInvoiceeInformation(invoicee, beginDate, endDate)
@@ -192,36 +194,57 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         )
     ]))
 
-    amountPayedCash = sum(
-        invoices.filter(paymentMethod='CS').values_list('paidAmount', flat=True)
-    )
-    amountPayedTransfer = sum(
-        invoices.filter(paymentMethod='TR').values_list('paidAmount', flat=True)
-    )
-    amountPayedCheck = sum(
-        invoices.filter(paymentMethod='CK').values_list('paidAmount', flat=True)
-    )
-    amountPayedDivers = sum(
-        invoices.filter(paymentMethod='DV').values_list('paidAmount', flat=True)
-    )
+    distributionAmountsPaidOnPaymentMethod = [
+        (
+            printAmountWithCurrency(
+                sum(
+                    invoices.filter(paymentMethod='CS').values_list(
+                        'paidAmount',
+                        flat=True,
+                    )
+                ),
+                get_currency_symbol(currency),
+            ),
+            printAmountWithCurrency(
+                sum(
+                    invoices.filter(paymentMethod='TR').values_list(
+                        'paidAmount',
+                        flat=True,
+                    )
+                ),
+                get_currency_symbol(currency),
+            ),
+            printAmountWithCurrency(
+                sum(
+                    invoices.filter(paymentMethod='CK').values_list(
+                        'paidAmount',
+                        flat=True,
+                    )
+                ),
+                get_currency_symbol(currency),
+            ),
+            printAmountWithCurrency(
+                sum(
+                    invoices.filter(paymentMethod='DV').values_list(
+                        'paidAmount',
+                        flat=True,
+                    )
+                ),
+                get_currency_symbol(currency),
+            ),
+        )
+        for currency in set(invoices.values_list('baseCurrency', flat=True))
+    ]
+    paymentMethodDistribution = {
+        'CK': [
+            distributionAmountsPaid[i]
+            for distributionAmountsPaid in distributionAmountsPaidOnPaymentMethod
+        ]
+        for i, paymentMethod in enumerate(['CS', 'TR', 'CK', 'DV'])
+    }
 
     context = {
-        'amountPayedCash': printAmountWithCurrency(
-            amountPayedCash,
-            currencySymbol,
-        ),
-        'amountPayedTransfer': printAmountWithCurrency(
-            amountPayedTransfer,
-            currencySymbol,
-        ),
-        'amountPayedCheck': printAmountWithCurrency(
-            amountPayedCheck,
-            currencySymbol,
-        ),
-        'amountPayedDivers': printAmountWithCurrency(
-            amountPayedDivers,
-            currencySymbol,
-        ),
+        'paymentMethodDistribution': paymentMethodDistribution,
         'invoicesInformation': invoicesInformation,
         'invoiceesInformation': invoiceesInformation,
         'form': homeControlForm,
