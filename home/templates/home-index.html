@@ -76,6 +76,26 @@
             </table>
             <table class="StateTable"><thead>
               <tr>
+                <th>{% translate "INVOICEE" %}</th>
+                <th>{% translate "Country" %}</th>
+                <th>{% translate "OutStanding" %}</th>
+                <th>{% translate "TotalPaidAmoint" %}</th>
+              </tr></thead>
+            <tbody>
+              {% for invoiceeInformation in invoiceesInformation %}
+              {% if invoiceeInformation.2 != '-' %}
+              <tr>
+                <td>{{ invoiceeInformation.0 }}</td>
+                <td>{{ invoiceeInformation.1 }}</td>
+                <td>{{ invoiceeInformation.2 }}</td>
+                <td>{{ invoiceeInformation.3 }}</td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+            </table>
+            <table class="StateTable"><thead>
+              <tr>
                 <th>{% translate "Currency" %}</th>
                 <th>{% translate "NumInvoices" %}</th>
                 <th>{% translate "OutStandingInvoices" %}</th>
@@ -97,26 +117,6 @@
               </tr>
               {% endfor %}
             </tbody>
-            <table class="StateTable"><thead>
-              <tr>
-                <th>{% translate "INVOICEE" %}</th>
-                <th>{% translate "Country" %}</th>
-                <th>{% translate "OutStanding" %}</th>
-                <th>{% translate "TotalPaidAmoint" %}</th>
-              </tr></thead>
-            <tbody>
-              {% for invoiceeInformation in invoiceesInformation %}
-              {% if invoiceeInformation.2 != '-' %}
-              <tr>
-                <td>{{ invoiceeInformation.0 }}</td>
-                <td>{{ invoiceeInformation.1 }}</td>
-                <td>{{ invoiceeInformation.2 }}</td>
-                <td>{{ invoiceeInformation.3 }}</td>
-              </tr>
-              {% endif %}
-              {% endfor %}
-            </tbody>
-            </table>
             </table>
             <div class="home-main-text-muted">{% translate "HomeMAINTextFooter" %}</div>
         </div>
