@@ -8,9 +8,11 @@ from InvoiceGenerator.settings import (
     TEMPTEXFILESDIR,
     PREFIX_CLIENT_BOOKKEEPING_MOROCCO,
     PREFIX_CLIENT_BOOKKEEPING_FRANCE,
+    VAT_NOTE,
 )
 from Core.utils import (
     get_currency_symbol,
+    get_currency_symbol_latex,
     get_paymentMethod_label,
     lformat_decimal,
     lformat_date,
@@ -66,7 +68,7 @@ def parse_project_footer(fees, feesVAT, feesVATIncluded, currency):
 
 
 def parse_project(invoice, project):
-    currency = get_currency_symbol(invoice.baseCurrency)
+    currency = get_currency_symbol_latex(invoice.baseCurrency)
     if project.fee_set.count() == 0:
         raise LateXError(_('INVOICEInvalid'), f'{_('ADDProject')}{invoice}')
     activities = parse_project_header(project)
@@ -184,7 +186,7 @@ def check_invoiceIsForeign(invoicer, invoicee):
 
 
 def get_placeHolder_data(invoice):
-    textNote = f'\\begin{{center}}{_('VATNote')}\\end{{center}}'
+    textNote = f'\\begin{{center}}{VAT_NOTE}\\end{{center}}'
     invoicer_ice_designation = get_ice_designation(invoice.invoicer)
     invoiceeCountry = get_country(invoice.invoicee)
     invoicerCountry = get_country(invoice.invoicer)
