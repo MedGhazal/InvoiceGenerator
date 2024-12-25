@@ -1,0 +1,29 @@
+{% load i18n %}
+<div class="project-form" id="project-form-{{ projectIndex }}">
+  {{ projectForm }}
+  {% include 'home-fee-form.html' %}
+  <button 
+    type="button" 
+    id="add-fee-button" 
+    hx-on:click='
+    const addFeeButtonHXGetElements = document.getElementById("add-fee-button").getAttribute("hx-get").split("/");
+    var nextProjectIndex = parseInt(addFeeButtonHXGetElements[2], 10);
+    var nextFeeIndex = parseInt(addFeeButtonHXGetElements[3], 10);
+    var newGetURL = "./feeForm/" + nextProjectIndex + "/" + (nextFeeIndex + 1);
+    document.getElementById("add-fee-button").setAttribute("hx-get", newGetURL);
+    document.getElementById("add-fee-button").addEventListener("htmx:configRequest", (event) => {
+    event.detail.path = newGetURL;
+    });
+    '
+    hx-get="./feeForm/{{ projectIndex }}/2" 
+    hx-target="#fee-form-{{ projectIndex }}-1" 
+    hx-swap="afterend">
+    <span class="symbol">&#10798;</span><span class="underlined">{% translate 'AddFee' %}</span>
+  </button>
+  {% if projectIndex > 1 %}
+  <button hx-on:click='document.getElementById("project-form-{{ projectIndex }}").remove()'>
+    <span class="symbol">&#10807;</span>
+    <span class="underlined">{% translate 'DeleteProject' %}</span>
+  </button>
+  {% endif %}
+</div>

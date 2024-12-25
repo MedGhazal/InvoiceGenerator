@@ -1,6 +1,50 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% block title %}
+<title>LAMOME Business | {% translate 'INVOICES' %}</title>
+{% endblock %}
 {% block content %}
-    {% translate 'INVOICEE' %}
-
+<h1>{% translate 'InvoiceListView' %}</h1>
+<div class="home-content">
+    <div class="home-controls">
+        <div class="home-controls-text">{% translate "HomeCONTROLSText" %}</div>
+        <form action="{% url 'home:index' %}" method="POST">
+            {% csrf_token %}
+            {{ form }}
+            <input type="{% translate "submit" %}" value="{% translate "Submit" %}">
+        </form>
+    </div>
+    <div class="items-list">
+        <table>
+            <thead>
+                <tr>
+                {% if managerHasMultipleInvoicers %}
+                <th>{% translate 'INVOICER' %}</th>
+                {% endif %}
+                <th>{% translate 'INVOICEE' %}</th>
+                <th>{% translate 'Count' %}</th>
+                <th>{% translate 'TotalAfterVAT' %}</th>
+                <th></th>
+                <th></th>
+                <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoice_list %}
+                <tr>
+                    {% if managerHasMultipleInvoicers %}
+                        <td>{{ invoice.invoicer }}</td>
+                    {% endif %}
+                    <td>{{ invoice.invoicee }}</td>
+                    <td>{{ invoice.count }}</td>
+                    <td>{{ invoice.totalAfterVAT }}</td>
+                    <td><a href="{% url 'Invoice:preview' invoice.id %}">{% translate 'PreviewInvoice' %}</a></td>
+                    <td><a href="{% url 'Invoice:download' invoice.id %}">{% translate 'DownloadInvoice' %}</a></td>
+                    <td><a href="{% url 'Invoice:modify' invoice.id %}">{% translate 'ModifyInvoice' %}</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

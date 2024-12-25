@@ -1,0 +1,24 @@
+{% load i18n %}
+{% if user.is_authenticated %}
+<aside>
+    <div class="nav-box column">
+        <ul>
+            <li><a href="{% url 'home:index' %}" class="MainItem">{% translate 'Home' %}</a></li>
+            {% if user.is_staff %}
+            <li><a href="{% url 'admin:index' %}" class="MainItem">{% translate 'ADMINSHORTCUTS' %}</a></li>
+            {% if user.is_superuser %}
+            <li><a href="{% url 'admin:Invoicer_invoicer_changelist' %}" class="SubItem">- {% translate 'INVOICERS' %}</a></li>
+            {% endif %}
+            <li><a href="{% url 'admin:Invoicee_invoicee_changelist' %}" class="SubItem">- {% translate 'INVOICEES' %}</a></li>
+            <li><a href="{% url 'admin:Invoice_invoice_changelist' %}" class="SubItem">- {% translate 'INVOICES' %}</a></li>
+            <li><a href="{% url 'admin:Invoice_project_changelist' %}" class="SubItem">- {% translate 'PROJECTS' %}</a></li>
+            <li><a href="{% url 'admin:Invoice_fee_changelist' %}" class="SubItem">- {% translate 'FEES' %}</a></li>
+            <li><a href="{% url 'home:add-invoice' %}" class="MainItem">{% translate 'AddInvoice' %}</a></li>
+            <li><a href="{% url 'home:add-draft' %}" class="MainItem">{% translate 'AddDraft' %}</a></li>
+            </li>
+            {% endif %}
+	    {% block extraAsideItems %} {% endblock %}
+        </ul>
+    </div>
+</aside>
+{% endif %}

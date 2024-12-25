@@ -1,0 +1,45 @@
+.invoice-detail-main {	
+	display: block;
+	background-color: var(--light-color);
+	width: 80%;
+	padding: 1% 5%;
+	margin: 1% 5%;
+	border-radius: 5px;
+}
+.invoice-detail-header {
+	display: flex;
+}
+.invoice-detail-header .right {
+	align-self: right;
+	width: min(20%, 250px);
+}
+.invoice-detail-header .left {
+	align-self: left;
+	width: max(80%, 100px);
+}
+.invoice-detail-address {
+	margin: 2%;
+	padding: 2%;
+}
+.invoice-detail-opening {
+	margin: 2.5%;
+}
+.invoice-detail-body {
+	margin: 2% 6%;
+	text-align: center;
+}
+.invoice-detail-body table {
+	border-collapse: collapse;
+	text-align: left;
+	width: 100%;
+	margin: 1%;
+	border-bottom: 2px solid var(--primary-color);
+	border-top: 2px solid var(--primary-color);
+}
+.invoice-detail-body table thead {
+	border-bottom: 1px solid var(--primary-color);
+	font-weight: bold;
+}
+.invoice-detail-body table tfoot {
+	border-top: 1px solid var(--primary-color);
+}

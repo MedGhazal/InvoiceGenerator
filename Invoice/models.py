@@ -177,6 +177,24 @@ class Invoice(Model):
             ) + 1
         super(Invoice, self).save()
 
+    @property
+    def totalBeforeVAT(self):
+        return sum(
+            project.totalBeforeVAT for project in self.project_set.all()
+        )
+
+    @property
+    def totalVAT(self):
+        return sum(
+            project.totalVAT for project in self.project_set.all()
+        )
+
+    @property
+    def totalAfterVAT(self):
+        return sum(
+            project.totalAfterVAT for project in self.project_set.all()
+        )
+
     class Meta:
         verbose_name = _('INVOICE')
         verbose_name_plural = _('INVOICES')
@@ -194,6 +212,18 @@ class Project(Model):
         db_default='',
         verbose_name=_('Title'),
     )
+
+    @property
+    def totalBeforeVAT(self):
+        return sum(fee.totalBeforeVAT for fee in self.fee_set.all())
+
+    @property
+    def totalVAT(self):
+        return sum(fee.totalVAT for fee in self.fee_set.all())
+
+    @property
+    def totalAfterVAT(self):
+        return sum(fee.totalAfterVAT for fee in self.fee_set.all())
 
     def __str__(self):
         return f'{self.invoice}|{self.title}'
@@ -249,6 +279,18 @@ class Fee(Model):
         )
         invoice.save()
         super(Fee, self).delete(*args, **kwargs)
+
+    @property
+    def totalBeforeVAT(self):
+        return self.count * self.rateUnit
+
+    @property
+    def totalVAT(self):
+        return round(self.totalBeforeVAT * Decimal(self.vat / 100), 2)
+
+    @property
+    def totalAfterVAT(self):
+        return round(self.totalBeforeVAT + self.totalVAT, 2)
 
     def __str__(self):
         return f'{self.project}-{self.description}'

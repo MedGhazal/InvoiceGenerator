@@ -1,21 +1,30 @@
-from decimal import Decimal
-from itertools import chain
 from datetime import datetime, date
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils.translation import gettext as _
+from django.contrib.messages import error
 
-from Invoice.models import Invoice, Fee, Project
-from Invoicee.models import Invoicee
 from Invoicer.models import Invoicer
+from Invoice.models import Invoice, Project, Fee
 
-from .forms import ContactDataForm, HomeControlForm
-
-from Core.utils import (
-    get_currency_symbol,
-    lformat_decimal,
+from .forms import (
+    ContactDataForm,
 )
+from Invoice.forms import (
+    InvoiceForm,
+    ProjectForm,
+    FeeForm,
+)
+from .utils import (
+    getInvoiceesInformation,
+    getInvoicesInformation,
+    getPaymentMethodDistribution,
+    getProjectsInformation,
+    getTotalTurnoversInvoices,
+)
+
+from Core.forms import InvoiceFilterControlForm
 
 
 class DateConverter:
@@ -29,259 +38,9 @@ class DateConverter:
         return value.strftime(self.format)
 
 
-def printAmountWithCurrency(amount, currencySymbol):
-    if amount is None or amount <= 0:
-        return '-'
-    else:
-        return f'{lformat_decimal(amount)}{currencySymbol}'
-
-
-def getVATOfInvoices(invoices):
-    return sum(
-        round(fee.rateUnit * fee.count * Decimal(fee.vat / 100), 2)
-        for fee in Fee.objects.filter(
-            project__in=Project.objects.filter(
-                invoice__in=invoices
-            )
-        )
-    )
-
-
-def getBeforeVATOfInvoices(invoices):
-    return sum(
-        fee.rateUnit * fee.count
-        for fee in Fee.objects.filter(
-            project__in=Project.objects.filter(
-                invoice__in=invoices
-            )
-        )
-    )
-
-
-def getAfterVATOfInvoices(invoices):
-    return sum(invoices.values_list('owedAmount', flat=True))
-
-
-def getOutstandingAmountOfInvoicee(invoicee, beginDate, endDate):
-    outStandingAmount = {}
-    for invoice in Invoice.objects.filter(
-        invoicee=invoicee
-    ).filter(
-        facturationDate__gte=beginDate
-    ).filter(
-        facturationDate__lte=endDate
-    ):
-        if invoice.owedAmount > invoice.paidAmount:
-            currency = get_currency_symbol(invoice.baseCurrency)
-            if outStandingAmount.get(currency):
-                outStandingAmount[
-                    currency
-                ] += invoice.owedAmount - invoice.paidAmount
-            else:
-                outStandingAmount[
-                    currency
-                ] = invoice.owedAmount - invoice.paidAmount
-    return outStandingAmount
-
-
-def getPaidAmountOfInvoicee(invoicee, beginDate, endDate):
-    paidAmount = {}
-    for invoice in Invoice.objects.filter(
-        invoicee=invoicee
-    ).filter(
-        facturationDate__gte=beginDate
-    ).filter(
-        facturationDate__lte=endDate
-    ):
-        currencySymbol = get_currency_symbol(invoice.baseCurrency)
-        if paidAmount.get(currencySymbol):
-            paidAmount[currencySymbol] += invoice.paidAmount
-        else:
-            paidAmount[currencySymbol] = invoice.paidAmount
-    return paidAmount
-
-
-def packageInvoiceeInformation(invoicee, beginDate, endDate):
-    paid = getPaidAmountOfInvoicee(invoicee, beginDate, endDate)
-    outStanding = getOutstandingAmountOfInvoicee(invoicee, beginDate, endDate)
-    currencies = set(paid.keys()).union(set(outStanding.keys()))
-    return [
-        (
-            invoicee.name,
-            invoicee.country,
-            printAmountWithCurrency(outStanding.get(currency), currency),
-            printAmountWithCurrency(paid.get(currency), currency),
-        )
-        for currency in currencies
-    ]
-
-
-def getInvoiceesInformation(user, beginDate, endDate):
-    return list(
-        chain.from_iterable(
-            packageInvoiceeInformation(invoicee, beginDate, endDate)
-            for invoicee in Invoicee.objects.filter(
-                invoicer__in=Invoicer.objects.filter(manager=user)
-            )
-        )
-    )
-
-
-def getInvoicesInformation(invoices, currencies):
-    return [
-        (
-            currency,
-            invoices.filter(baseCurrency=currency).count(),
-            invoices.filter(baseCurrency=currency).filter(status=3).count(),
-            printAmountWithCurrency(
-                sum(
-                    owedAmount - paidAmount
-                    for owedAmount, paidAmount in invoices.filter(
-                        baseCurrency=currency
-                    ).filter(
-                        status__in=[3, 1]
-                    ).values_list(
-                        'owedAmount', 'paidAmount'
-                    )
-                    if paidAmount >= 0
-                ),
-                get_currency_symbol(currency),
-            ),
-            printAmountWithCurrency(
-                getVATOfInvoices(invoices.filter(baseCurrency=currency)),
-                get_currency_symbol(currency),
-            ),
-            printAmountWithCurrency(
-                getBeforeVATOfInvoices(invoices.filter(baseCurrency=currency)),
-                get_currency_symbol(currency),
-            ),
-            printAmountWithCurrency(
-                getAfterVATOfInvoices(invoices.filter(baseCurrency=currency)),
-                get_currency_symbol(currency),
-            ),
-        )
-        for currency in currencies
-    ]
-
-
-def getPaymentMethodDistribution(invoices, currencies):
-    distributionAmountsPaidOnPaymentMethod = [
-        (
-            printAmountWithCurrency(
-                sum(
-                    invoices.filter(
-                        paymentMethod='CS'
-                    ).filter(
-                        baseCurrency=currency
-                    ).values_list(
-                        'paidAmount',
-                        flat=True,
-                    )
-                ),
-                get_currency_symbol(currency),
-            ),
-            printAmountWithCurrency(
-                sum(
-                    invoices.filter(
-                        paymentMethod='TR'
-                    ).filter(
-                        baseCurrency=currency
-                    ).values_list(
-                        'paidAmount',
-                        flat=True,
-                    )
-                ),
-                get_currency_symbol(currency),
-            ),
-            printAmountWithCurrency(
-                sum(
-                    invoices.filter(
-                        paymentMethod='CK'
-                    ).filter(
-                        baseCurrency=currency
-                    ).values_list(
-                        'paidAmount',
-                        flat=True,
-                    )
-                ),
-                get_currency_symbol(currency),
-            ),
-            printAmountWithCurrency(
-                sum(
-                    invoices.filter(
-                        paymentMethod='DV'
-                    ).filter(
-                        baseCurrency=currency
-                    ).values_list(
-                        'paidAmount',
-                        flat=True,
-                    )
-                ),
-                get_currency_symbol(currency),
-            ),
-        )
-        for currency in currencies
-    ]
-    return {
-        paymentMethod: [
-            distributionAmountsPaid[i]
-            for distributionAmountsPaid in distributionAmountsPaidOnPaymentMethod
-        ]
-        for i, paymentMethod in enumerate(['CS', 'TR', 'CK', 'DV'])
-    }
-
-
-def getProjectsInformation(invoices, currencies):
-    natures = set(
-        Project.objects.filter(
-            invoice__in=invoices
-        ).values_list(
-            'title', flat=True
-        )
-    )
-    return list(
-        chain.from_iterable(
-            [
-                [
-                    nature,
-                    printAmountWithCurrency(
-                        sum(
-                            invoice.owedAmount
-                            for invoice in invoices.filter(
-                                project__title=nature
-                            ).filter(
-                                baseCurrency=currency
-                            )
-                        ),
-                        get_currency_symbol(currency)
-                    )
-                ]
-                for currency in currencies
-            ]
-            for nature in natures
-        )
-    )
-
-
-def getTotalTurnoversInvoices(invoices, currencies):
-    return [
-        (
-            printAmountWithCurrency(
-                sum(
-                    owedAmount for owedAmount in invoices.filter(
-                        baseCurrency=currency
-                    ).values_list('owedAmount', flat=True)
-                ),
-                get_currency_symbol(currency),
-            )
-        )
-        for currency in currencies
-    ]
-
-
 @login_required()
 def index(request, invoicer=None, beginDate=None, endDate=None):
-    homeControlForm = HomeControlForm()
+    homeControlForm = InvoiceFilterControlForm()
 
     if Invoicer.objects.filter(manager=request.user).count() <= 1:
         if not request.user.is_superuser:
@@ -352,6 +111,184 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         'form': homeControlForm,
     }
     return render(request, 'home-index.html', context)
+
+
+def processInvoiceDraftDataAndSave(invoiceData, draft=True):
+    invoice = Invoice()
+    invoice.invoicer = invoiceData['invoicer']
+    invoice.invoicee = invoiceData['invoicee']
+    if not draft:
+        invoice.facturationDate = invoiceData['facturationDate']
+        invoice.dueDate = invoiceData['dueDate']
+    invoice.baseCurrency = invoiceData['baseCurrency']
+    invoice.paymentMethod = invoiceData['paymentMethod']
+    invoice.salesAccount = 0
+    invoice.vatAccount = 0
+    invoice.draft = draft
+    invoice.save()
+    for projectData in invoiceData['projects']:
+        project = Project()
+        project.invoice = Invoice()
+        project.title = projectData['title']
+        project.save()
+        for feeData in projectData['fees']:
+            fee = Fee()
+            fee.rateUnit = feeData['rateUnit']
+            fee.count = feeData['count']
+            fee.vat = feeData['vat']
+            fee.description = feeData['description']
+            fee.bookKeepingAmount = 0
+            fee.save()
+
+
+@login_required()
+def add_invoice(request):
+    invoiceForm = InvoiceForm()
+    projectForm = ProjectForm()
+    feeForm = FeeForm()
+    invoiceData = {
+        'invoicer': None,
+        'invoicee': None,
+        'facturationDate': None,
+        'dueDate': None,
+        'baseCurrency': None,
+        'paymentMethod': None,
+        'projects': [],
+    }
+    projectData = {'title': None, 'fees': []}
+    feeData = {
+        'description': None,
+        'rateUnit': None,
+        'count': None,
+        'vat': None,
+    }
+    if request.method == 'POST':
+        data = str(request.body).split('&')
+        for element in data:
+            field, entry = element.split('=')
+            if field != 'csrfmiddlewaretoken':
+                if field in (
+                    'invoicer',
+                    'invoicee',
+                    'facturationDate',
+                    'dueDate',
+                    'baseCurrency',
+                    'paymentMethod',
+                ):
+                    invoiceData[field] = entry
+                elif field == 'title':
+                    if len(invoiceData['projects']) > 0:
+                        if len(projectData['fees']) == 0:
+                            error(request, _('EmptyProjectError'))
+                        else:
+                            invoiceData['projects'].append(projectData)
+                    projectData = {'title': entry, 'fees': []}
+                elif field == 'vat':
+                    feeData[field] = entry
+                    projectData['fees'].append(feeData)
+                    feeData = {
+                        'description': None,
+                        'rateUnit': None,
+                        'count': None,
+                        'vat': None,
+                    }
+                elif field in ('description', 'rateUnit', 'count'):
+                    feeData[field] = entry
+        processInvoiceDraftDataAndSave(invoiceData, draft=False)
+    context = {
+        'invoiceForm': invoiceForm,
+        'projectForm': projectForm,
+        'feeForm': feeForm,
+        'projectIndex': 1,
+        'feeIndex': 1,
+    }
+    return render(request, './home-add-invoice.html', context)
+
+
+@login_required()
+def add_draft(request):
+    invoiceForm = InvoiceForm()
+    del invoiceForm.fields['dueDate']
+    del invoiceForm.fields['facturationDate']
+    projectForm = ProjectForm()
+    feeForm = FeeForm()
+    invoiceData = {
+        'invoicer': None,
+        'invoicee': None,
+        'baseCurrency': None,
+        'paymentMethod': None,
+        'projects': [],
+    }
+    projectData = {'title': None, 'fees': []}
+    feeData = {
+        'description': None,
+        'rateUnit': None,
+        'count': None,
+        'vat': None,
+    }
+    if request.method == 'POST':
+        data = str(request.body).split('&')
+        for element in data:
+            field, entry = element.split('=')
+            if field != 'csrfmiddlewaretoken':
+                if field in (
+                    'invoicer',
+                    'invoicee',
+                    'baseCurrency',
+                    'paymentMethod',
+                ):
+                    invoiceData[field] = entry
+                elif field == 'title':
+                    if len(invoiceData['projects']) > 0:
+                        if len(projectData['fees']) == 0:
+                            error(request, _('EmptyProjectError'))
+                        else:
+                            invoiceData['projects'].append(projectData)
+                    projectData = {'title': entry, 'fees': []}
+                elif field == 'vat':
+                    feeData[field] = entry
+                    projectData['fees'].append(feeData)
+                    feeData = {
+                        'description': None,
+                        'rateUnit': None,
+                        'count': None,
+                        'vat': None,
+                    }
+                elif field in ('description', 'rateUnit', 'count'):
+                    feeData[field] = entry
+        processInvoiceDraftDataAndSave(invoiceData, draft=True)
+    context = {
+        'invoiceForm': invoiceForm,
+        'projectForm': projectForm,
+        'feeForm': feeForm,
+        'projectIndex': 1,
+        'feeIndex': 1,
+    }
+    return render(request, './home-add-invoice.html', context)
+
+
+@login_required()
+def get_project_form(request, projectIndex=1):
+    projectForm = ProjectForm()
+    feeForm = FeeForm()
+    context = {
+        'projectForm': projectForm,
+        'feeForm': feeForm,
+        'projectIndex': projectIndex,
+        'feeIndex': 1,
+    }
+    return render(request, './home-project-form.html', context)
+
+
+@login_required()
+def get_fee_form(request, projectIndex=1, feeIndex=1):
+    feeForm = FeeForm()
+    context = {
+        'feeForm': feeForm,
+        'projectIndex': projectIndex,
+        'feeIndex': feeIndex,
+    }
+    return render(request, './home-fee-form.html', context)
 
 
 def register_success(request):

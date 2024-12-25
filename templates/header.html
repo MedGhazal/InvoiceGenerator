@@ -8,8 +8,9 @@
 
   <div class="nav-box">
     <ul>
-      <li><a href={% url 'home:index' %}>Home</a></li>
+      <li><a href={% url 'home:index' %}>{% translate 'Home' %}</a></li>
       {% if user.is_authenticated %}
+        <li><a href={% url 'Invoice:index' %}>{% translate 'INVOICES' %}</a></li>
         {% if user.is_superuser or user.is_staff %}
           <li><a href={% url 'admin:index' %}>{% translate 'ADMIN' %}</a></li>
         {% endif %}

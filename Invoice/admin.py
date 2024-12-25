@@ -26,10 +26,10 @@ from django.http import (
     HttpResponse,
 )
 from django.contrib.messages import error, warning
-from django.db.models import (
-    F,
-)
+from django.db.models import F
+
 from rangefilter.filters import DateRangeFilter
+
 from Invoicee.models import Invoicee
 from Invoicer.models import Invoicer
 from .models import Invoice, Project, Fee, Payment

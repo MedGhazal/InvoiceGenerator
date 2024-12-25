@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+    {% block title %}
+    <title>LAMOME Business | {% translate 'Home' %}</title>
+    {% endblock %}
+    {% block content %}
+    <div class="home-invoice">
+        <form method="post" action="{% url 'home:add-invoice' %}" class='home-invoice-form'>
+            {% csrf_token %}
+            <div class="invoice-form">
+                {{ invoiceForm }}
+                <div class="home-invoice-form-footer">
+                    <button type="submit" var="submit">{% translate 'Save' %}</button>
+                </div>
+            </div>
+            <div class="projects-fees-forms">
+                {% include 'home-project-form.html' %}
+                <button 
+                    type="button"
+                    id="add-project-button" 
+                    hx-on:click='
+                    const addProjectButtonHXGetElements = document.getElementById("add-project-button").getAttribute("hx-get").split("/");
+                    var nextProjectIndex = parseInt(addFeeButtonHXGetElements[2], 10);
+                    var newGetURL = "./feeForm/" + nextProjectIndex;
+                    document.getElementById("add-project-button").setAttribute("hx-get", newGetURL);
+                    document.getElementById("add-project-button").addEventListener("htmx:configRequest", (event) => {
+                    event.detail.path = newGetURL;
+                    });
+                    '
+                    hx-get="./projectForm/2" 
+                    hx-target="#project-form-1"
+                    hx-swap="afterend">
+                    <span class="symbol">&#10798;</span><span class="underlined">{% translate 'AddProject' %}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endblock %}
