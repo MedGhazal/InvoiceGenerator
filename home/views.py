@@ -27,17 +27,6 @@ from .utils import (
 from Core.forms import InvoiceFilterControlForm
 
 
-class DateConverter:
-    regex = '[0-9]{4}-[0-9]{2}-[0-9]{2}'
-    format = '%Y-%m-%d'
-
-    def to_python(self, value):
-        return datetime.strftime(value, self.format).date()
-
-    def to_url(self, value):
-        return value.strftime(self.format)
-
-
 @login_required()
 def index(request, invoicer=None, beginDate=None, endDate=None):
     homeControlForm = InvoiceFilterControlForm()

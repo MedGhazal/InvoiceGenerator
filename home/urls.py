@@ -23,8 +23,8 @@ from .views import (
     add_draft,
     get_project_form,
     get_fee_form,
-    DateConverter,
 )
+from Core.views import DateConverter
 
 register_converter(DateConverter, 'date')
 app_name = 'home'

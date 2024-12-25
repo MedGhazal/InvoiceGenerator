@@ -8,12 +8,13 @@
 <div class="home-content">
     <div class="home-controls">
         <div class="home-controls-text">{% translate "HomeCONTROLSText" %}</div>
-        <form action="{% url 'home:index' %}" method="POST">
+        <form action="{% url 'Invoice:index' %}" method="GET">
             {% csrf_token %}
             {{ form }}
             <input type="{% translate "submit" %}" value="{% translate "Submit" %}">
         </form>
     </div>
+    {% if invoice_list %}
     <div class="items-list">
         <table>
             <thead>
@@ -46,5 +47,8 @@
             </tbody>
         </table>
     </div>
+    {% else %}
+    <div class="message">{% translate 'NoInvoiceAvailableForChosenFilterOrUserHasNoInvoicers' %}</div>
+    {% endif %}
 </div>
 {% endblock %}

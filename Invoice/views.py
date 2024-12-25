@@ -15,6 +15,7 @@ from django.utils.translation import gettext_lazy as _
 from Core.forms import InvoiceFilterControlForm
 
 from Invoicer.models import Invoicer
+from Invoicee.models import Invoicee
 from .models import Invoice, Project, Fee
 from .forms import ProjectForm, FeeForm, InvoiceForm
 from .utils import (
@@ -47,12 +48,20 @@ class InvoiceListView(ListView, LoginRequiredMixin):
     template_name = 'Invoice-index.html'
 
     def get_context_data(self, *args, **kwargs):
+        print(self.request.GET)
         context = super().get_context_data(*args, **kwargs)
         invoiceFilterControlForm = InvoiceFilterControlForm()
+        invoicerQuerySet = Invoicer.objects.filter(
+            manager=self.request.user
+        )
+        invoiceFilterControlForm['invoicer'].queryset = invoicerQuerySet
+        invoiceFilterControlForm[
+            'invoicee'
+        ].queryset = Invoicee.objects.filter(invoicer__in=invoicerQuerySet)
         managerHasMultipleInvoicers = Invoicer.objects.filter(
             manager=self.request.user
         ).count() > 1
-        if managerHasMultipleInvoicers:
+        if not managerHasMultipleInvoicers:
             invoiceFilterControlForm.fields.pop('invoicer')
         context.update({
             'form': invoiceFilterControlForm,
