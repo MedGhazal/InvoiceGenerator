@@ -63,6 +63,12 @@ class InvoiceListView(ListView, LoginRequiredMixin):
         ).count() > 1
         if not managerHasMultipleInvoicers:
             invoiceFilterControlForm.fields.pop('invoicer')
+        print(context)
+        context['invoice_list'] = context['invoice_list'].filter(
+            facturationDate__gte=self.request.GET['beginDate']
+        ).filter(
+            facturationDate__lte=self.request.GET['endDate']
+        )
         context.update({
             'form': invoiceFilterControlForm,
             'managerHasMultipleInvoicers': managerHasMultipleInvoicers,
