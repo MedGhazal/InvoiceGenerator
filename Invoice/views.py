@@ -54,8 +54,8 @@ class InvoiceListView(ListView, LoginRequiredMixin):
         invoicerQuerySet = Invoicer.objects.filter(
             manager=self.request.user
         )
-        invoiceFilterControlForm['invoicer'].queryset = invoicerQuerySet
-        invoiceFilterControlForm[
+        invoiceFilterControlForm.fields['invoicer'].queryset = invoicerQuerySet
+        invoiceFilterControlForm.fields[
             'invoicee'
         ].queryset = Invoicee.objects.filter(invoicer__in=invoicerQuerySet)
         managerHasMultipleInvoicers = Invoicer.objects.filter(
@@ -63,7 +63,6 @@ class InvoiceListView(ListView, LoginRequiredMixin):
         ).count() > 1
         if not managerHasMultipleInvoicers:
             invoiceFilterControlForm.fields.pop('invoicer')
-        print(context)
         if self.request.GET:
             context['invoice_list'] = context['invoice_list'].filter(
                 invoicee=self.request.GET['invoicee']
