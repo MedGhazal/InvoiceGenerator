@@ -185,15 +185,21 @@ class Invoice(Model):
 
     @property
     def totalVAT(self):
-        return sum(
-            project.totalVAT for project in self.project_set.all()
-        )
+        return sum(project.totalVAT for project in self.project_set.all())
 
     @property
     def totalAfterVAT(self):
-        return sum(
-            project.totalAfterVAT for project in self.project_set.all()
-        )
+        return sum(project.totalAfterVAT for project in self.project_set.all())
+
+    @property
+    def avgVAT(self):
+        if self.project_set.all().count() > 0:
+            return (
+                sum(project.avgVAT for project in self.project_set.all())
+                / self.project_set.count()
+            )
+        else:
+            return 0
 
     class Meta:
         verbose_name = _('INVOICE')
@@ -224,6 +230,16 @@ class Project(Model):
     @property
     def totalAfterVAT(self):
         return sum(fee.totalAfterVAT for fee in self.fee_set.all())
+
+    @property
+    def avgVAT(self):
+        if self.fee_set.all().count() > 0:
+            return (
+                sum(fee.vat for fee in self.fee_set.all()) 
+                / self.fee_set.count()
+            )
+        else:
+            return 0
 
     def __str__(self):
         return f'{self.invoice}|{self.title}'

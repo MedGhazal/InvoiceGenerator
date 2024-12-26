@@ -34,6 +34,7 @@ from Invoicee.models import Invoicee
 from Invoicer.models import Invoicer
 from .models import Invoice, Project, Fee, Payment
 from .utils import (
+    create_credit_note,
     generate_invoice_file,
     export_invoice_data,
     LateXError,
@@ -42,6 +43,12 @@ from InvoiceGenerator.settings import TEMPTEXFILESDIR, EXPORT_DATA_HEADER
 from Core.utils import (
     get_currency_symbol,
 )
+
+
+@action(description=_('InvoiceCreateCreditNoteAction'))
+def create_credit_note_action(invoiceAdmin, request, queryset):
+    for invoice in queryset:
+        create_credit_note(invoice)
 
 
 @action(description=_('InvoiceGenerateAction'))
@@ -195,6 +202,7 @@ class InvoiceAdmin(ModelAdmin):
         generate_invoice,
         export_invoices,
         validate_invoices,
+        create_credit_note_action,
     ]
     list_filter = (
         ('facturationDate', DateRangeFilter),

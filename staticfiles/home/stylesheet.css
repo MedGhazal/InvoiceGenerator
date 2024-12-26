@@ -1,6 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,200;0,400;1,200;1,400&display=swap');
-@import url('login_form.css')
-@font-face { font-display: swap; }
 :root {
 	--primary-color: #072352;
 	--muted-primary-color: #8391a8;
@@ -72,6 +70,8 @@ a, button {
 	cursor: pointer;
 	transition: all .1s ease-in-out;
 	font: inherit;
+	color: var(--primary-color);
+	background-color: var(--light-color);
 }
 
 /* utility classes */
@@ -83,25 +83,25 @@ a, button {
 	color: var(--error-color);
 	size: 0.6rem;
 }
+
 /* Header */
 header {
-	margin: 1% auto 1vh;
+	display: flex;
 	background-color: var(--light-color);
 	border-radius: 10px;
 	align-items: center;
-	display: flex;
 	flex-direction: row;
 	width: fit-content;
-	height: 9vh;
+	height: 7vh;
+	margin: auto;
 }
 .complete-logo {
-	width: 80px;
+	width: 60px;
 }
 .nav-box {
 	margin: 0;
 	padding: 0;
 	border-radius: 0;
-	background-color: var(--light-color);
 }
 .nav-box ul {
 	margin: 0 15px;
@@ -110,7 +110,7 @@ header {
 	flex-direction: row;
 	background-color: var(--light-color);
 }
-.nav-box ul li a {
+.nav-box ul li a, .nav-box ul li button {
 	margin: 0;
 	padding: 5px 10px;
 	border: 0;
@@ -118,10 +118,17 @@ header {
 	border-color: var(--ligth-color);
 	background-color: var(--light-color);
 }
+.nav-box ul li button:hover {
+	color: var(--light-color);
+	border-color: var(--primary-color);
+	background-color: var(--primary-color);
+	transition: all .15s ease-in-out;
+}
 .nav-box ul li a:hover {
 	color: var(--light-color);
 	border-color: var(--primary-color);
 	background-color: var(--primary-color);
+	transition: all .15s ease-in-out;
 }
 
 /* aside */
@@ -173,7 +180,7 @@ main {
 	width: 82%;
 	margin: 1% 1vh;
 	padding: 1% 1vh;
-	height: 71vh;
+	height: 77vh;
 	left: 15%;
 	overflow: auto;
 	position: fixed;
@@ -186,9 +193,9 @@ footer {
 	margin-top: auto;
 	width: 100%;
 	text-align: center;
-	height: 10vh;
+	height: 8vh;
 	position: fixed;
-	top: 90%;
+	top: 92vh;
 	display: grid;
 	grid-template-columns: 90% 10%;
 }
@@ -197,6 +204,8 @@ footer {
 }
 .footer-social {
 	color: var(--secondary-color);
+	background-color: var(--primary-color);
+	margin: .5vh 10px;
 	padding: 0;
 }
 .footer-social:hover {

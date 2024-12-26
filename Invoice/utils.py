@@ -4,6 +4,8 @@ from decimal import Decimal
 from os import system, chdir, getcwd, remove
 from os.path import join
 from django.utils.translation import gettext as _
+
+from .models import Invoice, Project, Fee
 from InvoiceGenerator.settings import (
     TEMPTEXFILESDIR,
     PREFIX_CLIENT_BOOKKEEPING_MOROCCO,
@@ -11,7 +13,6 @@ from InvoiceGenerator.settings import (
     VAT_NOTE,
 )
 from Core.utils import (
-    get_currency_symbol,
     get_currency_symbol_latex,
     get_paymentMethod_label,
     lformat_decimal,
@@ -20,6 +21,35 @@ from Core.utils import (
 from Core.exceptions import (
     LateXError,
 )
+
+
+def create_credit_note(invoice):
+    invoice.paymentMethod = _('AsCreditNote')
+    invoice.owedAmount = 0
+    invoice.save()
+    creditNote = Invoice()
+    creditNote.invoicer = invoice.invoicer
+    creditNote.invoicee = invoice.invoicee
+    creditNote.baseCurrency = invoice.baseCurrency
+    creditNote.dueDate = invoice.dueDate
+    creditNote.facturationDate = invoice.facturationDate
+    creditNote.paymentMethod = _('AsCreditNote')
+    creditNote.salesAccount = invoice.salesAccount
+    creditNote.vatAccount = invoice.vatAccount
+    creditNote.draft = False
+    creditNote.save()
+    project = Project()
+    project.invoice = creditNote
+    project.title = _('CreditNote')
+    project.save()
+    fee = Fee()
+    fee.project = project
+    fee.description = f'{_('CreditNoteForTheInvoice')}: {invoice.count}'
+    fee.count = 1
+    fee.rateUnit = invoice.totalBeforeVAT * -1
+    fee.vat = invoice.avgVAT
+    creditNote.owedAmount = 0
+    fee.save()
 
 
 def split_description(description):
@@ -458,3 +488,23 @@ def export_invoice_data(invoice, headers):
             ),
             headers,
         )
+
+
+def processInvoiceDraftDataAndSave(invoiceData, draft=True):
+    invoice = Invoice()
+    invoice.invoicer = invoiceData['invoicer']
+    invoice.invoicee = invoiceData['invoicee']
+    if not draft:
+        invoice.facturationDate = date.fromisoformat(
+            invoiceData['facturationDate'],
+        )
+        invoice.dueDate = date.fromisoformat(
+            invoiceData['dueDate'],
+        )
+    invoice.baseCurrency = invoiceData['baseCurrency']
+    invoice.paymentMethod = invoiceData['paymentMethod']
+    invoice.salesAccount = 0
+    invoice.vatAccount = 0
+    invoice.draft = draft
+    invoice.save()
+    return invoice.id

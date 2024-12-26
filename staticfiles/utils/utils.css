@@ -1,0 +1,125 @@
+.helptext {
+	font-size: .8rem;
+	color: var(--light-color);
+	padding: 0;
+}
+form {
+	align-items: center;
+	width: fit-content;
+}
+input {
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+	border: 0px;
+	border-radius: 5px;
+	padding: 0.25rem;
+	width: max-content;
+}
+input:active {
+	border: 2px;
+	border-color: var(--primary-color);
+}
+input[type="submit"] {
+	border: 0;
+	padding: 0.5rem;
+	color: var(--primary-color);
+	background-color: var(--secondary-color);
+	width: max(20%, 80px);
+	margin: 5% 0  5% max(10%, 10px);
+}
+input[type="submit"]:hover {
+	border-radius: 10px 20px;
+	color: var(--secondary-color);
+	background-color: var(--primary-color);
+}
+form div {
+	display: flex;
+	flex-direction: column;
+	padding: 0.6rem;
+}
+form label {
+	font-size: .8rem;
+	color: var(--light-color);
+}
+select {
+	appearance: none;
+	width: 90%;
+	padding: 0.25rem;
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+	border: 1px var(--primary-color) #caced1;
+	border-radius: 5px;
+	cursor: pointer;
+}
+button {
+	background-color: var(--primary-color);
+	color: var(--secondary-color);
+	border: 1px solid var(--secondary-color);
+	padding: .25rem;
+	margin: .25rem;
+	border-radius: 10px;
+	transition: all .25s ease-in-out;
+	transition: background-color 1s;
+}
+
+button.extensive-button {
+	display: flex;
+	flex-direction: row;
+	color: var(--secondary-color);
+	background-color: var(--primary-color);
+	margin: 0;
+	padding: 0;
+	transition: all .25s ease-in-out;
+}
+button.extensive-button .symbol {
+	display: block;
+	transition: all .25s ease-in-out;
+	padding: .5rem;
+}
+button.extensive-button .text {
+	display: block;
+	transition: all .25s ease-in-out;
+	color: var(--primary-color);
+	padding: .5rem;
+}
+button.extensive-button:hover {
+	transition: all .25s ease-in-out;
+}
+button .extensive-button:hover .symbol {
+	transition: all .25s ease-in-out;
+}
+button.extensive-button:hover .text {
+	transition: all .25s ease-in-out;
+	background-color: var(--muted-primary-color);
+}
+
+ul.messages {
+	display: block;
+	width: 100%;
+	padding: 15px;
+}
+li.error {
+	padding-left: 5px;
+	border-left: 2px solid #ff3300;
+	background-color: #ff4d4d;
+}
+li.info {
+	padding-left: 5px;
+	border-left: 2px solid var(--primary-color);
+	background-color: var(--muted-primary-color);
+}
+li.success {
+	padding-left: 5px;
+	border-left: 2px solid #33cc33;
+	background-color: #ebfaeb;
+}
+li.warning {
+	padding-left: 5px;
+	border-left: 2px solid #ffcc00;
+	background-color: #fffae6;
+}
+li.debug {
+	padding-left: 5px;
+	border-left: 2px solid #660066;
+	background-color: #ffe6ff;
+}

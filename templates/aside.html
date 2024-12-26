@@ -3,7 +3,6 @@
 <aside>
     <div class="nav-box column">
         <ul>
-            <li><a href="{% url 'home:index' %}" class="MainItem">{% translate 'Home' %}</a></li>
             {% if user.is_staff %}
             <li><a href="{% url 'admin:index' %}" class="MainItem">{% translate 'ADMINSHORTCUTS' %}</a></li>
             {% if user.is_superuser %}
@@ -13,9 +12,12 @@
             <li><a href="{% url 'admin:Invoice_invoice_changelist' %}" class="SubItem">- {% translate 'INVOICES' %}</a></li>
             <li><a href="{% url 'admin:Invoice_project_changelist' %}" class="SubItem">- {% translate 'PROJECTS' %}</a></li>
             <li><a href="{% url 'admin:Invoice_fee_changelist' %}" class="SubItem">- {% translate 'FEES' %}</a></li>
-            <li><a href="{% url 'home:add-invoice' %}" class="MainItem">{% translate 'AddInvoice' %}</a></li>
-            <li><a href="{% url 'home:add-draft' %}" class="MainItem">{% translate 'AddDraft' %}</a></li>
-            </li>
+	    <li><button class="MainItem" type="button" hx-get="{% url 'Invoice:add-invoice' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
+	      {% translate 'AddInvoice' %}
+	    </button></li>
+	    <li><button class="MainItem" type="button" hx-get="{% url 'Invoice:add-draft' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
+	      {% translate 'AddDraft' %}
+	    </button></li>
             {% endif %}
 	    {% block extraAsideItems %} {% endblock %}
         </ul>

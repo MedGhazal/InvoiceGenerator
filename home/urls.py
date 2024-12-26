@@ -19,10 +19,6 @@ from .views import (
     index,
     register_user,
     register_success,
-    add_invoice,
-    add_draft,
-    get_project_form,
-    get_fee_form,
 )
 from Core.views import DateConverter
 
@@ -34,28 +30,6 @@ urlpatterns = [
         '<int:invoicer>/<date:beginDate>/<date:endDate>',
         index,
         name='index',
-    ),
-    path('addInvoice/', add_invoice, name='add-invoice'),
-    path(
-        'addInvoice/projectForm/<int:projectIndex>',
-        get_project_form,
-        name='projectForm',
-    ),
-    path(
-        'addInvoice/feeForm/<int:projectIndex>/<int:feeIndex>',
-        get_fee_form,
-        name='fee-form',
-    ),
-    path('addDraft/', add_draft, name='add-draft'),
-    path(
-        'addDraft/projectForm/<int:projectIndex>',
-        get_project_form,
-        name='projectForm',
-    ),
-    path(
-        'addDraft/feeForm/<int:projectIndex>/<int:feeIndex>',
-        get_fee_form,
-        name='fee-form',
     ),
     path('register/', register_user, name='register'),
     path('registerSuccess/', register_success, name='registerSuccess')

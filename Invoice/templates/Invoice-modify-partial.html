@@ -1,0 +1,174 @@
+{% load i18n %}
+<h1>{% translate 'ModifyINVOICE' %}: {{ invoice }}</h1>
+{% if messages %}
+<div class="messages-content">
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}{% translate 'Error' %}: {% endif %}
+            {{ message }}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+<div class="invoice-modify-content">
+    <form method="post" class='invoice-form'>
+        {% csrf_token %}
+        {{ invoiceForm }}
+        <button name="modify-invoice-{{ invoice.id }}" type="submit">Save</button>
+    </form>
+    <div class="project-space">
+        <div class="list-items">
+            {% for project in projectSet %}
+            <div id="project-{{ project.instance.id }}">
+                <div id="project-title-{{ project.instance.id }}" class="item"><b>{% translate 'ProjectTitle' %}</b>: {{ project.instance.title}}</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{% translate 'Description' %}</th>
+                            <th>{% translate 'VAT' %}</th>
+                            <th>{% translate 'Count' %}</th>
+                            <th>{% translate 'BeforeVAT' %}</th>
+                            <th>{% translate 'AfterVAT' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fee in project.instance.fee_set.all %}
+                        <tr><td>{{ fee.description }}</td><td>{{ fee.vat }}%</td><td>{{ fee.count }}</td><td>{{ fee.rateUnit }}</td><td>{{ fee.totalAfterVAT }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot></tfoot>
+                </table>
+                <div class="project-controls">
+                    <button 
+                        id="delete-project-button-{{ project.instance.id }}"
+                        class="delete-project-button"
+                        hx-get="{% url 'Invoice:deleteProject' project.instance.id %}" 
+                        hx-confirm="{% translate 'ProjectDeleteConfirmMessage' %}"
+                        hx-target="#project-{{ project.instance.id }}" 
+                        hx-swap="outerHTML">{% translate 'DeleteProject' %}</button>
+                    <button 
+                        id="add-fee-to-project-dialog-open-{{ project.instance.id }}"
+                        hx-on:click="
+                        const addFeeToProjectDialog = document.getElementById('add-fee-to-project-dialog-{{ project.instance.id }}');
+                        addFeeToProjectDialog.showModal();
+                        ">{% translate 'AddFeesToProject' %}</button>
+                    <button 
+                        id="modify-project-dialog-open-{{ project.instance.id }}"
+                        hx-on:click="
+                        const modifyProjectDialog = document.getElementById('modify-project-dialog-{{ project.instance.id }}');
+                        modifyProjectDialog.showModal();
+                        ">{% translate 'ModifyProject' %}</button>
+                </div>
+                <dialog id="add-fee-to-project-dialog-{{ project.instance.id }}" class="fee-dialog">
+                    <button 
+                        class="dialog-close-button"
+                        id="modify-project-dialog-close-{{ project.instance.id }}"
+                        hx-on:click="
+                            const addFeesToProjectDialog = document.getElementById('add-fee-to-project-dialog-{{ project.instance.id }}');
+                            addFeesToProjectDialog.close();
+                        ">{% translate 'CloseWithoutSaving' %}</button>
+                    <form 
+                        method="POST" 
+                        action="{% url 'Invoice:addFeesToProject' project.instance.id %}" 
+                        class="add-fee-to-project-form-{{ project.instance.id }}"
+                        id="add-fee-to-project-form-{{ project.instance.id }}-1">
+                        {% csrf_token %}
+                        {{ feeForm }}
+                        <button name="add-fees-to-project-{{ fee.instance.id }}" type="submit">{% translate 'Save' %}</button>
+                    </form>
+                </dialog>
+                <dialog id="modify-project-dialog-{{ project.instance.id }}" class="project-dialog">
+                    <button 
+                        id="modify-project-dialog-close-{{ project.instance.id }}"
+                        hx-on:click="
+                        const modifyProjectDialog = document.getElementById('modify-project-dialog-{{ project.instance.id }}');
+                        modifyProjectDialog.close();
+                        ">{% translate 'CloseWithoutSaving' %}</button>
+                    <form 
+                        method="POST" 
+                        hx-trigger="submit" 
+                        hx-post="{% url 'Invoice:modifyProject' project.instance.id %}" 
+                        class="project-dialog-form" 
+                        id="project-dialog-form-{{ project.instance.id }}">
+                        {% csrf_token %}
+                        {{ project.form }}
+                    </form>
+                    {% for fee in project.feeSet %}
+                    <form 
+                        method="POST" 
+                        hx-trigger="submit" 
+                        hx-post="{% url 'Invoice:modifyFee' fee.instance.id %}" 
+                        class="fee-dialog-form" 
+                        id="fee-dialog-form-{{ fee.instance.id }}" >
+                        {% csrf_token %}
+                        {{ fee.form }}
+                    </form>
+                    {% endfor %}
+                    <button 
+                        id="add-fee-to-project-dialog-open-{{ project.instance.id }}"
+                        hx-on:click="
+                        const addFeeToProjectDialog = document.getElementById('add-fee-to-project-dialog-{{ project.instance.id }}');
+                        addFeeToProjectDialog.showModal();
+                        ">{% translate 'AddFeesToProject' %}</button>
+                    <button 
+                        id="saveAll-project-dialog-{{ project.instance.id }}"
+                        hx-on:click="
+                            htmx.trigger('#project-dialog-form-{{ project.instance.id }}', 'submit');
+                            {% for fee in project.feeSet %}
+                            htmx.trigger('#fee-dialog-form-{{ fee.instance.id }}', 'submit');
+                            {% endfor %} 
+                            document.getElementById('saveAll-project-dialog-{{ project.instance.id }}').remove();
+                        ">{% translate 'SaveAll' %}</button>
+                </dialog>
+                {% endfor %}
+                <dialog id="new-project-dialog" class="project-dialog">
+                    <button 
+                        id="new-project-dialog-close-{{ project.instance.id }}"
+                        hx-on:click="
+                        const newProjectDialog = document.getElementById('new-project-dialog');
+                        newProjectDialog.close();
+                        ">{% translate 'CloseWithoutSaving' %}</button>
+                    <form method="POST" action="{% url 'Invoice:addProjectAndFeesToInvoice' invoice.id %}">
+                        {% csrf_token %}
+                        {{ projectForm }}
+                        <div id="fee-forms"><div class="fee-form" id="fee-form-1">{{ feeForm }}</div>
+                        <button 
+                            name="add-fee" 
+                            type="button"
+                            hx-on:click="
+                                feeForm = document.getElementById('fee-form-1');
+                                newFeeForm = feeForm.cloneNode(true);
+                                numFeeForms = document.getElementsByClassName('fee-form').length;
+                                newFeeForm.id = 'fee-form-' + (numFeeForms + 1);
+                                document.getElementById('fee-forms').appendChild(newFeeForm);
+                            ">AddFee</button>
+                        <button 
+                            name="delete-fee" 
+                            type="button"
+                            hx-on:click="
+                                numFeeForms = document.getElementsByClassName('fee-form').length;
+                                if (numFeeForms == 1) {
+                                    alert('{% translate 'ProjectMustHaveAtLeastOneFee' %}');
+                                } else {
+                                    feeForm = document.getElementById('fee-form-' + numFeeForms);
+                                    feeForm.remove();
+                                }
+                            ">DeleteLastFee</button>
+                        <button name="modify-fee-{{ fee.instance.id }}" type="submit">Save</button>
+                    </form>
+                </dialog>
+            </div>
+            <div class="project-space-footer">
+                <button 
+                    id="new-project-dialog-open"
+                    hx-on:click="
+                    const dialog = document.getElementById('new-project-dialog');
+                    dialog.showModal();
+                    "
+                >NewProject</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,87 @@
+.invoice-list-content {
+	display: grid;
+	grid-template-columns: 1fr 2fr;
+}
+.invoice-filter-form {
+	margin: auto;
+	background-color: var(--primary-color);
+	padding: 2.5%;
+	border-radius: 10px;
+}
+.invoice-list {
+	margin: auto;
+	padding: 2.5%;
+	background-color: var(--secondary-color);
+	border-radius: 10px;
+}
+.invoice-list table {
+	padding: 1%;
+	margin: 2%;
+	border-collapse: collapse;
+	border-bottom: 2px solid var(--primary-color);
+}
+.invoice-list thead {
+	padding: 1%;
+	margin: 2%;
+}
+.invoice-list thead tr th {
+	color: var(--secondary-color);
+	background-color: var(--primary-color);
+	margin: .5rem;
+	padding: .5rem;
+}
+.invoice-list tbody tr td {
+	padding: .5rem;
+	border-bottom: 1px solid var(--primary-color);
+}
+.invoice-list tbody tr:nth-child(even) {
+	background-color: var(--muted-primary-color);
+}
+.invoice-list table button, .invoice-list table a {
+	padding: 0;
+	margin: 0;
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+	width: min-content;
+	border: 0;
+	padding: .25rem;
+	border-radius: 5px;
+	position: relative;
+}
+.invoice-list table button::after {
+	content: attr(helptext);
+	display: block;
+	position: absolute;
+	top: 22px; left: 0;
+	opacity: 0;
+	width: 150px;
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.5em;
+	padding: 0.5em 0.8em;
+	background: rgba(0,0,0,0.8);
+	color: #fff;
+	pointer-events: none; /* This prevents the box from apearing when hovered. */
+	transition: opacity 500ms, top 500ms;
+}
+.invoice-list table button::before {
+	content: '';
+	display: block;
+	position: absolute;
+	top: 12px; left: 20px;
+	opacity: 0;
+	width: 0; height: 0;
+	border: solid transparent 5px;
+	border-bottom-color: rgba(0,0,0,0.8);
+	transition: opacity 500ms, top 500ms;
+}
+.invoice-list table button:hover {z-index: 2;} /* Keeps the info boxes on top of other elements */
+.invoice-list table button:hover::after,
+.invoice-list table button:hover::before {opacity: 1;}
+.invoice-list table button:hover::after {top: 30px;}
+.invoice-list table button:hover::before {top: 20px;}
+.invoice-list table button:hover, .invoice-list table a:hover {
+	border: 0;
+	background-color: var(--primary-color);
+	color: var(--secondary-color);
+}

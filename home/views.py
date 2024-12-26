@@ -1,12 +1,15 @@
-from datetime import datetime, date
+from datetime import date
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils.translation import gettext as _
 from django.contrib.messages import error
+from django.urls import reverse
 
 from Invoicer.models import Invoicer
+from Invoicee.models import Invoicee
 from Invoice.models import Invoice, Project, Fee
+from django.http import HttpResponseRedirect
 
 from .forms import (
     ContactDataForm,
@@ -15,6 +18,7 @@ from Invoice.forms import (
     InvoiceForm,
     ProjectForm,
     FeeForm,
+    FeeFormset,
 )
 from .utils import (
     getInvoiceesInformation,
@@ -99,7 +103,10 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         'projectsInformation': projectsInformation,
         'form': homeControlForm,
     }
-    return render(request, 'home-index.html', context)
+    if request.META.get('HTTP_HX_REQUEST'):
+        return render(request, 'home-index-partial.html', context)
+    else:
+        return render(request, 'home-index.html', context)
 
 
 def processInvoiceDraftDataAndSave(invoiceData, draft=True):
@@ -107,177 +114,19 @@ def processInvoiceDraftDataAndSave(invoiceData, draft=True):
     invoice.invoicer = invoiceData['invoicer']
     invoice.invoicee = invoiceData['invoicee']
     if not draft:
-        invoice.facturationDate = invoiceData['facturationDate']
-        invoice.dueDate = invoiceData['dueDate']
+        invoice.facturationDate = date.fromisoformat(
+            invoiceData['facturationDate'],
+        )
+        invoice.dueDate = date.fromisoformat(
+            invoiceData['dueDate'],
+        )
     invoice.baseCurrency = invoiceData['baseCurrency']
     invoice.paymentMethod = invoiceData['paymentMethod']
     invoice.salesAccount = 0
     invoice.vatAccount = 0
     invoice.draft = draft
     invoice.save()
-    for projectData in invoiceData['projects']:
-        project = Project()
-        project.invoice = Invoice()
-        project.title = projectData['title']
-        project.save()
-        for feeData in projectData['fees']:
-            fee = Fee()
-            fee.rateUnit = feeData['rateUnit']
-            fee.count = feeData['count']
-            fee.vat = feeData['vat']
-            fee.description = feeData['description']
-            fee.bookKeepingAmount = 0
-            fee.save()
-
-
-@login_required()
-def add_invoice(request):
-    invoiceForm = InvoiceForm()
-    projectForm = ProjectForm()
-    feeForm = FeeForm()
-    invoiceData = {
-        'invoicer': None,
-        'invoicee': None,
-        'facturationDate': None,
-        'dueDate': None,
-        'baseCurrency': None,
-        'paymentMethod': None,
-        'projects': [],
-    }
-    projectData = {'title': None, 'fees': []}
-    feeData = {
-        'description': None,
-        'rateUnit': None,
-        'count': None,
-        'vat': None,
-    }
-    if request.method == 'POST':
-        data = str(request.body).split('&')
-        for element in data:
-            field, entry = element.split('=')
-            if field != 'csrfmiddlewaretoken':
-                if field in (
-                    'invoicer',
-                    'invoicee',
-                    'facturationDate',
-                    'dueDate',
-                    'baseCurrency',
-                    'paymentMethod',
-                ):
-                    invoiceData[field] = entry
-                elif field == 'title':
-                    if len(invoiceData['projects']) > 0:
-                        if len(projectData['fees']) == 0:
-                            error(request, _('EmptyProjectError'))
-                        else:
-                            invoiceData['projects'].append(projectData)
-                    projectData = {'title': entry, 'fees': []}
-                elif field == 'vat':
-                    feeData[field] = entry
-                    projectData['fees'].append(feeData)
-                    feeData = {
-                        'description': None,
-                        'rateUnit': None,
-                        'count': None,
-                        'vat': None,
-                    }
-                elif field in ('description', 'rateUnit', 'count'):
-                    feeData[field] = entry
-        processInvoiceDraftDataAndSave(invoiceData, draft=False)
-    context = {
-        'invoiceForm': invoiceForm,
-        'projectForm': projectForm,
-        'feeForm': feeForm,
-        'projectIndex': 1,
-        'feeIndex': 1,
-    }
-    return render(request, './home-add-invoice.html', context)
-
-
-@login_required()
-def add_draft(request):
-    invoiceForm = InvoiceForm()
-    del invoiceForm.fields['dueDate']
-    del invoiceForm.fields['facturationDate']
-    projectForm = ProjectForm()
-    feeForm = FeeForm()
-    invoiceData = {
-        'invoicer': None,
-        'invoicee': None,
-        'baseCurrency': None,
-        'paymentMethod': None,
-        'projects': [],
-    }
-    projectData = {'title': None, 'fees': []}
-    feeData = {
-        'description': None,
-        'rateUnit': None,
-        'count': None,
-        'vat': None,
-    }
-    if request.method == 'POST':
-        data = str(request.body).split('&')
-        for element in data:
-            field, entry = element.split('=')
-            if field != 'csrfmiddlewaretoken':
-                if field in (
-                    'invoicer',
-                    'invoicee',
-                    'baseCurrency',
-                    'paymentMethod',
-                ):
-                    invoiceData[field] = entry
-                elif field == 'title':
-                    if len(invoiceData['projects']) > 0:
-                        if len(projectData['fees']) == 0:
-                            error(request, _('EmptyProjectError'))
-                        else:
-                            invoiceData['projects'].append(projectData)
-                    projectData = {'title': entry, 'fees': []}
-                elif field == 'vat':
-                    feeData[field] = entry
-                    projectData['fees'].append(feeData)
-                    feeData = {
-                        'description': None,
-                        'rateUnit': None,
-                        'count': None,
-                        'vat': None,
-                    }
-                elif field in ('description', 'rateUnit', 'count'):
-                    feeData[field] = entry
-        processInvoiceDraftDataAndSave(invoiceData, draft=True)
-    context = {
-        'invoiceForm': invoiceForm,
-        'projectForm': projectForm,
-        'feeForm': feeForm,
-        'projectIndex': 1,
-        'feeIndex': 1,
-    }
-    return render(request, './home-add-invoice.html', context)
-
-
-@login_required()
-def get_project_form(request, projectIndex=1):
-    projectForm = ProjectForm()
-    feeForm = FeeForm()
-    context = {
-        'projectForm': projectForm,
-        'feeForm': feeForm,
-        'projectIndex': projectIndex,
-        'feeIndex': 1,
-    }
-    return render(request, './home-project-form.html', context)
-
-
-@login_required()
-def get_fee_form(request, projectIndex=1, feeIndex=1):
-    feeForm = FeeForm()
-    context = {
-        'feeForm': feeForm,
-        'projectIndex': projectIndex,
-        'feeIndex': feeIndex,
-    }
-    return render(request, './home-fee-form.html', context)
+    return invoice.id
 
 
 def register_success(request):

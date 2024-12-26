@@ -1,0 +1,13 @@
+{% load i18n %}
+<form method="post" 
+    hx-post="{% url 'Invoice:add-invoice' %}" 
+    hx-push-url="true"
+    hx-swap="innerHTML"
+    hx-target="main"
+    class="invoice-form">
+    {% csrf_token %}
+    {{ invoiceForm }}
+    <button type="submit">
+        <span class="symbol">&#10798;</span><span class="underlined">{% translate 'SaveInvoice' %}</span>
+    </button>
+</form>

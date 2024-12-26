@@ -21,12 +21,14 @@
         ]
     }'
   />
+  <link rel="stylesheet" href="{% static './utils/utils.css' %}">
   <link rel="stylesheet" href="{% static './home/stylesheet.css' %}">
   <link rel="stylesheet" href="{% static './home/table.css' %}">
   <link rel="stylesheet" href="{% static './home/home-content.css' %}">
-  <link rel="stylesheet" href="{% static './home/home-invoice-form.css' %}">
-  <link rel="stylesheet" href="{% static './home/invoice-detail.css' %}">
+  <link rel="stylesheet" href="{% static './Invoice/invoice-detail.css' %}">
+  <link rel="stylesheet" href="{% static './Invoice/invoice-form.css' %}">
   <link rel="stylesheet" href="{% static './Invoice/Invoice-modify.css' %}">
+  <link rel="stylesheet" href="{% static './Invoice/Invoice-list.css' %}">
   <link href="{% static 'formset/css/collections.css' %}" rel="stylesheet">
   <link href="{% static 'formset/css/bootstrap5-extra.css' %}" rel="stylesheet">
   <link rel="shortcut icon" href="{% static './img/shortcutIcon.png' %}">
@@ -44,7 +46,7 @@
 <body>
   {% include 'header.html' %}
   {% include 'aside.html' %}
-  <main> {% block content %} {% endblock %} </main>
+  <main>{% block content %} {% endblock %}</main>
   {% include 'footer.html' %}
 </body>
 </html>

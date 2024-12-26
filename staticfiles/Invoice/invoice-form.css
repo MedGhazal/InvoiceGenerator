@@ -1,0 +1,8 @@
+.invoice-form {
+	display: block;
+	color: var(--primary-color);
+	background-color: var(--primary-color);
+	border-radius: 10px;
+	margin: auto;
+	padding: 1.5%;
+}

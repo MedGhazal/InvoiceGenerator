@@ -1,16 +1,18 @@
 {% load i18n %}
 {% load static %}
 <header>
-
   <div class="brand-box">
     <img src="{% static 'img/lmmb-compact.svg' %}" alt="complete-logo" class="complete-logo">
   </div>
-
   <div class="nav-box">
     <ul>
-      <li><a href={% url 'home:index' %}>{% translate 'Home' %}</a></li>
+      <li><button type="button" hx-get="{% url 'home:index' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
+        {% translate 'Home' %}
+      </button></li>
       {% if user.is_authenticated %}
-        <li><a href={% url 'Invoice:index' %}>{% translate 'INVOICES' %}</a></li>
+	    <li><button type="button" hx-get="{% url 'Invoice:index' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
+	      {% translate 'Invoices' %}
+	    </button></li>
         {% if user.is_superuser or user.is_staff %}
           <li><a href={% url 'admin:index' %}>{% translate 'ADMIN' %}</a></li>
         {% endif %}
@@ -23,5 +25,4 @@
       {% endif %}
     </ul>
   </div>
-
 </header>

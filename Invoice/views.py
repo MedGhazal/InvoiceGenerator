@@ -19,7 +19,9 @@ from Invoicee.models import Invoicee
 from .models import Invoice, Project, Fee
 from .forms import ProjectForm, FeeForm, InvoiceForm
 from .utils import (
+    create_credit_note,
     generate_invoice_file,
+    processInvoiceDraftDataAndSave,
     LateXError,
 )
 from InvoiceGenerator.settings import TEMPTEXFILESDIR
@@ -47,8 +49,24 @@ class InvoiceListView(ListView, LoginRequiredMixin):
     model = Invoice
     template_name = 'Invoice-index.html'
 
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.META.get('HTTP_HX_REQUEST'):
+            return render(
+                self.request,
+                './invoice-index-partial.html',
+                context,
+            )
+        else:
+            response_kwargs.setdefault("content_type", self.content_type)
+            return self.response_class(
+                request=self.request,
+                template=self.get_template_names(),
+                context=context,
+                using=self.template_engine,
+                **response_kwargs,
+            )
+
     def get_context_data(self, *args, **kwargs):
-        print(self.request.GET)
         context = super().get_context_data(*args, **kwargs)
         invoiceFilterControlForm = InvoiceFilterControlForm()
         invoicerQuerySet = Invoicer.objects.filter(
@@ -63,14 +81,6 @@ class InvoiceListView(ListView, LoginRequiredMixin):
         ).count() > 1
         if not managerHasMultipleInvoicers:
             invoiceFilterControlForm.fields.pop('invoicer')
-        if self.request.GET:
-            context['invoice_list'] = context['invoice_list'].filter(
-                invoicee=self.request.GET['invoicee']
-            ).filter(
-                facturationDate__gte=self.request.GET['beginDate']
-            ).filter(
-                facturationDate__lte=self.request.GET['endDate']
-            )
         context.update({
             'form': invoiceFilterControlForm,
             'managerHasMultipleInvoicers': managerHasMultipleInvoicers,
@@ -79,6 +89,20 @@ class InvoiceListView(ListView, LoginRequiredMixin):
 
     def get_queryset(self, *args, **kwargs):
         queryset = super().get_queryset(*args, **kwargs)
+        if self.request.GET:
+            print("TEST")
+            invoicer = self.request.GET.get('invoicer')
+            if not invoicer:
+                invoicer = Invoicer.objects.get(manager=self.request.user)
+            return queryset.filter(
+                invoicer=invoicer
+            ).filter(
+                invoicee=self.request.GET['invoicee']
+            ).filter(
+                facturationDate__gte=self.request.GET['beginDate']
+            ).filter(
+                facturationDate__lte=self.request.GET['endDate']
+            )
         return queryset.filter(
             invoicer__in=Invoicer.objects.filter(manager=self.request.user)
         )
@@ -92,11 +116,137 @@ class InvoiceDetailView(DetailView, LoginRequiredMixin):
         context = super().get_context_data(*args, **kwargs)
         return context
 
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.META.get('HTTP_HX_REQUEST'):
+            return render(
+                self.request,
+                './invoice-detail-partial.html',
+                context,
+            )
+        else:
+            response_kwargs.setdefault("content_type", self.content_type)
+            return self.response_class(
+                request=self.request,
+                template=self.get_template_names(),
+                context=context,
+                using=self.template_engine,
+                **response_kwargs,
+            )
+
+
+@login_required()
+def add_draft(request):
+    invoiceForm = InvoiceForm()
+    invoiceForm.fields.pop('facturationDate')
+    invoiceForm.fields.pop('dueDate')
+    if Invoicer.objects.filter(manager=request.user).count() < 2:
+        invoiceForm.fields.pop('invoicer')
+    if request.method == 'POST':
+        if request.POST.get('invoicer'):
+            invoicer = Invoicer.objects.get(
+                id=int(request.POST.get('invoicer'))
+            )
+        else:
+            invoicer = Invoicer.objects.get(
+                manager=request.user
+            )
+        invoiceData = {
+            'invoicer': invoicer,
+            'invoicee': Invoicee.objects.get(
+                id=int(request.POST.get('invoicee'))
+            ),
+            'facturationDate': request.POST.get('facturationDate'),
+            'dueDate': request.POST.get('dueDate'),
+            'baseCurrency': request.POST.get('baseCurrency'),
+            'paymentMethod': request.POST.get('paymentMethod'),
+        }
+        invoiceID = processInvoiceDraftDataAndSave(invoiceData, draft=False)
+        return HttpResponseRedirect(
+            reverse(
+                'Invoice:modify',
+                args=[invoiceID]
+            ),
+        )
+    context = {'invoiceForm': invoiceForm}
+    if request.META.get('HTTP_HX_REQUEST'):
+        return render(request, './invoice-form-partial.html', context)
+    else:
+        return render(request, './invoice-form.html', context)
+
+
+@login_required()
+def add_invoice(request):
+    invoiceForm = InvoiceForm()
+    if Invoicer.objects.filter(manager=request.user).count() < 2:
+        invoiceForm.fields.pop('invoicer')
+    if request.method == 'POST':
+        if request.POST.get('invoicer'):
+            invoicer = Invoicer.objects.get(
+                id=int(request.POST.get('invoicer'))
+            )
+        else:
+            invoicer = Invoicer.objects.get(
+                manager=request.user
+            )
+        invoiceData = {
+            'invoicer': invoicer,
+            'invoicee': Invoicee.objects.get(
+                id=int(request.POST.get('invoicee'))
+            ),
+            'facturationDate': request.POST.get('facturationDate'),
+            'dueDate': request.POST.get('dueDate'),
+            'baseCurrency': request.POST.get('baseCurrency'),
+            'paymentMethod': request.POST.get('paymentMethod'),
+        }
+        invoiceID = processInvoiceDraftDataAndSave(invoiceData, draft=False)
+        return HttpResponseRedirect(
+            reverse(
+                'Invoice:modify',
+                args=[invoiceID]
+            ),
+        )
+    context = {'invoiceForm': invoiceForm}
+    if request.META.get('HTTP_HX_REQUEST'):
+        return render(request, './invoice-form-partial.html', context)
+    else:
+        return render(request, './invoice-form.html', context)
+
+
+@require_POST
+@login_required()
+def delete_invoice(request, invoice):
+    invoice = Invoice.objects.get(id=invoice)
+    if not invoice.draft:
+        return render(request, 'errorPages/405.html', status=405)
+    invoice.delete()
+    success(request, _('InvoiceSuccessfullyDeleted'))
+    return HttpResponseRedirect(reverse('Invoice:index'))
+
+
+@login_required()
+def create_creditNoteOfInvoice(request, invoice):
+    invoice = Invoice.objects.get(id=invoice)
+    if invoice.draft:
+        return render(request, 'errorPages/405.html', status=405)
+    success(request, _('CreditNoteSuccessfullyCreated'))
+    create_credit_note(invoice)
+    return HttpResponseRedirect(reverse('Invoice:index'))
+
+
+@require_POST
+@login_required()
+def validate_invoice(request, invoice):
+    invoice = Invoice.objects.get(id=invoice)
+    invoice.draft = False
+    invoice.save()
+    success(request, _('InvoiceSuccessfullyValidated'))
+    return render(request, 'Invoice-list-item.html', {'invoice': invoice})
+
 
 @login_required()
 def modify_invoice(request, invoice):
     invoice = Invoice.objects.get(id=invoice)
-    invoiceForm = InvoiceForm(instance=invoice)
+    invoicerQueryset = Invoicer.objects.filter(manager=request.user)
     projectForm = ProjectForm()
     feeForm = FeeForm()
     projectSet = []
@@ -113,12 +263,26 @@ def modify_invoice(request, invoice):
             'feeSet': feeSet,
 
         })
-    # if request.method == 'POST':
-    #     print(request)
-    #     print(request.POST)
-    #     print(request.method)
-    # else:
-    #     print(request.method)
+    if request.method == 'POST':
+        if request.POST.get('invoicer'):
+            invoice.invoicer = Invoicer.objects.get(
+                id=request.POST.get('invoicer')
+            )
+        invoice.invoicee = Invoicee.objects.get(
+            id=request.POST.get('invoicee')
+        )
+        invoice.paymentMethod = request.POST.get('paymentMethod')
+        invoice.baseCurrency = request.POST.get('baseCurrency')
+        invoice.dueDate = request.POST.get('dueDate')
+        invoice.facturationDate = request.POST.get('facturationDate')
+        invoice.save()
+        success(request, _('InvoiceSuccessfullyModified'))
+    invoiceForm = InvoiceForm(instance=invoice)
+    if invoicerQueryset.count() < 2:
+        invoiceForm.fields.pop('invoicer')
+    invoiceForm.fields['invoicee'].queryset = Invoicee.objects.filter(
+        invoicer__in=invoicerQueryset
+    )
     context = {
         'invoice': invoice,
         'invoiceForm': invoiceForm,
@@ -126,7 +290,10 @@ def modify_invoice(request, invoice):
         'projectForm': projectForm,
         'feeForm': feeForm,
     }
-    return render(request, './Invoice-modify.html', context)
+    if request.META.get('HTTP_HX_REQUEST'):
+        return render(request, './Invoice-modify-partial.html', context)
+    else:
+        return render(request, './invoice-modify.html', context)
 
 
 @require_POST
@@ -175,9 +342,7 @@ def add_projectAndFeesToInvoice(request, invoice):
         fee.count = request.POST['count']
         fee.vat = request.POST['vat']
         fee.save()
-    return HttpResponseRedirect(
-        reverse('Invoice:modify', args=[invoice.id]),
-    )
+    return HttpResponseRedirect(reverse('Invoice:modify', args=[invoice.id]))
 
 
 @require_POST
