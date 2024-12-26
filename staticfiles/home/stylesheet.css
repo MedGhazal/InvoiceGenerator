@@ -94,6 +94,7 @@ header {
 	width: fit-content;
 	height: 7vh;
 	margin: auto;
+	margin-top: 1vh;
 }
 .complete-logo {
 	width: 60px;

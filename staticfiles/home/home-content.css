@@ -20,7 +20,7 @@
 	margin: 0 auto;
 	padding: 2%;
 	height: max-content;
-	width: 80%;
+	width: 100%;
 }
 .home-controls .helptext {
 	font-size: .8rem;
@@ -35,7 +35,6 @@
 	border: 0px;
 	border-radius: 5px;
 	padding: 0.25rem;
-	width: max-content;
 }
 .home-controls input:active {
 	border: 2px;
@@ -59,7 +58,7 @@
 }
 .home-controls select {
 	appearance: none;
-	width: 90%;
+	width: 100%;
 	padding: 0.25rem;
 	background-color: var(--secondary-color);
 	color: var(--primary-color);

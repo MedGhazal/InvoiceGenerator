@@ -1,6 +1,6 @@
 .invoice-list-content {
 	display: grid;
-	grid-template-columns: 1fr 2fr;
+	grid-template-columns: 1fr 4fr;
 }
 .invoice-filter-form {
 	margin: auto;
@@ -31,20 +31,21 @@
 	padding: .5rem;
 }
 .invoice-list tbody tr td {
-	padding: .5rem;
+	font-size: .9rem;
+	padding: .1rem;
 	border-bottom: 1px solid var(--primary-color);
 }
-.invoice-list tbody tr:nth-child(even) {
+.invoice-list tbody tr:nth-child(odd) {
 	background-color: var(--muted-primary-color);
 }
 .invoice-list table button, .invoice-list table a {
 	padding: 0;
 	margin: 0;
-	background-color: var(--secondary-color);
+	background-color: inherit;
 	color: var(--primary-color);
 	width: min-content;
 	border: 0;
-	padding: .25rem;
+	padding: .1rem;
 	border-radius: 5px;
 	position: relative;
 }
