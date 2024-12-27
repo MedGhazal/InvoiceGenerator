@@ -96,6 +96,16 @@ class Invoice(Model):
         verbose_name=_('Draft'),
         default=True,
     )
+    credited = BooleanField(
+        db_default=False,
+        verbose_name=_('Credited'),
+        default=False,
+    )
+    estimate = BooleanField(
+        db_default=False,
+        verbose_name=_('Estimate'),
+        default=False,
+    )
     status = GeneratedField(
         expression=Case(
             When(draft=True, then=Value(0)),
@@ -128,14 +138,14 @@ class Invoice(Model):
     )
 
     def __str__(self):
-        if self.draft:
+        if self.draft or self.estimate:
             return f'{self.invoicer}|{self.invoicee}:D'.replace('\n', ' ')
         elif not self.draft:
-            reper = f'{self.invoicer}|{self.invoicee}:F{self.count}'
+            repr = f'{self.invoicer}|{self.invoicee}:F{self.count}'
             if self.owedAmount > 0:
                 currencySymbol = get_currency_symbol(self.baseCurrency)
-                reper += f':{self.owedAmount}{currencySymbol}'
-            return reper.replace('\n', ' ')
+                repr += f':{self.owedAmount}{currencySymbol}'
+            return repr.replace('\n', ' ')
         else:
             return ''
 
@@ -145,7 +155,7 @@ class Invoice(Model):
             or self.facturationDate is None
             or isinstance(self.dueDate, DatabaseDefault)
             or isinstance(self.facturationDate, DatabaseDefault)
-        ) and not self.draft:
+        ) and not self.draft and not self.estimate:
             raise ValidationError(
                 _('DueANDFacturationDATESareMANDATORYForINVOICES')
             )
@@ -159,9 +169,9 @@ class Invoice(Model):
         if self.draft:
             self.count = None
         elif not self.draft and (
-                self.count is None
-                or isinstance(self.count, DatabaseDefault)
-                or self.count == 0
+            self.count is None
+            or isinstance(self.count, DatabaseDefault)
+            or self.count == 0
         ):
             invoices = invoices.filter(
                 draft=False,
@@ -176,6 +186,17 @@ class Invoice(Model):
                 invoice.count for invoice in invoices
             ) + 1
         super(Invoice, self).save()
+
+    @property
+    def wellFormed(self):
+        wellFormed = self.project_set.count() > 0
+        return wellFormed and all(
+            project.fee_set.count() > 0 for project in self.project_set.all()
+        )
+
+    @property
+    def downloadable(self):
+        return self.wellFormed and (self.estimate or not self.draft)
 
     @property
     def totalBeforeVAT(self):

@@ -13,6 +13,7 @@ from .views import (
     validate_invoice,
     delete_invoice,
     add_draft,
+    invoice_estimate,
     InvoiceDetailView,
     InvoiceListView,
 )
@@ -31,6 +32,11 @@ urlpatterns = [
     ),
     path('addInvoice/', add_invoice, name='add-invoice'),
     path('deleteInvoice/<int:invoice>', delete_invoice, name='delete-invoice'),
+    path(
+        'invoiceEstimate/<int:invoice>',
+        invoice_estimate,
+        name='invoice-estimate',
+    ),
     path('addDraft/', add_draft, name='add-draft'),
     path(
         'invoiceValidate/<int:invoice>',

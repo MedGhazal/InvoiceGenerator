@@ -20,36 +20,40 @@ from Core.utils import (
 )
 from Core.exceptions import (
     LateXError,
+    InvoicingError,
 )
 
 
 def create_credit_note(invoice):
-    invoice.paymentMethod = _('AsCreditNote')
-    invoice.owedAmount = 0
-    invoice.save()
-    creditNote = Invoice()
-    creditNote.invoicer = invoice.invoicer
-    creditNote.invoicee = invoice.invoicee
-    creditNote.baseCurrency = invoice.baseCurrency
-    creditNote.dueDate = invoice.dueDate
-    creditNote.facturationDate = invoice.facturationDate
-    creditNote.paymentMethod = _('AsCreditNote')
-    creditNote.salesAccount = invoice.salesAccount
-    creditNote.vatAccount = invoice.vatAccount
-    creditNote.draft = False
-    creditNote.save()
-    project = Project()
-    project.invoice = creditNote
-    project.title = _('CreditNote')
-    project.save()
-    fee = Fee()
-    fee.project = project
-    fee.description = f'{_('CreditNoteForTheInvoice')}: {invoice.count}'
-    fee.count = 1
-    fee.rateUnit = invoice.totalBeforeVAT * -1
-    fee.vat = invoice.avgVAT
-    creditNote.owedAmount = 0
-    fee.save()
+    if not invoice.draft:
+        invoice.paymentMethod = 'CN'
+        invoice.owedAmount = 0
+        invoice.save()
+        creditNote = Invoice()
+        creditNote.invoicer = invoice.invoicer
+        creditNote.invoicee = invoice.invoicee
+        creditNote.baseCurrency = invoice.baseCurrency
+        creditNote.dueDate = date.today()
+        creditNote.facturationDate = date.today()
+        creditNote.paymentMethod = 'CN'
+        creditNote.salesAccount = invoice.salesAccount
+        creditNote.vatAccount = invoice.vatAccount
+        creditNote.draft = False
+        creditNote.save()
+        project = Project()
+        project.invoice = creditNote
+        project.title = _('CreditNote')
+        project.save()
+        fee = Fee()
+        fee.project = project
+        fee.description = f'{_('CreditNoteForTheInvoice')}: {invoice.count}'
+        fee.count = 1
+        fee.rateUnit = invoice.totalBeforeVAT * -1
+        fee.vat = invoice.avgVAT
+        creditNote.owedAmount = 0
+        fee.save()
+    else:
+        raise InvoicingError(_('ACreditNotCanOnlyBeMadeForInvoices'))
 
 
 def split_description(description):
@@ -481,20 +485,18 @@ def export_invoice_data(invoice, headers):
         )
     else:
         return dectifyData(
-            dataCaseExport(
-                invoice,
-                sumFees,
-                sumFeesVEBaseCurrency,
-            ),
+            dataCaseExport(invoice, sumFees, sumFeesVEBaseCurrency),
             headers,
         )
 
 
-def processInvoiceDraftDataAndSave(invoiceData, draft=True):
+def processInvoiceDraftDataAndSave(invoiceData, estimate=None):
+    if estimate is None:
+        raise ValueError(_('Error: estimate can\'t be None.'))
     invoice = Invoice()
     invoice.invoicer = invoiceData['invoicer']
     invoice.invoicee = invoiceData['invoicee']
-    if not draft:
+    if not estimate:
         invoice.facturationDate = date.fromisoformat(
             invoiceData['facturationDate'],
         )
@@ -505,6 +507,7 @@ def processInvoiceDraftDataAndSave(invoiceData, draft=True):
     invoice.paymentMethod = invoiceData['paymentMethod']
     invoice.salesAccount = 0
     invoice.vatAccount = 0
-    invoice.draft = draft
+    invoice.draft = True
+    invoice.estimate = estimate
     invoice.save()
     return invoice.id

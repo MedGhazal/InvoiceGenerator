@@ -11,7 +11,7 @@
             <li><a href="{% url 'admin:Invoicee_invoicee_changelist' %}" class="SubItem">- {% translate 'INVOICEES' %}</a></li>
             <li><a href="{% url 'admin:Invoice_invoice_changelist' %}" class="SubItem">- {% translate 'INVOICES' %}</a></li>
             <li><a href="{% url 'admin:Invoice_project_changelist' %}" class="SubItem">- {% translate 'PROJECTS' %}</a></li>
-            <li><a href="{% url 'admin:Invoice_fee_changelist' %}" class="SubItem">- {% translate 'FEES' %}</a></li>
+            <li><a href="{% url 'admin:Invoice_fee_changelist' %}" class="SubItem">- {% translate 'Fees' %}</a></li>
 	    <li><button class="MainItem" type="button" hx-get="{% url 'Invoice:add-invoice' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
 	      {% translate 'AddInvoice' %}
 	    </button></li>

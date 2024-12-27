@@ -155,19 +155,14 @@ def add_draft(request):
             'invoicee': Invoicee.objects.get(
                 id=int(request.POST.get('invoicee'))
             ),
-            'facturationDate': request.POST.get('facturationDate'),
-            'dueDate': request.POST.get('dueDate'),
             'baseCurrency': request.POST.get('baseCurrency'),
             'paymentMethod': request.POST.get('paymentMethod'),
         }
-        invoiceID = processInvoiceDraftDataAndSave(invoiceData, draft=False)
+        invoiceID = processInvoiceDraftDataAndSave(invoiceData, estimate=True)
         return HttpResponseRedirect(
-            reverse(
-                'Invoice:modify',
-                args=[invoiceID]
-            ),
+            reverse('Invoice:modify', args=[invoiceID]),
         )
-    context = {'invoiceForm': invoiceForm}
+    context = {'invoiceForm': invoiceForm, 'estimate': True}
     if request.META.get('HTTP_HX_REQUEST'):
         return render(request, './invoice-form-partial.html', context)
     else:
@@ -198,24 +193,22 @@ def add_invoice(request):
             'baseCurrency': request.POST.get('baseCurrency'),
             'paymentMethod': request.POST.get('paymentMethod'),
         }
-        invoiceID = processInvoiceDraftDataAndSave(invoiceData, draft=False)
+        invoiceID = processInvoiceDraftDataAndSave(invoiceData, estimate=False)
         return HttpResponseRedirect(
-            reverse(
-                'Invoice:modify',
-                args=[invoiceID]
-            ),
+            reverse('Invoice:modify', args=[invoiceID]),
         )
-    context = {'invoiceForm': invoiceForm}
+    context = {'invoiceForm': invoiceForm, 'invoice': True}
     if request.META.get('HTTP_HX_REQUEST'):
         return render(request, './invoice-form-partial.html', context)
     else:
         return render(request, './invoice-form.html', context)
 
 
-@require_POST
+# @require_POST
 @login_required()
 def delete_invoice(request, invoice):
     invoice = Invoice.objects.get(id=invoice)
+    print(invoice)
     if not invoice.draft:
         return render(request, 'errorPages/405.html', status=405)
     invoice.delete()
@@ -237,6 +230,11 @@ def create_creditNoteOfInvoice(request, invoice):
 @login_required()
 def validate_invoice(request, invoice):
     invoice = Invoice.objects.get(id=invoice)
+    if invoice.project_set.count() == 0:
+        error(request, _('InvoiceHasNoProjects'))
+    for project in invoice.project_set.all():
+        if project.fee_set.count() == 0:
+            error(request, _('Project %(p)s has no fees', {'p': project}))
     invoice.draft = False
     invoice.save()
     success(request, _('InvoiceSuccessfullyValidated'))
@@ -278,6 +276,9 @@ def modify_invoice(request, invoice):
         invoice.save()
         success(request, _('InvoiceSuccessfullyModified'))
     invoiceForm = InvoiceForm(instance=invoice)
+    if invoice.estimate:
+        invoiceForm.fields.pop('facturationDate')
+        invoiceForm.fields.pop('dueDate')
     if invoicerQueryset.count() < 2:
         invoiceForm.fields.pop('invoicer')
     invoiceForm.fields['invoicee'].queryset = Invoicee.objects.filter(
@@ -371,11 +372,20 @@ def add_feesToProject(request, project):
     )
 
 
+@require_POST
 @login_required()
 def delete_project(request, project):
     project = Project.objects.get(id=project)
     project.delete()
     return HttpResponse(_('ProjectSuccessfullyDeleted'))
+
+
+@require_POST
+@login_required()
+def invoice_estimate(request, invoice):
+    invoice = Invoice.objects.get(id=invoice)
+    invoice.estimate = False
+    return HttpResponse(_('EstimateSuccessfullyInvoiced'))
 
 
 class HTTPResponseHXRedirect(HttpResponseRedirect):

@@ -1,6 +1,6 @@
 {% load i18n %}
 <form method="post" 
-    hx-post="{% url 'Invoice:add-invoice' %}" 
+    hx-post="{% if invoice %}{% url 'Invoice:add-invoice' %}{% elif estimate %}{% url 'Invoice:add-draft' %}{% endif %}"
     hx-push-url="true"
     hx-swap="innerHTML"
     hx-target="main"
