@@ -3,8 +3,9 @@
 	--muted-primary-color: #8391a8;
 	--secondary-color: #C3ECEF;
 	--light-color: rgba(255, 255, 255, .7);
-	--error-color: #ad0909;
 	--a-background-color: rgba(7, 35, 82, .2);
+	--table-first-color: #D0E4F5;
+	--table-second-color: #e9f7f8;
 	--a-background-color-focus: rgba(7, 35, 82, .3);
 	--box-shadow-color: rgba( 31, 38, 135, 0.3 );
 	--select-border: #777;

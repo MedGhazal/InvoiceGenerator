@@ -15,9 +15,38 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
-from .views import index
+from .views import (
+    InvoiceeListView,
+    PrivateInvoiceeListView,
+    InvoiceeDetailView,
+    InvoiceeCreateView,
+    InvoiceeUpdateView,
+    PrivateInvoiceeCreateView,
+)
 
 app_name = 'Invoicee'
 urlpatterns = [
-    path('', index, name='index'),
+    path('', InvoiceeListView.as_view(), name='invoicees'),
+    path('private', PrivateInvoiceeListView.as_view(), name='pinvoicees'),
+    path('detail/<slug:pk>', InvoiceeDetailView.as_view(), name='invoicee'),
+    path(
+        'addInvoicee',
+        InvoiceeCreateView.as_view(),
+        name='add-invoicee',
+    ),
+    path(
+        'addPrivateInvoicee',
+        PrivateInvoiceeCreateView.as_view(),
+        name='add-private-invoicee',
+    ),
+    path(
+        'modify/<slug:pk>',
+        InvoiceeUpdateView.as_view(),
+        name='modify-invoicee',
+    ),
+    path(
+        'addInvoicee',
+        InvoiceeCreateView.as_view(),
+        name='add-invoicee',
+    ),
 ]

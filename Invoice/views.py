@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from os import remove, getcwd
 from os.path import join
@@ -47,13 +48,13 @@ def download_invoice(request, invoice):
 
 class InvoiceListView(ListView, LoginRequiredMixin):
     model = Invoice
-    template_name = 'Invoice-index.html'
+    template_name = './Invoice-index.html'
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.META.get('HTTP_HX_REQUEST'):
             return render(
                 self.request,
-                './invoice-index-partial.html',
+                './Invoice-index-partial.html',
                 context,
             )
         else:
@@ -68,21 +69,25 @@ class InvoiceListView(ListView, LoginRequiredMixin):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        invoiceFilterControlForm = InvoiceFilterControlForm()
-        invoicerQuerySet = Invoicer.objects.filter(
-            manager=self.request.user
+        invoices = context['invoice_list'].filter(
+            facturationDate__gte=f'{date.today().year}-01-01'
+        ).filter(
+            facturationDate__lte=f'{date.today().year}-12-31'
         )
-        invoiceFilterControlForm.fields['invoicer'].queryset = invoicerQuerySet
-        invoiceFilterControlForm.fields[
-            'invoicee'
-        ].queryset = Invoicee.objects.filter(invoicer__in=invoicerQuerySet)
+        invoiceFilterControlForm = InvoiceFilterControlForm()
+        if self.request.GET:
+            invoiceFilterControlForm.fields[
+                'beginDate'
+            ].initial = self.request.GET.get('beginDate')
+            invoiceFilterControlForm.fields[
+                'endDate'
+            ].initial = self.request.GET.get('endDate')
         managerHasMultipleInvoicers = Invoicer.objects.filter(
             manager=self.request.user
         ).count() > 1
-        if not managerHasMultipleInvoicers:
-            invoiceFilterControlForm.fields.pop('invoicer')
         context.update({
             'form': invoiceFilterControlForm,
+            'invoice_list': invoices,
             'managerHasMultipleInvoicers': managerHasMultipleInvoicers,
         })
         return context
@@ -90,15 +95,7 @@ class InvoiceListView(ListView, LoginRequiredMixin):
     def get_queryset(self, *args, **kwargs):
         queryset = super().get_queryset(*args, **kwargs)
         if self.request.GET:
-            print("TEST")
-            invoicer = self.request.GET.get('invoicer')
-            if not invoicer:
-                invoicer = Invoicer.objects.get(manager=self.request.user)
             return queryset.filter(
-                invoicer=invoicer
-            ).filter(
-                invoicee=self.request.GET['invoicee']
-            ).filter(
                 facturationDate__gte=self.request.GET['beginDate']
             ).filter(
                 facturationDate__lte=self.request.GET['endDate']
@@ -204,12 +201,10 @@ def add_invoice(request):
         return render(request, './invoice-form.html', context)
 
 
-# @require_POST
 @login_required()
 def delete_invoice(request, invoice):
     invoice = Invoice.objects.get(id=invoice)
-    print(invoice)
-    if not invoice.draft:
+    if not invoice.draft and not invoice.estimate:
         return render(request, 'errorPages/405.html', status=405)
     invoice.delete()
     success(request, _('InvoiceSuccessfullyDeleted'))

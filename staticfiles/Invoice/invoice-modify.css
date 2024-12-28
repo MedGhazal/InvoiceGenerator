@@ -14,6 +14,7 @@
     padding: 10px;
     border: 0;
     border-radius: 10px;
+    background-color: var(--primary-color);
 }
 .fee-dialog form {
     display: flex;
@@ -25,6 +26,7 @@
     padding: 10px;
     border: 0;
     border-radius: 10px;
+    background-color: var(--primary-color);
 }
 .project-dialog .fee-form {
     display: flex;

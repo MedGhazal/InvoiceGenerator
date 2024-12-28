@@ -1,0 +1,27 @@
+{% load i18n %}
+<div class="invoicee-form-container">
+    <form 
+        class="invoicee-form"
+        hx-post="
+        {% if update %}
+        {% url 'Invoicee:modify-invoicee' invoicee.id %}
+        {% elif private %}
+        {% url 'Invoicee:add-private-invoicee' %}
+        {% else %}
+        {% url 'Invoicee:add-invoicee' %}
+        {% endif %}
+        " 
+        hx-trigger="submit"
+        hx-swap="innerHTML"
+        hx-target="main">
+        {% csrf_token %}
+        {{ form }}
+        <button type="submit">
+            {% if update %}
+            {% translate 'Save' %}
+            {% else %}
+            {% translate 'AddInvoicee' %}
+            {% endif %}
+        </button>
+    </form>
+</div>

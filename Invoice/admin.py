@@ -261,9 +261,9 @@ class InvoiceAdmin(ModelAdmin):
 
     def get_fields(self, request, invoice=None):
         fields = super().get_fields(request)
-        fields.remove('owedAmount')
-        fields.remove('paidAmount')
         if not request.user.is_superuser:
+            fields.remove('owedAmount')
+            fields.remove('paidAmount')
             if Invoicer.objects.filter(manager=request.user).count() == 1:
                 fields.remove('invoicer')
             fields.remove('count')

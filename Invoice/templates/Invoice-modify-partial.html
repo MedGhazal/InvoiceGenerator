@@ -1,17 +1,5 @@
 {% load i18n %}
 <h1>{% translate 'ModifyINVOICE' %}: {{ invoice }}</h1>
-{% if messages %}
-<div class="messages-content">
-    <ul class="messages">
-        {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
-            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}{% translate 'Error' %}: {% endif %}
-            {{ message }}
-        </li>
-        {% endfor %}
-    </ul>
-</div>
-{% endif %}
 <div class="invoice-modify-content">
     <form method="post" class='invoice-form'>
         {% csrf_token %}

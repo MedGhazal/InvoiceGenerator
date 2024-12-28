@@ -10,18 +10,30 @@
         {% translate 'Home' %}
       </button></li>
       {% if user.is_authenticated %}
-	    <li><button type="button" hx-get="{% url 'Invoice:index' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
-	      {% translate 'Invoices' %}
-	    </button></li>
-        {% if user.is_superuser or user.is_staff %}
-          <li><a href={% url 'admin:index' %}>{% translate 'ADMIN' %}</a></li>
-        {% endif %}
-        {% if user.is_superuser %}
-          <li><a href={% url 'rosetta-old-home-redirect' %}>{% translate 'ROSETTA' %}</a></li>
-        {% endif %}
+      <li>
+        <button type="button" hx-get="{% url 'Invoicee:invoicees' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
+        {% translate 'INVOICEES' %}
+        </button>
+      </li>
+      <li>
+        <button type="button" hx-get="{% url 'Invoicee:pinvoicees' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
+        {% translate 'PrivateINVOICEES' %}
+        </button>
+      </li>
+      <li>
+        <button type="button" hx-get="{% url 'Invoice:index' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
+        {% translate 'INVOICES' %}
+        </button>
+      </li>
+      {% if user.is_superuser or user.is_staff %}
+      <li><a href={% url 'admin:index' %}>{% translate 'ADMIN' %}</a></li>
+      {% endif %}
+      {% if user.is_superuser %}
+      <li><a href={% url 'rosetta-old-home-redirect' %}>{% translate 'ROSETTA' %}</a></li>
+      {% endif %}
       {% else %}
-        <li><a href={% url 'login' %}>{% translate 'LOGIN' %}</a></li>
-        <li><a href={% url 'home:register' %}>{% translate 'REGISTER' %}</a></li>
+      <li><a href={% url 'login' %}>{% translate 'LOGIN' %}</a></li>
+      <li><a href={% url 'home:register' %}>{% translate 'REGISTER' %}</a></li>
       {% endif %}
     </ul>
   </div>

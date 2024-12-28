@@ -1,0 +1,8 @@
+{% load i18n %}
+{{ invoicee.invoicer.name }}
+{{ invoicee.name }}
+{% if invoicee.isPerson %}
+{{ invoicee.ice }}
+{% else %}
+{{ invoicee.cin }}
+{% endif %}

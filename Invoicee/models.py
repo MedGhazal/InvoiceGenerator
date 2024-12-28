@@ -1,3 +1,4 @@
+from django.urls import reverse_lazy
 from django.db.models import (
     Model,
     CharField,
@@ -14,6 +15,8 @@ from django.core.validators import (
     RegexValidator,
 )
 from django.utils.translation import gettext_lazy as _
+
+from Invoice.models import Invoice
 
 
 class Invoicee(Model):
@@ -82,6 +85,31 @@ class Invoicee(Model):
 
     def __str__(self):
         return f'{self.name}'
+
+    def get_absolute_url(self):
+        return reverse_lazy('Invoicee:invoicee', args=[self.id])
+
+    @property
+    def numOutstandingInvoices(self):
+        return Invoice.objects.filter(
+            status=1
+        ).filter(
+            invoicee=self
+        ).count()
+
+    @property
+    def paidAmount(self):
+        return sum(
+            invoice.paidAmount
+            for invoice in Invoice.objects.filter(invoicee=self)
+        )
+
+    @property
+    def owedAmount(self):
+        return sum(
+            invoice.owedAmount
+            for invoice in Invoice.objects.filter(invoicee=self)
+        )
 
     class Meta:
         verbose_name = _('INVOICEE')

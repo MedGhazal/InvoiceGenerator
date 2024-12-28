@@ -1,4 +1,6 @@
+{% load static %}
 {% load i18n %}
+<div class="invoice-form-wrapper">
 <form method="post" 
     hx-post="{% if invoice %}{% url 'Invoice:add-invoice' %}{% elif estimate %}{% url 'Invoice:add-draft' %}{% endif %}"
     hx-push-url="true"
@@ -8,6 +10,7 @@
     {% csrf_token %}
     {{ invoiceForm }}
     <button type="submit">
-        <span class="symbol">&#10798;</span><span class="underlined">{% translate 'SaveInvoice' %}</span>
+        <span class="symbol">&#10798;</span><span class="text">{% translate 'SaveInvoice' %}</span>
     </button>
 </form>
+</div>
