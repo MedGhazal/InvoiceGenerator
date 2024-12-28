@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 @register(Invoicer)
 class InvoicerAdmin(ModelAdmin):
+
     list_display = (
         'name',
         'get_invoicees',
@@ -28,5 +29,9 @@ class InvoicerAdmin(ModelAdmin):
             )
         invoicees += '</ul>'
         return mark_safe(invoicees)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset
 
     get_invoicees.short_description = _('INVOICEE')
