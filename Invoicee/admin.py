@@ -93,6 +93,6 @@ class InvoiceeAdmin(ModelAdmin):
         return True
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'invoicer':
+        if not request.user.is_superuser and db_field.name == 'invoicer':
             kwargs['queryset'] = Invoicer.objects.filter(manager=request.user)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
