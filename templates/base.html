@@ -9,16 +9,16 @@
   <meta name="author" content="Mohamed Ghazal">
   <meta name="robots" content="index, follow">
   <meta
-	name="htmx-config"
-	content='{
-        "responseHandling":[
-	    {"code":"204", "swap": false},
-	    {"code":"[23]..", "swap": true},
-            {"code":"405", "swap": true, "error": false, "swapOverride": "location.reload()"},
-            {"code":"4[1-9][1-4|6-7]", "swap": false, "error": true},
-            {"code":"5..", "swap": false, "error": true},
-            {"code":"...", "swap": true}
-        ]
+    name="htmx-config"
+    content='{
+    "responseHandling":[
+    {"code":"204", "swap": false},
+    {"code":"[23]..", "swap": true},
+    {"code":"405", "swap": true, "error": false, "swapOverride": "location.reload()"},
+    {"code":"4[1-9][1-4|6-7]", "swap": false, "error": true},
+    {"code":"5..", "swap": false, "error": true},
+    {"code":"...", "swap": true}
+    ]
     }'
   />
   <link rel="stylesheet" href="{% static './utils/utils.css' %}">
@@ -29,21 +29,46 @@
   <link rel="stylesheet" href="{% static './Invoice/invoice-form.css' %}">
   <link rel="stylesheet" href="{% static './Invoice/Invoice-modify.css' %}">
   <link rel="stylesheet" href="{% static './Invoice/Invoice-list.css' %}">
+  <link rel="stylesheet" href="{% static './Invoice/Invoice-list.css' %}">
+  <link rel="stylesheet" href="{% static './admin/css/vendor/select2/select2.min.css' %}" media="screen">
+  <link rel="stylesheet" href="{% static './django_select2/django_select2.css' %}" media="screen">
   <link rel="icon" type="image/x-icon" href="{% static './img/favicon.ico' %}">
   <script src="{% url 'javascript-catalog' %}"></script>
   <script src="{% static './js/htmx.min.js' %}"></script>
+  <script src="{% static './js/jquery.min.js' %}"></script>
+  <script src="{% static './admin/js/vendor/select2/select2.full.min.js' %}"></script>
+  <script src="{% static './admin/js/vendor/select2/i18n/en.js' %}"></script>
+  <script src="{% static './django_select2/django_select2.js' %}"></script>
   {% block title %} {% endblock %}
-  {% block scripts %} {% endblock %}
-  <link rel="stylesheet" 
-	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" 
-	integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" 
-	crossorigin="anonymous" 
-	referrerpolicy="no-referrer" />
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" 
+    integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" 
+    crossorigin="anonymous" 
+    referrerpolicy="no-referrer"/>
+  <script
+    src="https://js-de.sentry-cdn.com/214852234792598dc959fc82f2e33fed.min.js"
+    crossorigin="anonymous"
+  ></script>
 </head>
-<body>
-  {% include 'header.html' %}
-  {% include 'aside.html' %}
-  <main>{% block content %} {% endblock %}</main>
-  {% include 'footer.html' %}
-</body>
+  <body>
+    {% include 'header.html' %}
+    {% include 'aside.html' %}
+    <main>
+      {% if messages %}
+      <div class="messages-content">
+	<ul class="messages">
+	  {% for message in messages %}
+	  <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+	    {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}{% translate 'Error' %}: {% endif %}
+	    {{ message }}
+	  </li>
+	  {% endfor %}
+	</ul>
+      </div>
+      {% endif %}
+      {% block content %} {% endblock %}
+    </main>
+    {% include 'footer.html' %}
+  </body>
 </html>
