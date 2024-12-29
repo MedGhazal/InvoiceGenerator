@@ -14,7 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path
+from django.urls import path, register_converter
 from .views import (
     InvoiceeListView,
     PrivateInvoiceeListView,
@@ -24,6 +24,10 @@ from .views import (
     PrivateInvoiceeCreateView,
 )
 
+from Core.views import DateConverter
+
+
+register_converter(DateConverter, 'date')
 app_name = 'Invoicee'
 urlpatterns = [
     path('', InvoiceeListView.as_view(), name='invoicees'),

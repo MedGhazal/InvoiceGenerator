@@ -3,7 +3,9 @@
     {% if managerHasMultipleInvoicers %}
     <td style="padding-left: 5px">{{ invoice.invoicer }}</td>
     {% endif %}
+    {% if not invoicee %}
     <td style="padding-left: 5px" helptext="{% translate 'Invoicee' %}">{{ invoice.invoicee }}</td>
+    {% endif %}
     <td helptext="{% translate 'InvoiceNumber' %}">{{ invoice.facturationDate.year }}-{{ invoice.count }}</td>
     <td helptext="{% translate 'TotalAfterVAT' %}">{{ invoice.totalAfterVAT }}</td>
     <td>

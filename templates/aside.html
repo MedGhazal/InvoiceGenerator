@@ -14,7 +14,7 @@
             <li><a href="{% url 'admin:Invoice_fee_changelist' %}" class="SubItem">- {% translate 'Fees' %}</a></li>
             {% endif %}
             <li><a href="{% url 'Invoice:add-invoice' %}" class="MainItem">{% translate 'AddInvoice' %}</a></li>
-            <li><a href="{% url 'Invoice:add-draft' %}" class="MainItem">{% translate 'AddDraft' %}</a></li>
+            <li><a href="{% url 'Invoice:add-draft' %}" class="MainItem">{% translate 'AddEstimate' %}</a></li>
             <li><button 
                 hx-get="{% url 'Invoicee:add-invoicee' %}" class="MainItem"
                 hx-target="#invoicee-form-dialog"

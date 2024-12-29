@@ -96,6 +96,15 @@ class InvoiceeListView(ListView, LoginRequiredMixin):
         })
         return context
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset.filter(
+            invoicer__in=Invoicer.objects.filter(
+                manager=self.request.user
+            )
+        )
+        return queryset
+
 
 class PrivateInvoiceeListView(ListView, LoginRequiredMixin):
 
@@ -157,8 +166,17 @@ class InvoiceeDetailView(DetailView, LoginRequiredMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
         invoicee = context['invoicee']
-        invoices = Invoice.objects.filter(invoicee=invoicee)
         invoiceFilterControlForm = InvoiceFilterControlForm()
+        if self.request.GET:
+            invoices = Invoice.objects.filter(
+                invoicee=invoicee
+            ).filter(
+                facturationDate__gte=self.request.GET['beginDate']
+            ).filter(
+                facturationDate__lte=self.request.GET['endDate']
+            )
+        else:
+            invoices = Invoice.objects.filter(invoicee=invoicee)
         context.update({
             'managerHasManyInvoicers': Invoicer.objects.filter(
                 manager=self.request.user

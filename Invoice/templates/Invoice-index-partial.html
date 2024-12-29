@@ -3,7 +3,12 @@
 <div class="invoice-list-content">
     <div class="invoice-filter-form-wrapper">
         <h2>{% translate "HomeCONTROLSText" %}</h2>
-        <form hx-push-url="true" hx-get="{% url 'Invoice:index' %}" hx-swap="innerHTML" hx-target="main" class="invoice-filter-form">
+        <form 
+            hx-push-url="true" 
+            hx-get="{% if invoicee %}{% url 'Invoicee:invoicee' invoicee.id %}{% else %}{% url 'Invoice:index' %}{% endif %}" 
+            hx-swap="innerHTML" 
+            hx-target="main" 
+            class="invoice-filter-form">
             {% csrf_token %}
             {{ form }}
             <button type="submit">{% translate "ApplyFilter" %}</button>
@@ -17,14 +22,16 @@
                 {% if managerHasMultipleInvoicers %}
                 <th style="width: 300px">{% translate 'INVOICER' %}</th>
                 {% endif %}
+                {% if not invoicee %}
                 <th style="width: 300px">{% translate 'INVOICEE' %}</th>
+                {% endif %}
                 <th>{% translate 'InvoiceNumber' %}</th>
                 <th>{% translate 'TotalAfterVAT' %}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for invoice in invoice_list %}
-                {% include './Invoice-list-item.html' with invoice=invoice %}
+                {% include './Invoice-list-item.html' with invoicee=invoicee invoice=invoice %}
                 {% endfor %}
             </tbody>
             <tfoot>
