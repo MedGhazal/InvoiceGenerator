@@ -12,6 +12,8 @@ from django.utils.translation import gettext as _
 
 from .models import Invoicee
 from Invoicer.models import Invoicer
+from Invoice.models import Invoice
+from Core.forms import InvoiceFilterControlForm
 
 
 class InvoiceeUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
@@ -151,6 +153,20 @@ class InvoiceeDetailView(DetailView, LoginRequiredMixin):
                 using=self.template_engine,
                 **response_kwargs,
             )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        invoicee = context['invoicee']
+        invoices = Invoice.objects.filter(invoicee=invoicee)
+        invoiceFilterControlForm = InvoiceFilterControlForm()
+        context.update({
+            'managerHasManyInvoicers': Invoicer.objects.filter(
+                manager=self.request.user
+            ).count() > 1,
+            'invoices': invoices,
+            'form': invoiceFilterControlForm,
+        })
+        return context
 
 
 class InvoiceeCreateView(CreateView, LoginRequiredMixin, SuccessMessageMixin):

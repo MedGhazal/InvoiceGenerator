@@ -1,8 +1,7 @@
 {% load i18n %}
-{{ invoicee.invoicer.name }}
-{{ invoicee.name }}
-{% if invoicee.isPerson %}
-{{ invoicee.ice }}
-{% else %}
-{{ invoicee.cin }}
-{% endif %}
+{% include 'Invoice-index-partial.html' with invoice_list=invoices form=form managerHasManyInvoicers=managerHasManyInvoicers %}
+<p>
+{% blocktrans %}
+For the INVOICEE {{ invoicee.name }} the following INVOICES and Estimated has been edited.
+{% endblocktrans %}
+</p>

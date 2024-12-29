@@ -11,9 +11,7 @@
     <td>{% if invoicee.ice %}{{ invoicee.ice }}{% else %}-{% endif %}</td>
     {% endif %}
     <td>{{ invoicee.numOutstandingInvoices }}</td>
-    <td>{{ invoicee.paidAmount }}</td>
-    <td>{{ invoicee.owedAmount }}</td>
-    <td>
+    <td class="borderless">
         <button 
             helptext="{% translate 'InvoiceePreviewExplanation' %}"
             type="button"
@@ -37,7 +35,7 @@
             </svg>
         </button>
     </td>
-    <td>
+    <td class="borderless">
         <a href="{% url 'Invoicee:modify-invoicee' invoicee.id %}" helptext="{% translate 'InvoiceeModifyExplanation' %}">
             <svg 
                 xmlns="http://www.w3.org/2000/svg" 

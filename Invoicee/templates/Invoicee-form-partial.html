@@ -1,27 +1,34 @@
 {% load i18n %}
-<div class="invoicee-form-container">
-    <form 
-        class="invoicee-form"
-        hx-post="
-        {% if update %}
-        {% url 'Invoicee:modify-invoicee' invoicee.id %}
-        {% elif private %}
-        {% url 'Invoicee:add-private-invoicee' %}
-        {% else %}
-        {% url 'Invoicee:add-invoicee' %}
-        {% endif %}
-        " 
-        hx-trigger="submit"
-        hx-swap="innerHTML"
-        hx-target="main">
+<form 
+    class="invoicee form"
+    hx-post="
+    {% if update %}
+    {% url 'Invoicee:modify-invoicee' invoicee.id %}
+    {% elif private %}
+    {% url 'Invoicee:add-private-invoicee' %}
+    {% else %}
+    {% url 'Invoicee:add-invoicee' %}
+    {% endif %}
+    " 
+    hx-trigger="submit"
+    hx-swap="innerHTML"
+    hx-target="main">
+    <div class="form-header">
+        <botton type="button" hx-on:click="document.getElementById('invoicee-form-dialog').close()" class="dialog-close-button" tabindex="0">
+        {% include './symbols/x-square.svg' %}
+        </botton>
+    </div>
+    <div class="form-main">
         {% csrf_token %}
         {{ form }}
-        <button type="submit">
+    </div>
+    <div class="form-footer">
+        <button type="submit" class="dialog-submit-button">
             {% if update %}
             {% translate 'Save' %}
             {% else %}
             {% translate 'AddInvoicee' %}
             {% endif %}
         </button>
-    </form>
-</div>
+    </div>
+</form>

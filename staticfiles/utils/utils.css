@@ -124,3 +124,41 @@ li.debug {
 	border-left: 2px solid #660066;
 	background-color: #ffe6ff;
 }
+
+button.dialog-close-button {
+	display: block;
+	padding: .125rem;
+	background-color: var(--secondary-color);
+	transition: all .25s ease-in-out;
+}
+button.dialog-close-button:hover {
+	background-color: var(--primary-color);
+	color: var(--secondary-color);
+}
+.dialog-submit-button {
+	display: block;
+	padding: .125rem;
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+	transition: all .25s ease-in-out;
+}
+.dialog-close-button:hover {
+	background-color: var(--primary-color);
+	color: var(--secondary-color);
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+}
+.form-header {
+	color: var(--muted-primary-color);
+	padding: .125rem;
+	padding: .125rem;
+	align-self: flex-start;
+}
+.form-footer {
+	padding: .125rem;
+	padding: .125rem;
+	align-self: flex-end;
+}

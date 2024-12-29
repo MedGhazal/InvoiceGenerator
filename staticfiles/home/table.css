@@ -72,14 +72,21 @@ table.StateTable .HeaderColumn {
 	margin: 2%;
 }
 .item-list thead tr th {
+	font-size: .9rem;
 	color: var(--secondary-color);
 	background-color: var(--primary-color);
 	margin: .5rem;
 	padding: .5rem;
 }
+.item-list table td + td {
+	font-size: .8rem;
+    border-left: 2px solid var(--muted-primary-color); 
+}
+.item-list .borderless {
+    border: 0;
+}
 .item-list tbody tr td {
-	font-size: .9rem;
-	padding: .1rem;
+	padding: .1rem .5rem;
 	border-bottom: 1px solid var(--primary-color);
 }
 .item-list tbody tr:nth-child(odd) {

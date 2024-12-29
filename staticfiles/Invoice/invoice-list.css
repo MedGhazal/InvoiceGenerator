@@ -1,26 +1,38 @@
 .invoice-list-content {
 	display: grid;
-	grid-template-columns: 1fr 4fr;
+	grid-template-columns: 1fr;
 	padding: 1%;
 }
 .invoice-filter-form-wrapper {
-	display: flex;
-	flex-direction: column;
-	margin: auto;
-	margin: 1%;
-	padding: 1%;
 	background-color: var(--primary-color);
 	color: var(--secondary-color);
+	margin: 10px auto;
+	padding: .25rem;
 	border-radius: 10px;
 }
 .invoice-filter-form-wrapper h2 {
 	font-size: 1rem;
-	display: block;
 	padding: .25rem .5rem;
+	text-align: center;
 }
 .invoice-filter-form {
-	padding: 2.5%;
+	display: flex;
+	flex-direction: row;
+	padding: .25rem;
 	border-radius: 10px;
+}
+.invoice-filter-form button {
+	font-size: .8rem;
+	margin-bottom: 0;
+	padding: .2rem;
+	border: 0;
+	background-color: var(--light-color);
+	border-radius: 5px;
+	transition: all .25s ease-in-out;
+}
+.invoice-filter-form button:hover {
+	color: var(--secondary-color);
+	background-color: var(--primary-color);
 }
 
 .invoice-list {
@@ -46,8 +58,8 @@
 	padding: .5rem;
 }
 .invoice-list tbody tr td {
-	font-size: .9rem;
-	padding: .1rem;
+	font-size: .75rem;
+	padding: .1rem .5rem;
 	border-bottom: 1px solid var(--primary-color);
 }
 .invoice-list tbody tr:nth-child(odd) {

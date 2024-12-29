@@ -17,17 +17,19 @@
             <li><a href="{% url 'Invoice:add-draft' %}" class="MainItem">{% translate 'AddDraft' %}</a></li>
             <li><button 
                 hx-get="{% url 'Invoicee:add-invoicee' %}" class="MainItem"
-                hx-target="main"
+                hx-target="#invoicee-form-dialog"
+                hx-on:click="document.getElementById('invoicee-form-dialog').showModal();"
                 hx-swap="innerHTML"
             >{% translate 'AddInvoicee' %}</button></li>
             <li><button 
                 hx-get="{% url 'Invoicee:add-private-invoicee' %}" class="MainItem"
-                hx-target="main"
+                hx-target="#invoicee-form-dialog"
+                hx-on:click="document.getElementById('invoicee-form-dialog').showModal();"
                 hx-swap="innerHTML"
-                hx-push-url="true"
             >{% translate 'AddPrivateInvoicee' %}</button></li>
             {% block extraAsideItems %} {% endblock %}
         </ul>
     </div>
+    <dialog id="invoicee-form-dialog" class="invoicee-form-dialog"></dialog>
 </aside>
 {% endif %}

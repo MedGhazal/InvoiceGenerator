@@ -1,19 +1,12 @@
 {% load i18n %}
 <h1>{% translate 'InvoiceListView' %}</h1>
-{% if messages %}
-<ul class="messages">
-    {% for message in messages %}
-    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
 <div class="invoice-list-content">
     <div class="invoice-filter-form-wrapper">
         <h2>{% translate "HomeCONTROLSText" %}</h2>
         <form hx-push-url="true" hx-get="{% url 'Invoice:index' %}" hx-swap="innerHTML" hx-target="main" class="invoice-filter-form">
             {% csrf_token %}
             {{ form }}
-            <input type="{% translate "submit" %}" value="{% translate "Filter" %}">
+            <button type="submit">{% translate "ApplyFilter" %}</button>
         </form>
     </div>
     {% if invoice_list %}
