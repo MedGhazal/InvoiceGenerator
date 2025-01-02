@@ -199,6 +199,7 @@ class FeeStackedInline(StackedInline):
 @register(Invoice)
 class InvoiceAdmin(ModelAdmin):
 
+    list_select_related = ['invoicee', 'invoicer']
     list_per_page = 25
     actions = [
         generate_invoice,
@@ -377,6 +378,7 @@ class InvoiceeOfProjectFilter(SimpleListFilter):
 class ProjectAdmin(ModelAdmin):
 
     list_per_page = 25
+    list_select_related = ['invoice']
     list_filter = [InvoicerOfProjectFilter, InvoiceeOfProjectFilter]
     search_fields = ('title',)
     list_display = (
@@ -418,13 +420,6 @@ class ProjectAdmin(ModelAdmin):
                 invoicer__in=Invoicer.objects.filter(manager=request.user),
             )
         ).order_by('-id')
-
-    # def delete_model(self, request, project):
-    #     project.delete()
-
-    # def delete_query(self, request, projects):
-    #     for project in projects:
-    #         project.delete()
 
     def has_view_permission(self, request, obj=None):
         if obj is not None:
@@ -509,6 +504,7 @@ class InvoiceeOfProjectItemsFilter(SimpleListFilter):
 @register(Fee)
 class FeeAdmin(ModelAdmin):
 
+    list_select_related = ['project']
     list_per_page = 25
     list_filter = (
         InvoicerOfProjectItemsFilter,
@@ -549,20 +545,6 @@ class FeeAdmin(ModelAdmin):
         if not request.user.is_superuser:
             fields.remove('bookKeepingAmount')
         return fields
-
-    # def delete_model(self, request, fee):
-    #     fee.delete()
-
-    # def delete_queryset(self, request, fees):
-    #     for fee in fees:
-    #         invoice = fee.project.invoice
-    #         print(invoice.owedAmount)
-    #         invoice.owedAmount -= fee.rateUnit * fee.count * Decimal(
-    #             round(1 + fee.vat / 100, 2)
-    #         )
-    #         print(invoice.owedAmount)
-    #         invoice.save()
-    #         fee.delete()
 
     def get_queryset(self, request):
         querySet = super().get_queryset(request)
@@ -658,6 +640,7 @@ class PaymentInvoicerFilter(SimpleListFilter):
 @register(Payment)
 class PaymentAdmin(ModelAdmin):
 
+    list_select_related = ['invoice', 'invoicee']
     list_per_page = 25
     list_filter = (
         'paymentMethod',
