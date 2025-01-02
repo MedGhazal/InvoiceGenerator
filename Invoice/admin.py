@@ -198,6 +198,8 @@ class FeeStackedInline(StackedInline):
 
 @register(Invoice)
 class InvoiceAdmin(ModelAdmin):
+
+    list_per_page = 25
     actions = [
         generate_invoice,
         export_invoices,
@@ -373,6 +375,8 @@ class InvoiceeOfProjectFilter(SimpleListFilter):
 
 @register(Project)
 class ProjectAdmin(ModelAdmin):
+
+    list_per_page = 25
     list_filter = [InvoicerOfProjectFilter, InvoiceeOfProjectFilter]
     search_fields = ('title',)
     list_display = (
@@ -504,6 +508,8 @@ class InvoiceeOfProjectItemsFilter(SimpleListFilter):
 
 @register(Fee)
 class FeeAdmin(ModelAdmin):
+
+    list_per_page = 25
     list_filter = (
         InvoicerOfProjectItemsFilter,
         InvoiceeOfProjectItemsFilter,
@@ -651,6 +657,8 @@ class PaymentInvoicerFilter(SimpleListFilter):
 
 @register(Payment)
 class PaymentAdmin(ModelAdmin):
+
+    list_per_page = 25
     list_filter = (
         'paymentMethod',
         PaymentInvoicerFilter,
