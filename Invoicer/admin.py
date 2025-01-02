@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 @register(Invoicer)
 class InvoicerAdmin(ModelAdmin):
 
+    list_select_related = ['legalinformation', 'manager']
     list_display = (
         'name',
         'get_invoicees',
@@ -35,9 +36,11 @@ class InvoicerAdmin(ModelAdmin):
 class BankAccountAdmin(ModelAdmin):
 
     search_fields = ('bankName', 'owner')
+    list_select_related = ['owner']
 
 
 @register(LegalInformation)
 class LegalInformation(ModelAdmin):
 
     search_fields = ('invoicer',)
+    list_select_related = ['invoicer']
