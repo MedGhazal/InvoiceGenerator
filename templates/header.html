@@ -25,6 +25,11 @@
         {% translate 'INVOICES' %}
         </button>
       </li>
+      <li>
+        <button type="button" hx-get="{% url 'Invoice:payments' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
+        {% translate 'Payments' %}
+        </button>
+      </li>
       {% if user.is_superuser or user.is_staff %}
       <li><a href={% url 'admin:index' %}>{% translate 'ADMIN' %}</a></li>
       {% endif %}

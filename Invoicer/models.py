@@ -6,7 +6,10 @@ from django.db.models import (
     BooleanField,
     TextChoices,
     ForeignKey,
+    OneToOneField,
+    ManyToManyField,
     SET_NULL,
+    CASCADE,
 )
 from django.core.validators import (
     MinLengthValidator,
@@ -34,11 +37,6 @@ class Invoicer(Model):
         db_default='',
         verbose_name=_('NAME'),
     )
-    legalForm = CharField(
-        max_length=8,
-        db_default='',
-        verbose_name=_('LEGALFORM'),
-    )
     address = CharField(
         max_length=70,
         db_default='',
@@ -51,11 +49,47 @@ class Invoicer(Model):
         verbose_name=_('COUNTRY'),
     )
     logo = ImageField()
-    hasBankData = BooleanField(
-        db_default=False,
-        verbose_name=_('HasBankData'),
+    bankAccounts = ManyToManyField('BankAccount')
+    telefon = CharField(
+        validators=[
+            RegexValidator(
+                regex=r'^(0|\+\d{1,4})\d{9,15}$',
+                message=_('PhoneNumberINVALID'),
+            ),
+        ],
+        max_length=30,
+        db_default='',
+        verbose_name=_('TELEFONE'),
     )
-    bank = CharField(
+    bookKeepingCurrency = CharField(
+        max_length=4,
+        db_default='',
+        choices=SystemCurrency,
+        default=SystemCurrency.MAD,
+        verbose_name=_('BaseCurrency'),
+    )
+
+    @property
+    def numBankAccounts(self):
+        return self.bankAccounts.count()
+
+    def __str__(self):
+        return f'{self.name}'
+
+    class Meta:
+        verbose_name = _('INVOICER')
+        verbose_name_plural = _('INVOICERS')
+
+
+class BankAccount(Model):
+
+    owner = ForeignKey(
+        'Invoicer.Invoicer',
+        related_name='Owner',
+        verbose_name=_('Owner'),
+        on_delete=CASCADE,
+    )
+    bankName = CharField(
         max_length=70,
         db_default='',
         verbose_name=_('BankName'),
@@ -73,6 +107,16 @@ class Invoicer(Model):
         null=True,
         verbose_name=_('BIC'),
     )
+    rib = CharField(
+        max_length=24,
+        validators=[
+            MinLengthValidator(24),
+            MaxLengthValidator(24),
+        ],
+        db_default='',
+        verbose_name=_('RIB'),
+        null=True,
+    )
     iban = CharField(
         max_length=26,
         validators=[
@@ -87,15 +131,20 @@ class Invoicer(Model):
         verbose_name=_('IBAN'),
         null=True,
     )
-    rib = CharField(
-        max_length=24,
-        validators=[
-            MinLengthValidator(24),
-            MaxLengthValidator(24),
-        ],
-        db_default='',
-        verbose_name=_('RIB'),
-        null=True,
+
+    def __str__(self):
+        return f'{self.owner.name}:{self.bankName}'
+
+    class Meta:
+        verbose_name = _('BankAccount')
+        verbose_name_plural = _('BankAccounts')
+
+
+class LegalInformation(Model):
+
+    invoicer = OneToOneField(
+        'invoicer',
+        on_delete=CASCADE,
     )
     ice = CharField(
         max_length=16,
@@ -153,28 +202,71 @@ class Invoicer(Model):
         db_default='',
         verbose_name=_('IF'),
     )
-    telefon = CharField(
+    ice = CharField(
+        max_length=16,
         validators=[
             RegexValidator(
-                regex=r'^(0|\+\d{1,4})\d{9,15}$',
-                message=_('PhoneNumberINVALID'),
+                regex=r'\d{14,16}',
+                message=_('ICEInvalue'),
             ),
         ],
-        max_length=30,
         db_default='',
-        verbose_name=_('TELEFONE'),
+        verbose_name=_('SIRET/ICE'),
     )
-    bookKeepingCurrency = CharField(
-        max_length=4,
+    rc = CharField(
+        max_length=6,
+        validators=[
+            RegexValidator(
+                regex=r'\d{5,6}',
+                message=_('REInvalid'),
+            ),
+        ],
         db_default='',
-        choices=SystemCurrency,
-        default=SystemCurrency.MAD,
-        verbose_name=_('BaseCurrency'),
+        verbose_name=_('RC'),
+    )
+    patente = CharField(
+        max_length=9,
+        validators=[
+            RegexValidator(
+                regex=r'\d{8,9}',
+                message=_('REInvalid'),
+            ),
+        ],
+        db_default='',
+        verbose_name=_('PATENTE'),
+    )
+    cnss = CharField(
+        max_length=20,
+        validators=[
+            RegexValidator(
+                regex=r'\d{7}',
+                message=_('CNSSInvalid'),
+            ),
+        ],
+        db_default='',
+        verbose_name=_('CNSS'),
+        null=True,
+    )
+    fiscal = CharField(
+        max_length=20,
+        validators=[
+            RegexValidator(
+                regex=r'\d{6,8}',
+                message=_('CNSSInvalid'),
+            ),
+        ],
+        db_default='',
+        verbose_name=_('IF'),
+    )
+    legalForm = CharField(
+        max_length=8,
+        db_default='',
+        verbose_name=_('LEGALFORM'),
     )
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{_('LegalInformationsOf')}:{self.invoicer.name}'
 
     class Meta:
-        verbose_name = _('INVOICER')
-        verbose_name_plural = _('INVOICERS')
+        verbose_name = _('LegalInformation')
+        verbose_name_plural = _('LegalInformations')

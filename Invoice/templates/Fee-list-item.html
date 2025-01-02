@@ -1,0 +1,37 @@
+{% load i18n %}
+<tr id="fee-list-item-{{ fee.id }}">
+    <td>{{ fee.description }}</td>
+    <td>{{ fee.vat }}%</td>
+    <td>{{ fee.count }}</td>
+    <td>{{ fee.rateUnit }}</td>
+    <td>{{ fee.totalAfterVAT }}</td>
+    {% if invoice.status == 0 or invoice.status == 1 %}
+    <td class="borderless">
+        <button 
+            hx-get="{% url 'Invoice:updateFee' fee.id %}" 
+            hx-swap="innerHTML"
+            hx-target="#modify-fee-{{ fee.id }}-dialog"
+            hx-on:click="document.getElementById('modify-fee-{{ fee.id }}-dialog').showModal()"
+            helptext="{% translate 'FeeModifyExplanation' %}">
+            {% include './symbols/edit.svg' %}
+        </button>
+    </td>
+    {% if numFees > 1 %}
+    <td class="borderless">
+        <button 
+            hx-delete="{% url 'Invoice:deleteFee' fee.id %}"
+            hx-swap="innerHTML"
+            hx-target="main"
+            helptext="{% translate 'DeleteFeeButtonExplanation' %}">
+            {% include './symbols/trash.svg' %}
+        </button>
+        <script nonce={{ request.csp_nonce }}>
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        })
+        </script>
+    </td>
+    {% endif %}
+    {% endif %}
+</tr>
+<dialog id="modify-fee-{{ fee.id }}-dialog" class="fee-dialog"></dialog>

@@ -1,0 +1,18 @@
+{% load i18n %}
+<form 
+    hx-post="{% url 'Invoice:updateFee' fee.id %}" 
+    hx-target="main"
+    hx-swap="innerHTML">
+    <div class="form-header">
+        <button 
+            hx-on:click="document.getElementById('modify-fee-{{ fee.id }}-dialog').close();"
+            class="dialog-close-button">{% include './symbols/x-square.svg' %}</button>
+    </div>
+    <div class="form-main">
+        {% csrf_token %}
+        {{ feeForm }}
+    </div>
+    <div class="form-footer">
+        <button type="submit">{% translate 'Save' %}</button>
+    </div>
+</form>

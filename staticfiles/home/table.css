@@ -56,8 +56,8 @@ table.StateTable .HeaderColumn {
 }
 
 .item-list {
-	margin: auto;
-	padding: 2.5%;
+	padding: 1%;
+	margin: min(5px, .25%);
 	background-color: var(--secondary-color);
 	border-radius: 10px;
 }
@@ -100,7 +100,6 @@ table.StateTable .HeaderColumn {
 	margin: 0;
 	background-color: inherit;
 	color: var(--primary-color);
-	width: min-content;
 	border: 0;
 	padding: .1rem;
 	border-radius: 5px;
@@ -142,4 +141,9 @@ table.StateTable .HeaderColumn {
 	border: 0;
 	background-color: var(--primary-color);
 	color: var(--secondary-color);
+}
+.item-list-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: end;
 }

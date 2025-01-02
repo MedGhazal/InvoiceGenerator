@@ -30,29 +30,22 @@ class InvoicerFilter(SimpleListFilter):
 
 @register(Invoicee)
 class InvoiceeAdmin(ModelAdmin):
-    list_filter = (
-        'country',
-        InvoicerFilter,
-    )
-    list_display = (
-        'name',
-        'ice',
-        'cin',
-        'get_balance',
-    )
+    list_filter = ('country', InvoicerFilter)
+    list_display = ('name', 'ice', 'cin', 'get_balance')
     search_fields = ('name',)
-    fields = [
+    fields = (
         'invoicer',
         'name',
         'address',
+        'country',
         'cin',
         'ice',
         'is_person',
-    ]
+    )
 
     def get_balance(self, invoicee):
         balance = 0
-        for invoice in invoicee.invoice_set.filter(draft=False):
+        for invoice in invoicee.invoice_set.exclude(state__in=[0, 1]):
             balance += invoice.owedAmount - invoice.paidAmount
         if balance == 0:
             return '-'
@@ -74,22 +67,24 @@ class InvoiceeAdmin(ModelAdmin):
         ).order_by('-id')
 
     def has_view_permission(self, request, obj=None):
-        if obj is not None and (
-            not request.user.is_superuser and obj.invoicer.manager != request.user
-        ):
-            return False
+        if obj is not None:
+            return (
+                request.user.is_superuser
+                or obj.invoicer.manager == request.user
+            )
         return True
 
     def has_change_permission(self, request, obj=None):
-        if obj is not None and (
-            not request.user.is_superuser and obj.invoicer.manager != request.user
-        ):
-            return False
+        if obj is not None:
+            return (
+                request.user.is_superuser
+                or obj.invoicer.manager == request.user
+            )
         return True
 
     def has_delete_permission(self, request, obj=None):
-        if obj is not None and not request.user.is_superuser:
-            return False
+        if obj is not None:
+            return request.user.is_superuser
         return True
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

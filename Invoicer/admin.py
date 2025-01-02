@@ -2,7 +2,7 @@ from django.contrib.admin import (
     register,
     ModelAdmin,
 )
-from .models import Invoicer
+from .models import Invoicer, BankAccount, LegalInformation
 from django.urls import reverse
 from django.utils.html import format_html, mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -14,8 +14,6 @@ class InvoicerAdmin(ModelAdmin):
     list_display = (
         'name',
         'get_invoicees',
-        'hasBankData',
-        'ice',
     )
     search_fields = ('name',)
 
@@ -31,3 +29,15 @@ class InvoicerAdmin(ModelAdmin):
         return mark_safe(invoicees)
 
     get_invoicees.short_description = _('INVOICEE')
+
+
+@register(BankAccount)
+class BankAccountAdmin(ModelAdmin):
+
+    search_fields = ('bankName', 'owner')
+
+
+@register(LegalInformation)
+class LegalInformation(ModelAdmin):
+
+    search_fields = ('invoicer',)

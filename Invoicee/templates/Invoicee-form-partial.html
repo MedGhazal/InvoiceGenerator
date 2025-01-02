@@ -23,7 +23,7 @@
         {{ form }}
     </div>
     <div class="form-footer">
-        <button type="submit" class="dialog-submit-button">
+        <button type="submit" class="dialog-submit-button" hx-on:Click="document.getElementById('invoicee-form-dialog').close()">
             {% if update %}
             {% translate 'Save' %}
             {% else %}

@@ -1,5 +1,6 @@
 from django.db.models import (
     TextChoices,
+    IntegerChoices,
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -19,3 +20,11 @@ class PaymentMethod(TextChoices):
 class SystemCurrency(TextChoices):
     MAD = 'MAD', _('MOROCCANDIRHAM')
     EURO = 'EURO', _('EURO')
+
+
+class InvoiceStates(IntegerChoices):
+    DRAFT = 0, _('Draft')
+    Estimate = 1, _('Estimate')
+    Validated = 2, _('Validated')
+    Paid = 3, _('Paid')
+    Credited = 4, _('Credited')

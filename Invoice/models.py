@@ -1,5 +1,7 @@
 from datetime import date
 from decimal import Decimal
+
+from django.urls import reverse_lazy
 from django.db.models import (
     Q, F, When, Case, Value,
     Model,
@@ -11,6 +13,7 @@ from django.db.models import (
     DecimalField,
     GeneratedField,
     ManyToManyField,
+    OneToOneField,
     CASCADE,
 )
 from django.db.models.lookups import LessThanOrEqual
@@ -26,6 +29,7 @@ from simple_history.models import HistoricalRecords
 from Core.models import (
     PaymentMethod,
     SystemCurrency,
+    InvoiceStates,
 )
 from Core.utils import (
     get_currency_symbol,
@@ -43,6 +47,12 @@ class Invoice(Model):
         'Invoicee.Invoicee',
         on_delete=CASCADE,
         verbose_name=_('INVOICEE'),
+    )
+    bankAccount = ForeignKey(
+        'Invoicer.BankAccount',
+        on_delete=CASCADE,
+        verbose_name=_('BankAccount'),
+        null=True,
     )
     count = IntegerField(
         db_default=0,
@@ -91,24 +101,19 @@ class Invoice(Model):
             MaxValueValidator(99999999),
         ],
     )
-    draft = BooleanField(
-        db_default=True,
-        verbose_name=_('Draft'),
-        default=True,
+    state = IntegerField(
+        db_default=0,
+        choices=InvoiceStates,
+        default=InvoiceStates.DRAFT,
+        verbose_name=_('State'),
     )
-    credited = BooleanField(
-        db_default=False,
-        verbose_name=_('Credited'),
-        default=False,
-    )
-    estimate = BooleanField(
-        db_default=False,
-        verbose_name=_('Estimate'),
-        default=False,
-    )
+    # 0: Draft or Estimate
+    # 1: Validated, not paid and not overdue
+    # 2: Validated and fully Paid
+    # 3: Validated, not paid and overdue
     status = GeneratedField(
         expression=Case(
-            When(draft=True, then=Value(0)),
+            When(Q(state__in=[0, 1]), then=Value(0)),
             When(
                 Q(LessThanOrEqual(F('owedAmount'), F('paidAmount'))),
                 then=Value(2),
@@ -138,9 +143,11 @@ class Invoice(Model):
     )
 
     def __str__(self):
-        if self.draft or self.estimate:
+        if self.state == 0:
+            return f'{self.invoicer}|{self.invoicee}:B'.replace('\n', ' ')
+        elif self.state == 1:
             return f'{self.invoicer}|{self.invoicee}:D'.replace('\n', ' ')
-        elif not self.draft:
+        elif not self.state == 0:
             repr = f'{self.invoicer}|{self.invoicee}:F{self.count}'
             if self.owedAmount > 0:
                 currencySymbol = get_currency_symbol(self.baseCurrency)
@@ -149,13 +156,22 @@ class Invoice(Model):
         else:
             return ''
 
+    @property
+    def number(self):
+        if self.state == 0:
+            return f'{date.today().year}-B-{self.id}'
+        elif self.state == 1:
+            return f'{date.today().year}-D-{self.id}'
+        else:
+            return f'{self.facturationDate.year}-{self.count}'
+
     def clean(self):
         if (
             self.dueDate is None
             or self.facturationDate is None
             or isinstance(self.dueDate, DatabaseDefault)
             or isinstance(self.facturationDate, DatabaseDefault)
-        ) and not self.draft and not self.estimate:
+        ) and self.state != 1:
             raise ValidationError(
                 _('DueANDFacturationDATESareMANDATORYForINVOICES')
             )
@@ -166,15 +182,15 @@ class Invoice(Model):
     def save(self, *args, **kwargs):
         invoices = Invoice.objects
         self.description = f'{self.invoicer}|{self.invoicee}'
-        if self.draft:
+        if self.state == 0 or self.state == 1:
             self.count = None
-        elif not self.draft and (
+        elif not self.state == 0 and (
             self.count is None
             or isinstance(self.count, DatabaseDefault)
             or self.count == 0
         ):
-            invoices = invoices.filter(
-                draft=False,
+            invoices = invoices.exclude(
+                state__in=[0, 1],
             ).filter(
                 invoicer=self.invoicer,
             ).filter(
@@ -196,7 +212,7 @@ class Invoice(Model):
 
     @property
     def downloadable(self):
-        return self.wellFormed and (self.estimate or not self.draft)
+        return self.wellFormed and (self.state in [0, 1])
 
     @property
     def totalBeforeVAT(self):
@@ -261,6 +277,11 @@ class Project(Model):
             )
         else:
             return 0
+
+    @property
+    def numFees(self):
+        print(self.fee_set.count())
+        return self.fee_set.count()
 
     def __str__(self):
         return f'{self.invoice}|{self.title}'
@@ -329,6 +350,9 @@ class Fee(Model):
     def totalAfterVAT(self):
         return round(self.totalBeforeVAT + self.totalVAT, 2)
 
+    def get_absolute_url(self):
+        return reverse_lazy('Invoice:modify', args=[self.project.invoice.id])
+
     def __str__(self):
         return f'{self.project}-{self.description}'
 
@@ -368,6 +392,7 @@ class Payment(Model):
         related_name='paymentInvoice',
         related_query_name='paymentInvoice',
     )
+    bankAccount = ForeignKey('Invoicer.BankAccount', on_delete=CASCADE)
     history = HistoricalRecords()
 
     def __str__(self):
@@ -396,6 +421,9 @@ class Payment(Model):
             invoice.paidAmount -= coverage
             invoice.save()
         super(Payment, self).delete()
+
+    def get_absolute_url(self):
+        return reverse_lazy('Invoice:payment', args=[self.id])
 
     class Meta:
         verbose_name = _('Payment')

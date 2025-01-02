@@ -13,23 +13,46 @@
             <li><a href="{% url 'admin:Invoice_project_changelist' %}" class="SubItem">- {% translate 'PROJECTS' %}</a></li>
             <li><a href="{% url 'admin:Invoice_fee_changelist' %}" class="SubItem">- {% translate 'Fees' %}</a></li>
             {% endif %}
-            <li><a href="{% url 'Invoice:add-invoice' %}" class="MainItem">{% translate 'AddInvoice' %}</a></li>
-            <li><a href="{% url 'Invoice:add-draft' %}" class="MainItem">{% translate 'AddEstimate' %}</a></li>
+            <li><button 
+                hx-get="{% url 'Invoice:add-estimate' %}" class="MainItem"
+                hx-target="#invoice-form-dialog"
+                hx-on:click="document.getElementById('invoice-form-dialog').showModal();"
+                hx-swap="innerHTML"
+                nonce={{request.csp_nonce}}
+            >{% translate 'AddEstimate' %}</button></li>
+            <li><button 
+                hx-get="{% url 'Invoice:add-invoice' %}" class="MainItem"
+                hx-target="#invoice-form-dialog"
+                hx-on:click="document.getElementById('invoice-form-dialog').showModal();"
+                hx-swap="innerHTML"
+                nonce={{request.csp_nonce}}
+            >{% translate 'AddInvoice' %}</button></li>
+            <li><button 
+                hx-get="{% url 'Invoice:add-payment' %}" class="MainItem"
+                hx-target="#payment-form-dialog"
+                hx-on:click="document.getElementById('payment-form-dialog').showModal();"
+                hx-swap="innerHTML"
+                nonce={{request.csp_nonce}}
+            >{% translate 'AddPayment' %}</button></li>
             <li><button 
                 hx-get="{% url 'Invoicee:add-invoicee' %}" class="MainItem"
                 hx-target="#invoicee-form-dialog"
                 hx-on:click="document.getElementById('invoicee-form-dialog').showModal();"
                 hx-swap="innerHTML"
+                nonce={{request.csp_nonce}}
             >{% translate 'AddInvoicee' %}</button></li>
             <li><button 
                 hx-get="{% url 'Invoicee:add-private-invoicee' %}" class="MainItem"
                 hx-target="#invoicee-form-dialog"
                 hx-on:click="document.getElementById('invoicee-form-dialog').showModal();"
                 hx-swap="innerHTML"
+                nonce={{request.csp_nonce}}
             >{% translate 'AddPrivateInvoicee' %}</button></li>
             {% block extraAsideItems %} {% endblock %}
         </ul>
     </div>
-    <dialog id="invoicee-form-dialog" class="invoicee-form-dialog"></dialog>
+    <dialog id="invoicee-form-dialog" class="form-dialog"></dialog>
+    <dialog id="invoice-form-dialog" class="form-dialog"></dialog>
+    <dialog id="payment-form-dialog" class="form-dialog"></dialog>
 </aside>
 {% endif %}

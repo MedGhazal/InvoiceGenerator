@@ -33,11 +33,7 @@ urlpatterns = [
     path('', InvoiceeListView.as_view(), name='invoicees'),
     path('private', PrivateInvoiceeListView.as_view(), name='pinvoicees'),
     path('detail/<slug:pk>', InvoiceeDetailView.as_view(), name='invoicee'),
-    path(
-        'addInvoicee',
-        InvoiceeCreateView.as_view(),
-        name='add-invoicee',
-    ),
+    path('addInvoicee', InvoiceeCreateView.as_view(), name='add-invoicee'),
     path(
         'addPrivateInvoicee',
         PrivateInvoiceeCreateView.as_view(),

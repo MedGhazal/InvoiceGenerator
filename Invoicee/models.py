@@ -91,8 +91,8 @@ class Invoicee(Model):
 
     @property
     def numOutstandingInvoices(self):
-        return Invoice.objects.filter(
-            status=1
+        return Invoice.objects.exclude(
+            status__in=[0, 1]
         ).filter(
             invoicee=self
         ).count()
@@ -101,14 +101,22 @@ class Invoicee(Model):
     def paidAmount(self):
         return sum(
             invoice.paidAmount
-            for invoice in Invoice.objects.filter(invoicee=self)
+            for invoice in Invoice.objects.filter(
+                invoicee=self
+            ).exclude(
+                status__in=[0, 1]
+            )
         )
 
     @property
     def owedAmount(self):
         return sum(
             invoice.owedAmount
-            for invoice in Invoice.objects.filter(invoicee=self)
+            for invoice in Invoice.objects.filter(
+                invoicee=self
+            ).exclude(
+                status__in=[0, 1]
+            )
         )
 
     class Meta:

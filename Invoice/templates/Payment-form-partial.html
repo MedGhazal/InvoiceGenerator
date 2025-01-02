@@ -1,0 +1,36 @@
+{% load static %}
+{% load i18n %}
+{% if not dialogForm %}
+<div class="form-wrapper">
+{% endif %}
+    <form
+        hx-post=
+        {% if update %}
+        "{% url 'Invoice:update-payment' payment.id %}"
+        {% else %}
+        "{% url 'Invoice:add-payment' %}"
+        {% endif %}
+        hx-push-url="true"
+        hx-swap="innerHTML"
+        hx-target="main"
+        class="form">
+        <div class="form-header">
+            {% if dialogForm %}
+            <botton type="button" hx-on:click="document.getElementById('payment-form-dialog').close()" class="dialog-close-button">
+            {% include './symbols/x-square.svg' %}
+            </botton>
+            {% endif %}
+        </div>
+        <div class="form-main">
+            {% csrf_token %}
+            {{ form }}
+        </div>
+        <div class="form-footer">
+            <button type="submit" class="dialog-submit-button" hx-on:click="location.reload()">
+                {% translate 'SaveInvoice' %}
+            </button>
+        </div>
+    </form>
+{% if not dialogForm %}
+</div>
+{% endif %}

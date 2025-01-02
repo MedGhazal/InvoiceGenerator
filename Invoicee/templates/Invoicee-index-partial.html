@@ -1,5 +1,39 @@
 {% load i18n %}
 <h1>{% translate 'INVOICEE' %}</h1>
+{% if messages %}
+<div class="messages-content">
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}{% translate 'Error' %}: {% endif %}
+            {{ message }}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+<div class="filter-form-wrapper">
+    <form 
+    hx-push-url="true" 
+        hx-get=
+        {% if private %}
+        "{% url 'Invoicee:pinvoicees' %}" 
+        {% else %}
+        "{% url 'Invoicee:invoicees' %}" 
+        {% endif %}
+        hx-swap="innerHTML" 
+        hx-target="main" 
+        class="filter-form">
+        <div class="form-main">
+            <h2>{% translate "EnterNameToSearchForInvoicee" %}</h2>
+            {% csrf_token %}
+            {{ searchForm }}
+        </div>
+        <div class="form-footer">
+            <button class="submit-button" type="submit">{% translate "ApplyFilter" %}</button>
+        </div>
+    </form>
+</div>
 {% if invoicee_list %}
 <div class="item-list">
     <table>
@@ -27,6 +61,8 @@
         </tbody>
     </table>
 </div>
+<dialog id="invoice-form-dialog" class="invoice-form-dialog"></dialog>
+<dialog id="invoicee-form-dialog" class="invoicee-form-dialog"></dialog>
 {% else %}
-{% translate 'InvoicerHasNoInvoicees' %}
+{% translate '' %}
 {% endif %}

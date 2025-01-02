@@ -73,6 +73,10 @@ a, button {
 	color: var(--primary-color);
 	background-color: var(--light-color);
 }
+a:hover, button:hover {
+	background-color: var(--primary-color);
+	color: var(--light-color);
+}
 
 /* utility classes */
 .helptext {
@@ -116,20 +120,6 @@ header {
 	padding: 5px 10px;
 	border: 0;
 	border-radius: 0;
-	border-color: var(--ligth-color);
-	background-color: var(--light-color);
-}
-.nav-box ul li button:hover {
-	color: var(--light-color);
-	border-color: var(--primary-color);
-	background-color: var(--primary-color);
-	transition: all .15s ease-in-out;
-}
-.nav-box ul li a:hover {
-	color: var(--light-color);
-	border-color: var(--primary-color);
-	background-color: var(--primary-color);
-	transition: all .15s ease-in-out;
 }
 
 /* aside */
@@ -159,11 +149,6 @@ aside .nav-box ul li .SubItem {
 	width: 100%;
 	font-size: .8rem;
 	border: 10px;
-	color: var(--light-color);
-	background-color: var(--primary-color);
-	border: 1px solid var(--primary-color);
-}
-aside .nav-box ul li .MainItem:hover {
 	color: var(--light-color);
 	background-color: var(--primary-color);
 	border: 1px solid var(--primary-color);

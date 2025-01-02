@@ -1,0 +1,70 @@
+{% load i18n %}
+<h1>{% translate 'PaymentListView' %}</h1>
+{% if messages %}
+<div class="messages-content">
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}{% translate 'Error' %}: {% endif %}
+            {{ message }}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+<div class="filter-form-wrapper">
+    <form 
+        hx-push-url="true" 
+        hx-get="{% url 'Invoice:payments' %}" 
+        hx-swap="innerHTML" 
+        hx-target="main" 
+        class="filter-form">
+        <div class="form-main">
+            <h2>{% translate "PayemntFilterText" %}</h2>
+            {% csrf_token %}
+            {{ searchForm }}
+        </div>
+        <div class="form-footer">
+            <button class="submit-button" type="submit">{% translate "ApplyFilter" %}</button>
+        </div>
+    </form>
+</div>
+{% if payment_list %}
+<div class="item-list">
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 300px" nonce={{ request.csp_nonce }}>{% translate 'INVOICEE' %}</th>
+                <th>{% translate 'PaymentDay' %}</th>
+                <th>{% translate 'PaidAmount' %}</th>
+                <th>{% translate 'PaidInvoices' %}</th>
+                {% if invoicerHasManyBankAccounts %}
+                <th>{% translate 'BankAccounts' %}</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payment_list %}
+            {% include './payment-list-item.html' with payment=payment %}
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr></tr>
+        </tfoot>
+    </table>
+    <div class="item-list-footer">
+        <button 
+            class="extensive-button"
+            type="button"
+            hx-get="{% url 'Invoice:add-payment' %}"
+            hx-target="#payment-form-dialog"
+            hx-on:click="document.getElementById('payment-form-dialog').showModal();"
+            hx-swap="innerHTML">
+            {% include './symbols/award.svg' %}
+            <span class="text">{% translate 'AddNewPayment' %}</span>
+        </button>
+    </div>
+</div>
+{% else %}
+<div class="message">{% translate 'NoPaymentAvailableForChosenFilterOrUserHasNoPayment' %}</div>
+{% endif %}

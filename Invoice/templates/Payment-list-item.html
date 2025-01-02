@@ -1,0 +1,54 @@
+{% load i18n %}
+<tr>
+    <td>{{ payment.payor }}</td>
+    <td>{{ payment.paymentDay }}</td>
+    <td>{{ payment.paidAmount }}</td>
+    <td>
+        <ul>
+        {% for invoice in payment.invoice.all %}
+            <li><button 
+                hx-get="{% url 'Invoice:preview' invoice.id %}"
+                hx-swap="innerHTML"
+                hx-target="main"
+                helptext="{% translate 'PreviewInvoice' %}"
+                class="invoice-button"
+            >{{ invoice.number }}</button></li>
+        {% endfor %}
+        </ul>
+    </td>
+    {% if invoicerHasManyBankAccounts %}
+    <td>{{ payment.bankAccount }}</td>
+    {% endif %}
+    <td class="borderless">
+        <button 
+            hx-get="{% url 'Invoice:payment' payment.id %}"
+            hx-swap="innerHTML"
+            hx-target="main"
+            helptext="{% translate 'ViewPaymentDetailButtonExplanation' %}">
+            {% include './symbols/eye.svg' %}
+        </button>
+    </td>
+    <td class="borderless">
+        <button 
+            hx-get="{% url 'Invoice:update-payment' payment.id %}" 
+            hx-swap="innerHTML" 
+            hx-target="#payment-form-dialog"
+            hx-on:click="document.getElementById('payment-form-dialog').showModal();"
+            helptext="{% translate 'PaymentModifyExplanation' %}">{% include './symbols/edit.svg' %}</button>
+    </td>
+    <td class="borderless">
+        <button 
+            hx-delete="{% url 'Invoice:delete-payment' payment.id %}"
+            hx-confirm="{% translate 'PaymentDeleteConfimMessage' %}"
+            hx-swap="innerHTML"
+            hx-target="main"
+            helptext="{% translate 'DeletePaymentButtonExplanation' %}">
+            {% include './symbols/trash.svg' %}
+        </button>
+        <script nonce={{ request.csp_nonce }}>
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        })
+        </script>
+    </td>
+</tr>

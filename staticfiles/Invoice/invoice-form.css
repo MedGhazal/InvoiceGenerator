@@ -1,5 +1,12 @@
+.invoice-form-dialog {
+    margin: auto;
+    padding: 1%;
+    border: 0;
+    border-radius: 10px;
+    background-color: var(--primary-color);
+    width: fit-content;
+}
 .invoice-form-wrapper {
-	display: flex;
 	margin: auto;
 	height: 100%;
 }

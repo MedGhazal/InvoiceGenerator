@@ -25,9 +25,15 @@ from Core.exceptions import (
 
 
 def create_credit_note(invoice):
-    if not invoice.draft:
+    if (
+        not invoice.state == 0
+        and invoice.state == 1
+        and invoice.state == 3
+        and invoice.paidAmount == 0
+    ):
         invoice.paymentMethod = 'CN'
         invoice.owedAmount = 0
+        invoice.state = 3
         invoice.save()
         creditNote = Invoice()
         creditNote.invoicer = invoice.invoicer
@@ -38,7 +44,8 @@ def create_credit_note(invoice):
         creditNote.paymentMethod = 'CN'
         creditNote.salesAccount = invoice.salesAccount
         creditNote.vatAccount = invoice.vatAccount
-        creditNote.draft = False
+        creditNote.state = 3
+        creditNote.owedAmount = 0
         creditNote.save()
         project = Project()
         project.invoice = creditNote
@@ -147,17 +154,16 @@ def parse_address(address):
     return '\\\\'.join(address.split(','))
 
 
-def parse_bankdata(invoicer, isDomestic=False):
-    if invoicer.hasBankData:
-        bankData = f'\\textbf{{Banque}}: {invoicer.bank}\\\\'\
-            f'\\textbf{{SWIFT/BIC}}: {invoicer.bic}\\\\'
-        if isDomestic:
-            bankData += f'\\textbf{{RIB}}: {invoicer.rib}\\\\'
-        else:
-            bankData += f'\\textbf{{IBAN}}: {invoicer.iban}\\\\'
-        return bankData
-    else:
+def parse_bankdata(invoice, isDomestic=False):
+    if invoice.state == 1:
         return ''
+    bankData = f'\\textbf{{Banque}}: {invoice.bankAccount.bankName}\\\\'\
+        f'\\textbf{{SWIFT/BIC}}: {invoice.bankAccount.bic}\\\\'
+    if isDomestic:
+        bankData += f'\\textbf{{RIB}}: {invoice.bankAccount.rib}\\\\'
+    else:
+        bankData += f'\\textbf{{IBAN}}: {invoice.bankAccount.iban}\\\\'
+    return bankData
 
 
 def get_ice_designation(institution):
@@ -187,8 +193,9 @@ def get_invoiceeID(invoicer, invoicee):
 
 
 def get_invoice_block(invoice, invoiceStatus, invoiceType):
-    if invoice.draft:
+    if invoice.state == 1:
         return f'''
+Date de devis: {lformat_date(date.today())}
 Devis Numéro: D{date.today().year}-{date.today().day}{date.today().month}\\\\
 '''
     else:
@@ -202,7 +209,7 @@ def get_dueDate_block(invoice):
     if (
         invoice.facturationDate is not None
         and invoice.dueDate is not None
-        and not invoice.draft
+        and not invoice.state == 1
     ):
         if invoice.facturationDate == invoice.dueDate:
             return 'Échéance: À la réception de la facture'
@@ -231,7 +238,7 @@ def get_placeHolder_data(invoice):
     dueDateBlock = get_dueDate_block(invoice)
     paymentMethodLabel = get_paymentMethod_label(invoice.paymentMethod)
     invoicerAddress = f'{parse_address(invoice.invoicer.address)} {invoicerCountry}'
-    invoicerFullname = f'{invoice.invoicer.name} {invoice.invoicer.legalForm}'
+    invoicerFullname = f'{invoice.invoicer.name} {invoice.invoicer.legalinformation.legalForm}'
     invoiceeAddress = f'{parse_address(invoice.invoicee.address)} {invoiceeCountry}'
     facturationPeriod = (
         str(invoice.facturationDate.year)
@@ -239,7 +246,7 @@ def get_placeHolder_data(invoice):
         else date.today().year
     )
     bankBlock = parse_bankdata(
-        invoice.invoicer, isDomestic=(
+        invoice, isDomestic=(
             invoice.baseCurrency == invoice.invoicer.bookKeepingCurrency
         )
     )
@@ -249,18 +256,18 @@ def get_placeHolder_data(invoice):
         '%INVOICERADRESS%': invoicerAddress,
         '%INVOICERNAME%': invoice.invoicer.name,
         '%INVOICERFULLNAME%': invoicerFullname,
-        '%INVOICERICE%': f'{invoicer_ice_designation}: {invoice.invoicer.ice}',
-        '%RC%': invoice.invoicer.rc,
-        '%PATENTE%': invoice.invoicer.patente,
-        '%CNSS%': invoice.invoicer.cnss,
-        '%IF%': invoice.invoicer.fiscal,
+        '%INVOICERICE%': f'{invoicer_ice_designation}: {invoice.invoicer.legalinformation.ice}',
+        '%RC%': invoice.invoicer.legalinformation.rc,
+        '%PATENTE%': invoice.invoicer.legalinformation.patente,
+        '%CNSS%': invoice.invoicer.legalinformation.cnss,
+        '%IF%': invoice.invoicer.legalinformation.fiscal,
         '%TELEFON%': invoice.invoicer.telefon,
         '%INVOICEEADRESS%': invoiceeAddress,
         '%INVOICEEICE%': invoicee_id,
         '%INVOICEENAME%': invoice.invoicee.name,
         '%FACTURATIONYEAR%': facturationPeriod,
         '%DUEDATE%': str(invoice.dueDate),
-        '%PAYMENTMODE%': _(paymentMethodLabel),
+        '%PAYMENTMODE%': f'\\textbf{{Methode de payement}}: {_(paymentMethodLabel)}\\newline',
         '%NOTE%': textNote if isForeign else '',
         '%PATHTOLOGO%': str(invoice.invoicer.logo),
         '%INVOICEBLOCK%': invoiceBlock,
@@ -294,7 +301,7 @@ def compile_texFile(texFileName):
 
 def generate_invoice_file(invoice):
     rawTex = generate_invoice_tex(invoice)
-    if invoice.draft:
+    if invoice.state == 0:
         texFileName = f'{invoice.invoicer.name}_'\
             f'{date.today()}_'\
             f'{invoice.count}.tex'.replace(' ', '')
@@ -306,7 +313,7 @@ def generate_invoice_file(invoice):
     with open(texFilePath, 'w', encoding='utf-8') as texFile:
         texFile.write(rawTex)
     compile_texFile(texFileName)
-    if invoice.draft:
+    if invoice.state == 0:
         return f'{invoice.invoicer.name}_'\
             f'{date.today()}_'\
             f'{invoice.count}.pdf'.replace(' ', '')
@@ -500,14 +507,12 @@ def processInvoiceDraftDataAndSave(invoiceData, estimate=None):
         invoice.facturationDate = date.fromisoformat(
             invoiceData['facturationDate'],
         )
-        invoice.dueDate = date.fromisoformat(
-            invoiceData['dueDate'],
-        )
+        invoice.dueDate = date.fromisoformat(invoiceData['dueDate'])
+        invoice.bankAccount = invoiceData['bankAccount']
     invoice.baseCurrency = invoiceData['baseCurrency']
     invoice.paymentMethod = invoiceData['paymentMethod']
     invoice.salesAccount = 0
     invoice.vatAccount = 0
-    invoice.draft = True
-    invoice.estimate = estimate
+    invoice.state = 1 if estimate else 0
     invoice.save()
     return invoice.id

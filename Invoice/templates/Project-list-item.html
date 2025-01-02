@@ -1,0 +1,33 @@
+{% load i18n %}
+<tr>
+    <td>{{ fee.description }}</td>
+    <td>{{ fee.vat }}%</td>
+    <td>{{ fee.count }}</td>
+    <td>{{ fee.rateUnit }}</td>
+    <td>{{ fee.totalAfterVAT }}</td>
+    <td class="borderless">
+        {% if invoice.status == 0 or invoice.status == 1 %}
+        <a href="{% url 'Invoice:modify' invoice.id %}" helptext="{% translate 'FeeModifyExplanation' %}"> {% include './symbols/edit.svg' %} </a>
+        {% endif %}
+    </td>
+    {% if numFees > 1 %}
+    <td class="borderless">
+        {% if invoice.state == 0 or invoice.state == 1 %}
+        <button 
+            hx-get="{% url 'Invoice:delete-invoice' invoice.id %}"
+            hx-swap="innerHTML"
+            hx-target="main"
+            helptext="{% translate 'DeleteFeeButtonExplanation' %}">
+            {% include './symbols/trash.svg' %}
+        </button>
+        {% endif %}
+    </td>
+    {% endif %}
+    <td class="borderless">
+        {% if invoice.downloadable %}
+        <a href="{% url 'Invoice:download' invoice.id %}" helptext="{% translate 'DownloadInvoiceButtonExplanation' %}">
+            {% include './symbols/download.svg' %}
+        </a>
+        {% endif %}
+    </td>
+</tr>

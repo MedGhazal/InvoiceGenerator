@@ -1,10 +1,10 @@
 from django.forms import ModelForm
-from django.forms.models import (inlineformset_factory, ModelChoiceField)
-from django.forms import (DateInput, TextInput)
+from django.forms.models import inlineformset_factory
+from django.forms import DateInput
+from django.utils.translation import gettext_lazy as _
 
-from Invoicer.models import Invoicer
 from Invoicee.models import Invoicee
-from .models import Invoice, Project, Fee
+from .models import Invoice, Project, Fee, Payment
 
 from django_select2.forms import ModelSelect2Widget
 
@@ -28,25 +28,36 @@ FeeFormset = inlineformset_factory(
 )
 
 
-class InvoiceeWidget(ModelSelect2Widget):
-    search_fields = ['name__icontains']
+class PaymentForm(ModelForm):
+
+    class Meta:
+        model = Payment
+        fields = [
+            'payor',
+            'invoice',
+            'bankAccount',
+            'paidAmount',
+            'paymentDay',
+            'paymentMethod',
+        ]
+        widgets = {
+            'paymentDay': DateInput(
+                attrs={
+                    'type': 'date',
+                    'pattern': r'\d{4}-\d{2}-\d{2}',
+                }
+            ),
+        }
 
 
 class InvoiceForm(ModelForm):
-
-    # invoicee = ModelChoiceField(
-    #     queryset=Invoicee.objects.filter(
-    #         invoicer__in=Invoicer.objects.filter(
-    #             manager=self.request.user
-    #         )
-    #     )
-    # )
 
     class Meta:
         model = Invoice
         fields = [
             'invoicer',
             'invoicee',
+            'bankAccount',
             'baseCurrency',
             'paymentMethod',
             'dueDate',
@@ -54,12 +65,26 @@ class InvoiceForm(ModelForm):
         ]
         widgets = {
             'dueDate': DateInput(
-                attrs={'type': 'date', 'pattern': r'\d{4}-\d{2}-\d{2}'}
+                attrs={
+                    'type': 'date',
+                    'pattern': r'\d{4}-\d{2}-\d{2}',
+                    'required': True,
+                }
             ),
             'facturationDate': DateInput(
-                attrs={'type': 'date', 'pattern': r'\d{4}-\d{2}-\d{2}'}
+                attrs={
+                    'type': 'date',
+                    'pattern': r'\d{4}-\d{2}-\d{2}',
+                    'required': True,
+                }
             ),
-            'invoicee': InvoiceeWidget(),
+            'invoicee': ModelSelect2Widget(
+                search_fields=['name__icontains'],
+                attrs={
+                    'data-placeholder': _('ChooseINVOICEE'),
+                    'id': 'invoicee',
+                }
+            ),
         }
 
 

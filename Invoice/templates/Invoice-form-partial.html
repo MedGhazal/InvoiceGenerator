@@ -1,16 +1,60 @@
 {% load static %}
 {% load i18n %}
+{% if not dialogForm %}
 <div class="invoice-form-wrapper">
-<form method="post" 
-    hx-post="{% if invoice %}{% url 'Invoice:add-invoice' %}{% elif estimate %}{% url 'Invoice:add-draft' %}{% endif %}"
-    hx-push-url="true"
-    hx-swap="innerHTML"
-    hx-target="main"
-    class="invoice-form">
-    {% csrf_token %}
-    {{ invoiceForm }}
-    <button type="submit">
-        <span class="symbol">&#10798;</span><span class="text">{% translate 'SaveInvoice' %}</span>
-    </button>
-</form>
+{% endif %}
+    <form method="post" 
+        hx-post=
+        "{% if invoicee %}
+        {% if invoice %}
+        {% url 'Invoice:add-invoice-for' invoicee.id %}
+        {% else %}
+        {% url 'Invoice:add-estimate-for' invoicee.id %}
+        {% endif %}
+        {% else %}
+        {% if invoice %}
+        {% url 'Invoice:add-invoice' %}
+        {% elif estimate %}
+        {% url 'Invoice:add-estimate' %}
+        {% endif %}
+        {% endif %}"
+        hx-push-url="true"
+        hx-swap="innerHTML"
+        hx-target="main"
+        class="invoice-form form">
+        <div class="form-header">
+            {% if dialogForm %}
+            <botton type="button" hx-on:click="location.reload()" class="dialog-close-button">
+            {% include './symbols/x-square.svg' %}
+            </botton>
+            {% endif %}
+        </div>
+        <div class="form-main">
+            {% if invoicee %}
+            {% if invoice %}
+            <h2>{% blocktranslate with name=invoicee.name %}Add INVOICE to the INVOICEE: {{ name }}{% endblocktranslate %}</h2>
+            {% else %}
+            <h2>{% blocktranslate with name=invoicee.name %}Add Estimate to the INVOICEE: {{ name }}{% endblocktranslate %}</h2>
+            {% endif %}
+            {% endif %}
+            {% csrf_token %}
+            {{ invoiceForm }}
+        </div>
+        <div class="form-footer">
+            <button type="submit" class="dialog-submit-button">
+                {% if invoice %}
+                {% translate 'SaveInvoice' %}
+                {% elif estimate %}
+                {% translate 'SaveEstimate' %}
+                {% endif %}
+            </button>
+        </div>
+    </form>
+    <script nonce={{ request.csp_nonce }}>
+    $('#invoicee').djangoSelect2({
+        dropdownParent: $('#invoice-form-dialog')
+    });
+    </script>
+    {% if not dialogForm %}
 </div>
+{% endif %}

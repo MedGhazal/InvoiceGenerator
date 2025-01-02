@@ -81,7 +81,7 @@ def export_invoices(invoiceAdmin, request, querySet):
             dictWriter = DictWriter(temporaryFile, EXPORT_DATA_HEADER)
             dictWriter.writeheader()
             for invoice in querySet:
-                if invoice.draft:
+                if invoice.state == 0:
                     error(request, _('TheQUERYSETHasADraft'))
                     return None
                 data = export_invoice_data(invoice, EXPORT_DATA_HEADER)
@@ -98,7 +98,7 @@ def export_invoices(invoiceAdmin, request, querySet):
 @action(description=_('InvoiceValidateAction'))
 def validate_invoices(invoiceAdmin, request, querySet):
     for invoice in querySet:
-        invoice.draft = False
+        invoice.state = 1
         invoice.save()
 
 
@@ -216,7 +216,6 @@ class InvoiceAdmin(ModelAdmin):
         'get_fees',
         'dueDate',
         'facturationDate',
-        'get_status',
         'get_balance',
     )
     autocomplete_fields = ('invoicee',)
@@ -273,36 +272,11 @@ class InvoiceAdmin(ModelAdmin):
 
     def get_readonly_fields(self, request, invoice=None):
         fields = super().get_readonly_fields(request)
-        if invoice:
-            if (
-                not request.user.is_superuser
-                and invoice.paymentInvoice.count() > 0
-            ):
-                fields.append('draft')
         return set(fields)
-
-    def get_status(self, invoice):
-        if invoice.status == 0:
-            return mark_safe('&#128998;')
-        elif invoice.status == 1:
-            return mark_safe('&#129003;')
-        elif invoice.status == 2:
-            return mark_safe('&#129001;')
-        elif invoice.status == 3:
-            days = date.today() - invoice.dueDate
-            if days.days == 0:
-                return mark_safe('&#129000;')
-            if days.days == 1:
-                return mark_safe('&#12900;')
-            if days.days > 30:
-                return mark_safe('&#128997;')
-            return mark_safe('&#128999;')
-
-    get_status.short_description = _('Status')
 
     @display(ordering='owedAmount')
     def get_balance(self, invoice):
-        if invoice.draft:
+        if invoice.state == 0:
             return _('IsDraft')
         balance = invoice.owedAmount - invoice.paidAmount
         if balance <= 0:

@@ -1,5 +1,17 @@
 {% load i18n %}
 <h1>{% translate 'ModifyINVOICE' %}: {{ invoice }}</h1>
+{% if messages %}
+<div class="messages-content">
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}{% translate 'Error' %}: {% endif %}
+            {{ message }}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
 <div class="invoice-modify-content">
     <form method="post" class='invoice-form'>
         {% csrf_token %}
@@ -7,10 +19,10 @@
         <button name="modify-invoice-{{ invoice.id }}" type="submit">Save</button>
     </form>
     <div class="project-space">
-        <div class="list-items">
+        <div class="item-list">
             {% for project in projectSet %}
             <div id="project-{{ project.instance.id }}">
-                <div id="project-title-{{ project.instance.id }}" class="item"><b>{% translate 'ProjectTitle' %}</b>: {{ project.instance.title}}</div>
+                <div id="project-title-{{ project.instance.id }}" class="title"><b>{% translate 'ProjectTitle' %}</b>: {{ project.instance.title}}</div>
                 <table>
                     <thead>
                         <tr>
@@ -23,19 +35,22 @@
                     </thead>
                     <tbody>
                         {% for fee in project.instance.fee_set.all %}
-                        <tr><td>{{ fee.description }}</td><td>{{ fee.vat }}%</td><td>{{ fee.count }}</td><td>{{ fee.rateUnit }}</td><td>{{ fee.totalAfterVAT }}</td></tr>
+                        {% include './Fee-list-item.html' with fee=fee numFees=project.instance.numFees %}
                         {% endfor %}
                     </tbody>
                     <tfoot></tfoot>
                 </table>
                 <div class="project-controls">
                     <button 
-                        id="delete-project-button-{{ project.instance.id }}"
-                        class="delete-project-button"
-                        hx-get="{% url 'Invoice:deleteProject' project.instance.id %}" 
+                        hx-delete="{% url 'Invoice:deleteProject' project.instance.id %}" 
                         hx-confirm="{% translate 'ProjectDeleteConfirmMessage' %}"
-                        hx-target="#project-{{ project.instance.id }}" 
-                        hx-swap="outerHTML">{% translate 'DeleteProject' %}</button>
+                        hx-target="main" 
+                        hx-swap="innerHTML">{% translate 'DeleteProject' %}</button>
+                    <script nonce={{ request.csp_nonce }}>
+                    document.body.addEventListener('htmx:configRequest', (event) => {
+                        event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+                    })
+                    </script>
                     <button 
                         id="add-fee-to-project-dialog-open-{{ project.instance.id }}"
                         hx-on:click="
@@ -50,111 +65,120 @@
                         ">{% translate 'ModifyProject' %}</button>
                 </div>
                 <dialog id="add-fee-to-project-dialog-{{ project.instance.id }}" class="fee-dialog">
-                    <button 
-                        class="dialog-close-button"
-                        id="modify-project-dialog-close-{{ project.instance.id }}"
-                        hx-on:click="
-                            const addFeesToProjectDialog = document.getElementById('add-fee-to-project-dialog-{{ project.instance.id }}');
-                            addFeesToProjectDialog.close();
-                        ">{% translate 'CloseWithoutSaving' %}</button>
                     <form 
-                        method="POST" 
-                        action="{% url 'Invoice:addFeesToProject' project.instance.id %}" 
-                        class="add-fee-to-project-form-{{ project.instance.id }}"
+                        hx-post="{% url 'Invoice:addFeesToProject' project.instance.id %}" 
+                        class="form fee-form"
+                        hx-swap="innerHTML"
+                        hx-target="main"
                         id="add-fee-to-project-form-{{ project.instance.id }}-1">
-                        {% csrf_token %}
-                        {{ feeForm }}
-                        <button name="add-fees-to-project-{{ fee.instance.id }}" type="submit">{% translate 'Save' %}</button>
+                        <div class="form-header">
+                            <button 
+                                hx-on:click="document.getElementById('add-fee-to-project-dialog-{{ project.instance.id }}').close();"
+                                class="dialog-close-button">{% include './symbols/x-square.svg' %}</button>
+                        </div>
+                        <div class="form-main">
+                            {% csrf_token %}
+                            {{ feeForm }}
+                        </div>
+                        <div class="form-footer">
+                            <button name="add-fees-to-project-{{ fee.instance.id }}" type="submit">{% translate 'Save' %}</button>
+                        </div>
                     </form>
                 </dialog>
                 <dialog id="modify-project-dialog-{{ project.instance.id }}" class="project-dialog">
-                    <button 
-                        id="modify-project-dialog-close-{{ project.instance.id }}"
-                        hx-on:click="
-                        const modifyProjectDialog = document.getElementById('modify-project-dialog-{{ project.instance.id }}');
-                        modifyProjectDialog.close();
-                        ">{% translate 'CloseWithoutSaving' %}</button>
-                    <form 
-                        method="POST" 
-                        hx-trigger="submit" 
-                        hx-post="{% url 'Invoice:modifyProject' project.instance.id %}" 
-                        class="project-dialog-form" 
-                        id="project-dialog-form-{{ project.instance.id }}">
-                        {% csrf_token %}
-                        {{ project.form }}
-                    </form>
-                    {% for fee in project.feeSet %}
-                    <form 
-                        method="POST" 
-                        hx-trigger="submit" 
-                        hx-post="{% url 'Invoice:modifyFee' fee.instance.id %}" 
-                        class="fee-dialog-form" 
-                        id="fee-dialog-form-{{ fee.instance.id }}" >
-                        {% csrf_token %}
-                        {{ fee.form }}
-                    </form>
-                    {% endfor %}
-                    <button 
-                        id="add-fee-to-project-dialog-open-{{ project.instance.id }}"
-                        hx-on:click="
-                        const addFeeToProjectDialog = document.getElementById('add-fee-to-project-dialog-{{ project.instance.id }}');
-                        addFeeToProjectDialog.showModal();
-                        ">{% translate 'AddFeesToProject' %}</button>
-                    <button 
-                        id="saveAll-project-dialog-{{ project.instance.id }}"
-                        hx-on:click="
+                    <div class="form-header">
+                        <button 
+                            id="modify-project-dialog-close-{{ project.instance.id }}"
+                            class="dialog-close-button"
+                            hx-on:click="document.getElementById('modify-project-dialog-{{ project.instance.id }}').close();">{% include './symbols/x-square.svg' %}</button>
+                    </div>
+                    <div class="form-main">
+                        <form 
+                            hx-trigger="submit" 
+                            hx-post="{% url 'Invoice:modifyProject' project.instance.id %}" 
+                            hx-target="main"
+                            class="project-dialog-form" 
+                            id="project-dialog-form-{{ project.instance.id }}">
+                            {% csrf_token %}
+                            {{ project.form }}
+                        </form>
+                        {% for fee in project.feeSet %}
+                        <form 
+                            hx-trigger="submit" 
+                            hx-post="{% url 'Invoice:modifyFee' fee.instance.id %}" 
+                            hx-target="main"
+                            class="fee-dialog-form" 
+                            id="fee-dialog-form-{{ fee.instance.id }}" >
+                            {% csrf_token %}
+                            {{ fee.form }}
+                        </form>
+                        {% endfor %}
+                    </div>
+                    <div class="form-footer">
+                        <button 
+                            id="add-fee-to-project-dialog-open-{{ project.instance.id }}"
+                            hx-on:click="
+                            const addFeeToProjectDialog = document.getElementById('add-fee-to-project-dialog-{{ project.instance.id }}');
+                            addFeeToProjectDialog.showModal();
+                            ">{% translate 'AddFeesToProject' %}</button>
+                        <button 
+                            id="saveAll-project-dialog-{{ project.instance.id }}"
+                            hx-on:click="
                             htmx.trigger('#project-dialog-form-{{ project.instance.id }}', 'submit');
                             {% for fee in project.feeSet %}
                             htmx.trigger('#fee-dialog-form-{{ fee.instance.id }}', 'submit');
                             {% endfor %} 
                             document.getElementById('saveAll-project-dialog-{{ project.instance.id }}').remove();
-                        ">{% translate 'SaveAll' %}</button>
+                            ">{% translate 'SaveAll' %}</button>
+                    </div>
                 </dialog>
                 {% endfor %}
                 <dialog id="new-project-dialog" class="project-dialog">
-                    <button 
-                        id="new-project-dialog-close-{{ project.instance.id }}"
-                        hx-on:click="
-                        const newProjectDialog = document.getElementById('new-project-dialog');
-                        newProjectDialog.close();
-                        ">{% translate 'CloseWithoutSaving' %}</button>
-                    <form method="POST" action="{% url 'Invoice:addProjectAndFeesToInvoice' invoice.id %}">
-                        {% csrf_token %}
-                        {{ projectForm }}
-                        <div id="fee-forms"><div class="fee-form" id="fee-form-1">{{ feeForm }}</div>
-                        <button 
-                            name="add-fee" 
-                            type="button"
-                            hx-on:click="
-                                feeForm = document.getElementById('fee-form-1');
-                                newFeeForm = feeForm.cloneNode(true);
-                                numFeeForms = document.getElementsByClassName('fee-form').length;
-                                newFeeForm.id = 'fee-form-' + (numFeeForms + 1);
-                                document.getElementById('fee-forms').appendChild(newFeeForm);
-                            ">AddFee</button>
-                        <button 
-                            name="delete-fee" 
-                            type="button"
-                            hx-on:click="
-                                numFeeForms = document.getElementsByClassName('fee-form').length;
-                                if (numFeeForms == 1) {
+                    <!-- <form method="POST" action="{% url 'Invoice:addProjectAndFeesToInvoice' invoice.id %}"> -->
+                    <form hx-post="{% url 'Invoice:addProjectAndFeesToInvoice' invoice.id %}" hx-target="main" hx-swap="main">
+                        <div class="form-header">
+                            <button 
+                                id="new-project-dialog-close-{{ project.instance.id }}"
+                                class="dialog-close-button"
+                                hx-on:click=" document.getElementById('new-project-dialog').close();">{% include './symbols/x-square.svg' %}</button>
+                        </div>
+                        <div class="form-main">
+                            {% csrf_token %}
+                            {{ projectForm }}
+                            <div id="fee-forms"><div class="fee-form" id="fee-form-1">{{ feeForm }}</div>
+                            </div>
+                            <div class="form-footer">
+                                <button 
+                                    name="add-fee" 
+                                    type="button"
+                                    hx-on:click="
+                                    feeForm = document.getElementById('fee-form-1');
+                                    newFeeForm = feeForm.cloneNode(true);
+                                    numFeeForms = document.getElementsByClassName('fee-form').length;
+                                    newFeeForm.id = 'fee-form-' + (numFeeForms + 1);
+                                    document.getElementById('fee-forms').appendChild(newFeeForm);
+                                    ">AddFee</button>
+                                <button 
+                                    name="delete-fee" 
+                                    type="button"
+                                    hx-on:click="
+                                    numFeeForms = document.getElementsByClassName('fee-form').length;
+                                    if (numFeeForms == 1) {
                                     alert('{% translate 'ProjectMustHaveAtLeastOneFee' %}');
-                                } else {
+                                    } else {
                                     feeForm = document.getElementById('fee-form-' + numFeeForms);
                                     feeForm.remove();
-                                }
-                            ">DeleteLastFee</button>
-                        <button name="modify-fee-{{ fee.instance.id }}" type="submit">Save</button>
+                                    }
+                                    ">DeleteLastFee</button>
+                                <button name="modify-fee-{{ fee.instance.id }}" type="submit">Save</button>
+                            </div>
                     </form>
                 </dialog>
             </div>
             <div class="project-space-footer">
                 <button 
                     id="new-project-dialog-open"
-                    hx-on:click="
-                    const dialog = document.getElementById('new-project-dialog');
-                    dialog.showModal();
-                    "
+                    hx-on:click="document.getElementById('new-project-dialog').showModal();"
                 >NewProject</button>
             </div>
         </div>

@@ -1,7 +1,2 @@
 {% load i18n %}
 {% include 'Invoice-index-partial.html' with invoicee=invoicee invoice_list=invoices form=form managerHasManyInvoicers=managerHasManyInvoicers %}
-<p>
-{% blocktrans %}
-For the INVOICEE {{ invoicee.name }} the following INVOICES and Estimated has been edited.
-{% endblocktrans %}
-</p>

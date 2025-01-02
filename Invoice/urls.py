@@ -10,12 +10,19 @@ from .views import (
     add_feesToProject,
     create_creditNoteOfInvoice,
     add_invoice,
+    add_invoice_for,
     validate_invoice,
     delete_invoice,
-    add_draft,
+    add_estimate,
+    add_estimate_for,
     invoice_estimate,
+    delete_payment,
     InvoiceDetailView,
     InvoiceListView,
+    PaymentCreateView,
+    PaymentUpdateView,
+    PaymentDetailView,
+    PaymentListView,
 )
 
 from Core.views import DateConverter
@@ -31,13 +38,23 @@ urlpatterns = [
         name='index',
     ),
     path('addInvoice/', add_invoice, name='add-invoice'),
+    path('addEstimate/', add_estimate, name='add-estimate'),
+    path(
+        'addInvoiceFor/<int:invoicee>',
+        add_invoice_for,
+        name='add-invoice-for',
+    ),
+    path(
+        'addEstimateFor/<int:invoicee>',
+        add_estimate_for,
+        name='add-estimate-for',
+    ),
     path('deleteInvoice/<int:invoice>', delete_invoice, name='delete-invoice'),
     path(
         'invoiceEstimate/<int:invoice>',
         invoice_estimate,
         name='invoice-estimate',
     ),
-    path('addDraft/', add_draft, name='add-draft'),
     path(
         'invoiceValidate/<int:invoice>',
         validate_invoice,
@@ -65,4 +82,18 @@ urlpatterns = [
     ),
     path('deleteProject/<int:project>', delete_project, name='deleteProject'),
     path('deleteFee/<int:fee>', delete_fee, name='deleteFee'),
+    path('updateFee/<int:fee>', modify_fee, name='updateFee'),
+    path('payments', PaymentListView.as_view(), name='payments'),
+    path('payment/<slug:pk>', PaymentDetailView.as_view(), name='payment'),
+    path('addPayment', PaymentCreateView.as_view(), name='add-payment'),
+    path(
+        'updatePayment/<slug:pk>',
+        PaymentUpdateView.as_view(),
+        name='update-payment',
+    ),
+    path(
+        'deletePayment/<int:payment>',
+        delete_payment,
+        name='delete-payment',
+    )
 ]

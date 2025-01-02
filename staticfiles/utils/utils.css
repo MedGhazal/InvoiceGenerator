@@ -1,12 +1,12 @@
 ::backdrop {
-  background-image: linear-gradient(
-    45deg,
-    magenta,
-    rebeccapurple,
-    dodgerblue,
-    green
-  );
-  opacity: 0.75;
+	background-image: linear-gradient(
+		45deg,
+		magenta,
+		rebeccapurple,
+		dodgerblue,
+		green
+		);
+	opacity: 0.75;
 }
 
 .helptext {
@@ -75,6 +75,7 @@ button {
 }
 
 button.extensive-button {
+	transition: all .25s ease-in-out;
 	display: flex;
 	flex-direction: row;
 	color: var(--secondary-color);
@@ -84,6 +85,7 @@ button.extensive-button {
 	transition: all .25s ease-in-out;
 }
 button.extensive-button .symbol {
+	transition: all .25s ease-in-out;
 	display: block;
 	transition: all .25s ease-in-out;
 	padding: .5rem;
@@ -93,27 +95,21 @@ button.extensive-button .text {
 	transition: all .25s ease-in-out;
 	color: var(--primary-color);
 	padding: .5rem;
-}
-button.extensive-button:hover {
-	transition: all .25s ease-in-out;
-}
-button .extensive-button:hover .symbol {
 	transition: all .25s ease-in-out;
 }
 button.extensive-button:hover .text {
-	transition: all .25s ease-in-out;
-	background-color: var(--muted-primary-color);
+	background-color: var(--secondary-color);
 }
 
 ul.messages {
 	display: block;
 	width: 100%;
-	padding: 15px;
+	margin: min(5px, .25%);
 }
 li.error {
 	padding-left: 5px;
 	border-left: 2px solid #ff3300;
-	background-color: #ff4d4d;
+	background-color: #ffe6e6;
 }
 li.info {
 	padding-left: 5px;
@@ -136,16 +132,47 @@ li.debug {
 	background-color: #ffe6ff;
 }
 
+.cleared {
+	background-color: #ebfaeb;
+}
+.overdue {
+	background-color: #ffe6e6;
+}
+
+dialog > button {
+	border-radius: 5px;
+	border-color: var(--muted-primary-color);
+	background-color: var(--primary-color);
+	color: var(--muted-primary-color);
+	margin: .125rem .25rem;
+	padding: .125rem;
+}
+dialog > button:hover {
+	border-color: var(--secondary-color);
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+}
+.form-footer > button {
+	border-radius: 5px;
+	border-color: var(--muted-primary-color);
+	background-color: var(--primary-color);
+	color: var(--muted-primary-color);
+	margin: .125rem .25rem;
+	padding: .125rem;
+}
+.form-footer > button:hover {
+	border-color: var(--secondary-color);
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+}
+
 button.dialog-close-button {
 	display: block;
+	border: 0;
 	padding: .125rem;
-	background-color: var(--secondary-color);
-	transition: all .25s ease-in-out;
+	align-self: start;
 }
-button.dialog-close-button:hover {
-	background-color: var(--primary-color);
-	color: var(--secondary-color);
-}
+
 .dialog-submit-button {
 	display: block;
 	padding: .125rem;
@@ -163,13 +190,53 @@ button.dialog-close-button:hover {
 	flex-direction: column;
 }
 .form-header {
-	color: var(--muted-primary-color);
-	padding: .125rem;
 	padding: .125rem;
 	align-self: flex-start;
+	color: var(--muted-primary-color);
+}
+.form-main h2 {
+	color: var(--light-color);
+	font-size: 1rem;
 }
 .form-footer {
-	padding: .125rem;
+	display: flex;
+	flex-direction: row;
+	margin: .125rem;
 	padding: .125rem;
 	align-self: flex-end;
+}
+
+.form-wrapper {
+	margin: auto;
+	height: 100%;
+}
+.form-dialog {
+    margin: auto;
+    padding: 1%;
+    border: 0;
+    border-radius: 10px;
+    background-color: var(--primary-color);
+    width: fit-content;
+}
+
+.filter-form-wrapper {
+	display: block;
+}
+
+.filter-form {
+	color: var(--secondary-color);
+	background-color: var(--primary-color);
+	padding: min(10px, .5%);
+	margin: min(5px, .25%);
+	border-radius: 10px;
+	display: flex;
+}
+.filter-form > .form-main {
+	padding: 0;
+}
+.filter-form > .form-main > div {
+	padding: 5px 0;
+}
+.filter-form > .form-footer > .submit-button {
+	margin: 0;	
 }

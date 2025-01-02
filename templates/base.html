@@ -11,6 +11,7 @@
   <meta
     name="htmx-config"
     content='{
+    "inlineScriptNonce": "{{ request.csp_nonce }}",
     "responseHandling":[
     {"code":"204", "swap": false},
     {"code":"[23]..", "swap": true},
@@ -47,26 +48,16 @@
     integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" 
     crossorigin="anonymous" 
     referrerpolicy="no-referrer"/>
-  <!-- <script src="https://js-de.sentry-cdn.com/214852234792598dc959fc82f2e33fed.min.js" crossorigin="anonymous" ></script> -->
 </head>
   <body>
     {% include 'header.html' %}
     {% include 'aside.html' %}
     <main>
-      {% if messages %}
-      <div class="messages-content">
-	<ul class="messages">
-	  {% for message in messages %}
-	  <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
-	    {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}{% translate 'Error' %}: {% endif %}
-	    {{ message }}
-	  </li>
-	  {% endfor %}
-	</ul>
-      </div>
-      {% endif %}
       {% block content %} {% endblock %}
     </main>
     {% include 'footer.html' %}
+    <script defer nonce="{{ request.csp_nonce }}">
+    $(document).keyup(function(e) {if (e.keyCode == 27) {window.location.reload();}})
+    </script>
   </body>
 </html>
