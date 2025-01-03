@@ -802,9 +802,9 @@ class PaymentListView(ListView, LoginRequiredMixin):
                         )
                     )
                 ).filter(
-                    paymentDay__gte=f'01-01-{date.today().year}'
+                    paymentDay__gte=f'{date.today().year}-01-01'
                 ).filter(
-                    paymentDay__gte=f'31-12-{date.today().year}'
+                    paymentDay__lte=f'{date.today().year}-12-31'
                 ),
             })
         if not context['payment_list']:
