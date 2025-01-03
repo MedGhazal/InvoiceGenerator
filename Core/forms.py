@@ -11,6 +11,8 @@ from django.forms.fields import SlugField
 
 class InvoiceFilterControlForm(Form):
 
+    invoicer = SlugField()
+    invoicee = SlugField()
     beginDate = DateField(
         label='',
         widget=DateInput(
