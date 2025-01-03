@@ -96,7 +96,7 @@ class InvoiceeListView(ListView, LoginRequiredMixin):
         if self.request.GET.get('invoiceeName'):
             success(self.request, _('ResultsSuccessfullyFilterd'))
             queryset = Invoicee.objects.filter(
-                invoicer__in=Invoicer.objects.filter(manager=self.request.user)
+                invoicer=Invoicer.objects.get(manager=self.request.user)
             ).filter(
                 name__icontains=self.request.GET['invoiceeName']
             ).filter(
@@ -104,7 +104,7 @@ class InvoiceeListView(ListView, LoginRequiredMixin):
             )
         else:
             queryset = Invoicee.objects.filter(
-                invoicer__in=Invoicer.objects.filter(manager=self.request.user)
+                invoicer=Invoicer.objects.get(manager=self.request.user)
             ).filter(
                 is_person=is_person
             )
@@ -164,7 +164,9 @@ class InvoiceeDetailView(DetailView, LoginRequiredMixin):
                     'endDate': self.request.GET['endDate'],
                 },
             )
-            invoices = Invoice.objects.filter(
+            invoices = Invoice.objects.select_related(
+                'invoicee'
+            ).filter(
                 invoicee=invoicee
             ).filter(
                 facturationDate__gte=self.request.GET['beginDate']

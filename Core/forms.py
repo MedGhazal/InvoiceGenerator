@@ -11,7 +11,8 @@ class InvoiceFilterControlForm(Form):
     invoicee = SlugField(
         label='',
         help_text=_('INVOICEE'),
-        widget=TextInput(attrs={'placeholder': _('EnterNameOfInvoicee')},)
+        widget=TextInput(attrs={'placeholder': _('EnterNameOfInvoicee')}),
+        required=False,
     )
     beginDate = DateField(
         label='',
@@ -45,7 +46,8 @@ class PaymentFilterControlForm(Form):
     payor = SlugField(
         label='',
         help_text=_('INVOICEE'),
-        widget=TextInput(attrs={'placeholder': _('EnterNameOfPayor')},)
+        widget=TextInput(attrs={'placeholder': _('EnterNameOfPayor')}),
+        required=False,
     )
     beginDate = DateField(
         label='',

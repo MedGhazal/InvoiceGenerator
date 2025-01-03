@@ -145,8 +145,6 @@ def add_estimate(request):
     invoiceForm.fields.pop('facturationDate')
     invoiceForm.fields.pop('dueDate')
     invoiceForm.fields.pop('bankAccount')
-    if Invoicer.objects.filter(manager=request.user).count() < 2:
-        invoiceForm.fields.pop('invoicer')
     if request.method == 'POST':
         if request.POST.get('invoicer'):
             invoicer = Invoicer.objects.get(
@@ -258,12 +256,8 @@ def add_invoice_for(request, invoicee):
 @login_required()
 def add_invoice(request):
     invoiceForm = InvoiceForm()
-    invoicers = Invoicer.objects.get(manager=request.user)
-    if invoicers.count() < 2:
-        invoiceForm.fields.pop('invoicer')
-    bankAccounts = BankAccount.objects.filter(
-        owner__in=invoicers
-    )
+    invoicer = Invoicer.objects.get(manager=request.user)
+    bankAccounts = BankAccount.objects.filter(owner=invoicer)
     if bankAccounts.count() < 2:
         invoiceForm.fields.pop('bankAccount')
     else:

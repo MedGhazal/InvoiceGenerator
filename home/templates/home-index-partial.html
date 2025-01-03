@@ -1,120 +1,136 @@
 {% load i18n %}
-<h1>Home</h1>
-<div class="home-content">
-  <div class="home-controls">
-    <div class="home-controls-text">{% translate "HomeCONTROLSText" %}</div>
-    <form action="{% url 'home:index' %}" method="POST">
+<h1>{% translate 'Home' %}</h1>
+{% if messages %}
+<div class="messages-content">
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}{% translate 'Error' %}: {% endif %}
+            {{ message }}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+<div class="filter-form-wrapper">
+  <form action="{% url 'home:index' %}" method="POST" class="filter-form">
+    <div class="form-header">
+    </div>
+    <div class="form-main">
+      <div class="home-controls-text">{% translate "HomeCONTROLSText" %}</div>
       {% csrf_token %}
       {{ form }}
-      <input type="{% translate "submit" %}" value="{% translate "Submit" %}">
-    </form>
-  </div>
-  <div class="home-main">
-    <div class="home-main-text">{% translate "HomeMAINText" %}</div>
-    <table class="StateTable"><thead>
+    </div>
+    <div class="form-footer">
+      <button class="submit-button" type="submit">{% translate "Submit" %}</button>
+    </div>
+  </form>
+</div>
+<div class="home-main">
+  <div class="home-main-text">{% translate "HomeMAINText" %}</div>
+  <table class="StateTable"><thead>
+    <tr>
+      <th class="HeaderColumn">{% translate "PaymentMode" %}</th>
+      <th colspan="{{ numCurrencies }}">{% translate "Amount" %}</th>
+    </tr></thead>
+    <tbody>
       <tr>
-        <th class="HeaderColumn">{% translate "PaymentMode" %}</th>
-        <th colspan="{{ numCurrencies }}">{% translate "Amount" %}</th>
-      </tr></thead>
-      <tbody>
-        <tr>
-          <td class="HeaderColumn">{% translate "CASH" %}</td>
-          {% for amountPayedCash in paymentMethodDistribution.CS %}
-          <td>{{ amountPayedCash }}</td>
-          {% endfor %}
-        </tr>
-        <tr>
-          <td class="HeaderColumn">{% translate "TRANSFER" %}</td>
-          {% for amountPayedTransfer in paymentMethodDistribution.TR %}
-          <td>{{ amountPayedTransfer }}</td>
-          {% endfor %}
-        </tr>
-        <tr>
-          <td class="HeaderColumn">{% translate "CHEQUE" %}</td>
-          {% for amountPayedCheck in paymentMethodDistribution.CK %}
-          <td>{{ amountPayedCheck }}</td>
-          {% endfor %}
-        </tr>
-        <tr>
-          <td class="HeaderColumn">{% translate "DIVERS" %}</td>
-          {% for amountPayedDivers in paymentMethodDistribution.DV %}
-          <td>{{ amountPayedDivers }}</td>
-          {% endfor %}
-        </tr>
-      </tbody>
-    </table>
-    <table class="StateTable"><thead>
+        <td class="HeaderColumn">{% translate "CASH" %}</td>
+        {% for amountPayedCash in paymentMethodDistribution.CS %}
+        <td>{{ amountPayedCash }}</td>
+        {% endfor %}
+      </tr>
       <tr>
-        <th>{% translate "Nature" %}</th>
-        <th>{% translate "Amount" %}</th>
-      </tr></thead>
-      <tbody>
-        {% for projectInformation in projectsInformation %}
-        {% if projectInformation.1 != '-' %}   
-        <tr>
-          <td>{{ projectInformation.0 }}</td>
-          <td>{{ projectInformation.1 }}</td>
-        </tr>
+        <td class="HeaderColumn">{% translate "TRANSFER" %}</td>
+        {% for amountPayedTransfer in paymentMethodDistribution.TR %}
+        <td>{{ amountPayedTransfer }}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="HeaderColumn">{% translate "CHEQUE" %}</td>
+        {% for amountPayedCheck in paymentMethodDistribution.CK %}
+        <td>{{ amountPayedCheck }}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="HeaderColumn">{% translate "DIVERS" %}</td>
+        {% for amountPayedDivers in paymentMethodDistribution.DV %}
+        <td>{{ amountPayedDivers }}</td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+  <table class="StateTable"><thead>
+    <tr>
+      <th>{% translate "Nature" %}</th>
+      <th>{% translate "Amount" %}</th>
+    </tr></thead>
+    <tbody>
+      {% for projectInformation in projectsInformation %}
+      {% if projectInformation.1 != '-' %}   
+      <tr>
+        <td>{{ projectInformation.0 }}</td>
+        <td>{{ projectInformation.1 }}</td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      {% for totalTurnover in totalTurnovers %}
+      <tr>
+        {% if forloop.counter0 == 0 %}
+        <th>{% translate "TotalTurnover" %}</th>
+        {% else %}
+        <th></th>
         {% endif %}
-        {% endfor %}
-      </tbody>
-      <tfoot>
-        {% for totalTurnover in totalTurnovers %}
-        <tr>
-          {% if forloop.counter0 == 0 %}
-          <th>{% translate "TotalTurnover" %}</th>
-          {% else %}
-          <th></th>
-          {% endif %}
-          <td>{{ totalTurnover }}</td>
-        </tr>
-        {% endfor %}
-      </tfoot>
-    </table>
-    <table class="StateTable"><thead>
+        <td>{{ totalTurnover }}</td>
+      </tr>
+      {% endfor %}
+    </tfoot>
+  </table>
+  <table class="StateTable"><thead>
+    <tr>
+      <th>{% translate "INVOICEE" %}</th>
+      <th>{% translate "Country" %}</th>
+      <th>{% translate "OutStanding" %}</th>
+      <th>{% translate "TotalPaidAmoint" %}</th>
+    </tr></thead>
+    <tbody>
+      {% for invoiceeInformation in invoiceesInformation %}
+      {% if invoiceeInformation.2 != '-' %}
       <tr>
-        <th>{% translate "INVOICEE" %}</th>
-        <th>{% translate "Country" %}</th>
-        <th>{% translate "OutStanding" %}</th>
-        <th>{% translate "TotalPaidAmoint" %}</th>
-      </tr></thead>
-      <tbody>
-        {% for invoiceeInformation in invoiceesInformation %}
-        {% if invoiceeInformation.2 != '-' %}
-        <tr>
-          <td>{{ invoiceeInformation.0 }}</td>
-          <td>{{ invoiceeInformation.1 }}</td>
-          <td>{{ invoiceeInformation.2 }}</td>
-          <td>{{ invoiceeInformation.3 }}</td>
-        </tr>
-        {% endif %}
-        {% endfor %}
-      </tbody>
-    </table>
-    <table class="StateTable"><thead>
+        <td>{{ invoiceeInformation.0 }}</td>
+        <td>{{ invoiceeInformation.1 }}</td>
+        <td>{{ invoiceeInformation.2 }}</td>
+        <td>{{ invoiceeInformation.3 }}</td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  <table class="StateTable"><thead>
+    <tr>
+      <th>{% translate "Currency" %}</th>
+      <th>{% translate "NumInvoices" %}</th>
+      <th>{% translate "OutStandingInvoices" %}</th>
+      <th>{% translate "AmountOutStandingInvoices" %}</th>
+      <th>{% translate "SumVATPeriode" %}</th>
+      <th>{% translate "SumBeforeVATPeriode" %}</th>
+      <th>{% translate "SumAfterVATPeriod" %}</th>
+    </tr></thead>
+    <tbody>
+      {% for invoiceInformation in invoicesInformation %}
       <tr>
-        <th>{% translate "Currency" %}</th>
-        <th>{% translate "NumInvoices" %}</th>
-        <th>{% translate "OutStandingInvoices" %}</th>
-        <th>{% translate "AmountOutStandingInvoices" %}</th>
-        <th>{% translate "SumVATPeriode" %}</th>
-        <th>{% translate "SumBeforeVATPeriode" %}</th>
-        <th>{% translate "SumAfterVATPeriod" %}</th>
-      </tr></thead>
-      <tbody>
-        {% for invoiceInformation in invoicesInformation %}
-        <tr>
-          <td>{{ invoiceInformation.0 }}</td>
-          <td>{{ invoiceInformation.1 }}</td>
-          <td>{{ invoiceInformation.2 }}</td>
-          <td>{{ invoiceInformation.3 }}</td>
-          <td>{{ invoiceInformation.4 }}</td>
-          <td>{{ invoiceInformation.5 }}</td>
-          <td>{{ invoiceInformation.6 }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <div class="home-main-text-muted">{% translate "HomeMAINTextFooter" %}</div>
-  </div>
+        <td>{{ invoiceInformation.0 }}</td>
+        <td>{{ invoiceInformation.1 }}</td>
+        <td>{{ invoiceInformation.2 }}</td>
+        <td>{{ invoiceInformation.3 }}</td>
+        <td>{{ invoiceInformation.4 }}</td>
+        <td>{{ invoiceInformation.5 }}</td>
+        <td>{{ invoiceInformation.6 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="home-main-text-muted">{% translate "HomeMAINTextFooter" %}</div>
 </div>
