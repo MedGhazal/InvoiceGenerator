@@ -1,18 +1,18 @@
 from datetime import date
 
 from django.utils.translation import gettext as _
-from django.forms import (
-    Form,
-    DateField,
-    DateInput,
-)
+from django.forms import Form, DateField, DateInput
 from django.forms.fields import SlugField
+from django.forms.widgets import TextInput
 
 
 class InvoiceFilterControlForm(Form):
 
-    invoicer = SlugField()
-    invoicee = SlugField()
+    invoicee = SlugField(
+        label='',
+        help_text=_('INVOICEE'),
+        widget=TextInput(attrs={'placeholder': _('EnterNameOfInvoicee')},)
+    )
     beginDate = DateField(
         label='',
         widget=DateInput(
@@ -33,13 +33,20 @@ class InvoiceFilterControlForm(Form):
 
 class InvoiceeFilterControlForm(Form):
 
-    invoiceeName = SlugField()
+    invoiceeName = SlugField(
+        label='',
+        help_text=_('INVOICEE'),
+        widget=TextInput(attrs={'placeholder': _('EnterNameOfInvoicee')},)
+    )
 
 
 class PaymentFilterControlForm(Form):
 
-    payor = SlugField()
-
+    payor = SlugField(
+        label='',
+        help_text=_('INVOICEE'),
+        widget=TextInput(attrs={'placeholder': _('EnterNameOfPayor')},)
+    )
     beginDate = DateField(
         label='',
         widget=DateInput(

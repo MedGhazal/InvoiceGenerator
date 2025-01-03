@@ -35,39 +35,27 @@ from Core.forms import InvoiceFilterControlForm
 def index(request, invoicer=None, beginDate=None, endDate=None):
     homeControlForm = InvoiceFilterControlForm()
 
-    if Invoicer.objects.filter(manager=request.user).count() <= 1:
-        if not request.user.is_superuser:
-            homeControlForm.fields.pop('invoicer')
-
     context = {}
     if request.user.is_superuser:
         invoices = Invoice.objects
     else:
         invoices = Invoice.objects.exclude(
             status=0
+        ).select_related(
+            'invoicer'
         ).filter(
-            invoicer__in=Invoicer.objects.filter(manager=request.user)
+            invoicer=Invoicer.objects.get(manager=request.user)
         )
 
     if request.method == 'POST':
         form = request.POST
         beginDate = form['beginDate']
         endDate = form['endDate']
-        if form.get('invoicer'):
-            invoicer = form['invoicer']
-            invoices = invoices.filter(
-                facturationDate__gte=beginDate
-            ).filter(
-                facturationDate__lte=endDate
-            ).filter(
-                invoicer=invoicer
-            )
-        else:
-            invoices = invoices.filter(
-                facturationDate__gte=beginDate
-            ).filter(
-                facturationDate__lte=endDate
-            )
+        invoices = invoices.filter(
+            facturationDate__gte=beginDate
+        ).filter(
+            facturationDate__lte=endDate
+        )
     elif request.method == 'GET':
         beginDate = f'{date.today().year}-01-01'
         endDate = f'{date.today().year}-12-31'
@@ -107,26 +95,6 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         return render(request, 'home-index-partial.html', context)
     else:
         return render(request, 'home-index.html', context)
-
-
-def processInvoiceDraftDataAndSave(invoiceData, draft=True):
-    invoice = Invoice()
-    invoice.invoicer = invoiceData['invoicer']
-    invoice.invoicee = invoiceData['invoicee']
-    if not draft:
-        invoice.facturationDate = date.fromisoformat(
-            invoiceData['facturationDate'],
-        )
-        invoice.dueDate = date.fromisoformat(
-            invoiceData['dueDate'],
-        )
-    invoice.baseCurrency = invoiceData['baseCurrency']
-    invoice.paymentMethod = invoiceData['paymentMethod']
-    invoice.salesAccount = 0
-    invoice.vatAccount = 0
-    invoice.draft = draft
-    invoice.save()
-    return invoice.id
 
 
 def register_success(request):

@@ -27,7 +27,7 @@ class Invoicer(Model):
         MOROCCO = 'MAR', _('MOROCCO')
         FRANCE = 'FR', _('FRANCE')
 
-    manager = ForeignKey(
+    manager = OneToOneField(
         User,
         on_delete=SET_NULL,
         null=True,

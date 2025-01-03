@@ -55,7 +55,6 @@ class InvoiceForm(ModelForm):
     class Meta:
         model = Invoice
         fields = [
-            'invoicer',
             'invoicee',
             'bankAccount',
             'baseCurrency',

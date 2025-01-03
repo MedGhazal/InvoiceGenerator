@@ -106,8 +106,10 @@ class InvoiceListView(ListView, LoginRequiredMixin):
             ).filter(
                 facturationDate__lte=self.request.GET['endDate']
             )
-        return queryset.filter(
-            invoicer__in=Invoicer.objects.filter(manager=self.request.user)
+        return queryset.select_related(
+            'invoicer'
+        ).filter(
+            invoicer=Invoicer.objects.get(manager=self.request.user)
         )
 
 
@@ -151,9 +153,7 @@ def add_estimate(request):
                 id=int(request.POST.get('invoicer'))
             )
         else:
-            invoicer = Invoicer.objects.get(
-                manager=request.user
-            )
+            invoicer = Invoicer.objects.get(manager=request.user)
         invoiceData = {
             'invoicer': invoicer,
             'invoicee': Invoicee.objects.get(
@@ -182,17 +182,13 @@ def add_estimate_for(request, invoicee):
     invoiceForm.fields.pop('facturationDate')
     invoiceForm.fields.pop('dueDate')
     invoiceForm.fields.pop('bankAccount')
-    if Invoicer.objects.filter(manager=request.user).count() < 2:
-        invoiceForm.fields.pop('invoicer')
     if request.method == 'POST':
         if request.POST.get('invoicer'):
             invoicer = Invoicer.objects.get(
                 id=int(request.POST.get('invoicer'))
             )
         else:
-            invoicer = Invoicer.objects.get(
-                manager=request.user
-            )
+            invoicer = Invoicer.objects.get(manager=request.user)
         invoiceData = {
             'invoicer': invoicer,
             'invoicee': invoicee,
@@ -220,31 +216,20 @@ def add_invoice_for(request, invoicee):
     invoicee = Invoicee.objects.get(id=invoicee)
     invoiceForm = InvoiceForm()
     invoiceForm.fields.pop('invoicee')
-    invoicers = Invoicer.objects.filter(manager=request.user)
-    if invoicers.count() < 2:
-        invoiceForm.fields.pop('invoicer')
-    bankAccounts = BankAccount.objects.filter(
-        owner__in=invoicers
-    )
+    invoicer = Invoicer.objects.get(manager=request.user)
+    bankAccounts = BankAccount.objects.filter(owner=invoicer)
     if bankAccounts.count() < 2:
         invoiceForm.fields.pop('bankAccount')
     else:
         invoiceForm.fields['bankAccount'].queryset = bankAccounts
     if request.method == 'POST':
-        if request.POST.get('invoicer'):
-            invoicer = Invoicer.objects.get(
-                id=int(request.POST.get('invoicer'))
-            )
-        else:
-            invoicer = Invoicer.objects.get(
-                manager=request.user
-            )
-        if request.POST.get('bankAccount'):
-            bankAccount = BankAccount.objects.get(
+        invoicer = Invoicer.objects.get(manager=request.user)
+        if bankAccounts.count() > 1:
+            bankAccount = bankAccounts.get(
                 id=int(request.POST.get('bankAccount'))
             )
         else:
-            bankAccount = invoicer.bankAccounts.first()
+            bankAccount = bankAccounts.first()
         invoiceData = {
             'invoicer': invoicer,
             'invoicee': invoicee,
@@ -273,7 +258,7 @@ def add_invoice_for(request, invoicee):
 @login_required()
 def add_invoice(request):
     invoiceForm = InvoiceForm()
-    invoicers = Invoicer.objects.filter(manager=request.user)
+    invoicers = Invoicer.objects.get(manager=request.user)
     if invoicers.count() < 2:
         invoiceForm.fields.pop('invoicer')
     bankAccounts = BankAccount.objects.filter(
@@ -292,12 +277,12 @@ def add_invoice(request):
             invoicer = Invoicer.objects.get(
                 manager=request.user
             )
-        if request.POST.get('bankAccount'):
-            bankAccount = BankAccount.objects.get(
+        if bankAccounts.count() < 2:
+            bankAccount = bankAccounts.get(
                 id=int(request.POST.get('bankAccount'))
             )
         else:
-            bankAccount = invoicer.bankAccounts.first()
+            bankAccount = bankAccounts.first()
         invoiceData = {
             'invoicer': invoicer,
             'invoicee': Invoicee.objects.get(
@@ -359,7 +344,7 @@ def validate_invoice(request, invoice):
 @login_required()
 def modify_invoice(request, invoice):
     invoice = Invoice.objects.get(id=invoice)
-    invoicerQueryset = Invoicer.objects.filter(manager=request.user)
+    invoicer = Invoicer.objects.get(manager=request.user)
     projectForm = ProjectForm()
     feeForm = FeeForm()
     projectSet = []
@@ -395,7 +380,7 @@ def modify_invoice(request, invoice):
         invoice.save()
         success(request, _('InvoiceSuccessfullyModified'))
     invoiceForm = InvoiceForm(instance=invoice)
-    bankAccounts = BankAccount.objects.filter(owner__in=invoicerQueryset)
+    bankAccounts = BankAccount.objects.filter(owner=invoicer)
     if bankAccounts.count() < 2:
         invoiceForm.fields.pop('bankAccount')
     else:
@@ -403,10 +388,10 @@ def modify_invoice(request, invoice):
     if invoice.state == 1:
         invoiceForm.fields.pop('facturationDate')
         invoiceForm.fields.pop('dueDate')
-    if invoicerQueryset.count() < 2:
-        invoiceForm.fields.pop('invoicer')
-    invoiceForm.fields['invoicee'].queryset = Invoicee.objects.filter(
-        invoicer__in=invoicerQueryset
+    invoiceForm.fields['invoicee'].queryset = Invoicee.objects.select_related(
+        'invoicer'
+    ).filter(
+        invoicer=invoicer
     )
     if invoice.state == 1:
         invoiceForm.fields.pop('paymentMethod')
@@ -608,7 +593,9 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
         invoicer = Invoicer.objects.get(manager=self.request.user)
         if invoicer.bankAccounts.count() < 2:
             paymentForm.fields.pop('bankAccount')
-        outStandingInvoicesOfInvoicer = Invoice.objects.filter(
+        outStandingInvoicesOfInvoicer = Invoice.objects.select_related(
+            'invoicer', 'invoicee'
+        ).filter(
             invoicer=invoicer
         ).filter(
             owedAmount__gt=F('paidAmount')
@@ -843,7 +830,9 @@ class PaymentDetailView(DetailView, LoginRequiredMixin):
         payment = context['payment']
         if self.request.GET:
             context.update({
-                'invoicerHasManyBankAccounts': BankAccount.objects.filter(
+                'invoicerHasManyBankAccounts': BankAccount.objects.select_related(
+                    'owner'
+                ).filter(
                     owner=invoicer
                 ).count() > 1,
                 'payment': payment,
@@ -861,7 +850,9 @@ class PaymentDetailView(DetailView, LoginRequiredMixin):
             })
         else:
             context.update({
-                'invoicerHasManyBankAccounts': BankAccount.objects.filter(
+                'invoicerHasManyBankAccounts': BankAccount.objects.select_related(
+                    'owner'
+                ).filter(
                     owner=invoicer
                 ).count() > 1,
                 'payment': payment,
