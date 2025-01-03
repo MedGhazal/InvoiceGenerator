@@ -240,3 +240,14 @@ button.dialog-close-button {
 .filter-form > .form-footer > .submit-button {
 	margin: 0;	
 }
+
+.htmx-indicator {
+	opacity:0;
+	transition: opacity 250ms ease-in;
+}
+.htmx-request .htmx-indicator{
+	opacity:1;
+}
+.htmx-request .htmx-indicator{
+	opacity:1;
+}

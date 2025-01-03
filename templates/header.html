@@ -6,38 +6,50 @@
   </div>
   <div class="nav-box">
     <ul>
-      <li><button type="button" hx-get="{% url 'home:index' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
+      <li><button 
+        type="button" 
+        hx-get="{% url 'home:index' %}" 
+        hx-push-url="true" 
+        hx-target="main" 
+        hx-indicator="#indicator"
+        hx-swap="innerHTML">
         {% translate 'Home' %}
       </button></li>
       {% if user.is_authenticated %}
       <li>
-        <button type="button" hx-get="{% url 'Invoicee:invoicees' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
-        {% translate 'INVOICEES' %}
+        <button 
+          type="button" 
+          hx-get="{% url 'Invoicee:invoicees' %}" 
+          hx-push-url="true" 
+          hx-target="main" 
+          hx-indicator="#indicator"
+          hx-swap="innerHTML">
+          {% translate 'INVOICEES' %}
         </button>
       </li>
       <li>
         <button type="button" hx-get="{% url 'Invoicee:pinvoicees' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
-        {% translate 'PrivateINVOICEES' %}
+          {% translate 'PrivateINVOICEES' %}
         </button>
       </li>
       <li>
         <button type="button" hx-get="{% url 'Invoice:index' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
-        {% translate 'INVOICES' %}
+          {% translate 'INVOICES' %}
         </button>
       </li>
       <li>
         <button type="button" hx-get="{% url 'Invoice:estimates' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
-        {% translate 'Estimates' %}
+          {% translate 'Estimates' %}
         </button>
       </li>
       <li>
         <button type="button" hx-get="{% url 'Invoice:creditNotes' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
-        {% translate 'CreditNotes' %}
+          {% translate 'CreditNotes' %}
         </button>
       </li>
       <li>
         <button type="button" hx-get="{% url 'Invoice:payments' %}" hx-push-url="true" hx-target="main" hx-swap="innerHTML">
-        {% translate 'Payments' %}
+          {% translate 'Payments' %}
         </button>
       </li>
       {% if user.is_superuser or user.is_staff %}
