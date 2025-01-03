@@ -1,7 +1,7 @@
 {% load static %}
 {% load i18n %}
 {% if not dialogForm %}
-<div class="invoice-form-wrapper">
+<div class="form-wrapper">
 {% endif %}
     <form method="post" 
         hx-post=
@@ -50,11 +50,11 @@
             </button>
         </div>
     </form>
-    <script nonce={{ request.csp_nonce }}>
+    <script nonce="{{ request.csp_nonce }}">
     $('#invoicee').djangoSelect2({
         dropdownParent: $('#invoice-form-dialog')
     });
     </script>
-    {% if not dialogForm %}
+{% if not dialogForm %}
 </div>
 {% endif %}

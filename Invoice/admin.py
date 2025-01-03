@@ -315,7 +315,7 @@ class InvoiceAdmin(ModelAdmin):
                     reverse('admin:Invoice_fee_change', args=(fee.id,)),
                     f'{fee.description}',
                 )
-            projects += fees + '</ul><hr style="color: black">'
+            projects += fees + '</ul><hr>'
         projects += '</ul>'
         return mark_safe(projects)
 

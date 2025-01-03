@@ -19,6 +19,8 @@ from .views import (
     delete_payment,
     InvoiceDetailView,
     InvoiceListView,
+    EstimateListView,
+    CreditNoteListView,
     PaymentCreateView,
     PaymentUpdateView,
     PaymentDetailView,
@@ -32,6 +34,8 @@ register_converter(DateConverter, 'date')
 app_name = 'Invoice'
 urlpatterns = [
     path('', InvoiceListView.as_view(), name='index'),
+    path('estimates', EstimateListView.as_view(), name='estimates'),
+    path('creditNotes', CreditNoteListView.as_view(), name='creditNotes'),
     path(
         '<int:invoicer>/<int:invoicee>/<date:beginDate>/<date:endDate>',
         InvoiceListView.as_view(),

@@ -14,10 +14,8 @@
 {% endif %}
 <div class="filter-form-wrapper">
   <form action="{% url 'home:index' %}" method="POST" class="filter-form">
-    <div class="form-header">
-    </div>
     <div class="form-main">
-      <div class="home-controls-text">{% translate "HomeCONTROLSText" %}</div>
+      <h2>{% translate "HomeCONTROLSText" %}</h2>
       {% csrf_token %}
       {{ form }}
     </div>

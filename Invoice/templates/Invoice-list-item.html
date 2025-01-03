@@ -2,6 +2,7 @@
 <tr id="table-row-{{ invoice.id }}">
     {% if managerHasMultipleInvoicers %}
     <td 
+        nonce="{{ request.nonce_csp_nonce }}"
         style="padding-left: 5px"
         {% if invoice.state == 3 %}
         class="cleared"
@@ -12,6 +13,7 @@
     {% endif %}
     {% if not invoicee %}
     <td 
+        nonce="{{ request.nonce_csp_nonce }}"
         style="padding-left: 5px"
         {% if invoice.state == 3 %}
         class="cleared"

@@ -25,7 +25,7 @@
             helptext="{% translate 'DeleteFeeButtonExplanation' %}">
             {% include './symbols/trash.svg' %}
         </button>
-        <script nonce={{ request.csp_nonce }}>
+        <script nonce="{{ request.csp_nonce }}">
         document.body.addEventListener('htmx:configRequest', (event) => {
             event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
         })
