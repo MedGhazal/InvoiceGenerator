@@ -750,7 +750,8 @@ class PaymentListView(ListView, LoginRequiredMixin):
         if self.request.GET:
             success(self.request, _('ResultsSuccesfullyFiltered'))
             context.update({
-                'invoicerHasManyBankAccounts': BankAccount.objects.filter(
+                'invoicerHasManyBankAccounts': BankAccount.objects.select_related(
+                ).filter(
                     owner=invoicer
                 ).count() > 1,
                 'searchForm': PaymentFilterControlForm(
@@ -760,7 +761,7 @@ class PaymentListView(ListView, LoginRequiredMixin):
                         'endDate': self.request.GET['endDate'],
                     }
                 ),
-                'payment_list': Payment.objects.filter(
+                'payment_list': Payment.objects.select_related().filter(
                     paymentDay__gte=self.request.GET['beginDate']
                 ).filter(
                    paymentDay__lte=self.request.GET['endDate']
@@ -770,10 +771,24 @@ class PaymentListView(ListView, LoginRequiredMixin):
             })
         else:
             context.update({
-                'invoicerHasManyBankAccounts': BankAccount.objects.filter(
+                'invoicerHasManyBankAccounts': BankAccount.objects.select_related(
+                ).filter(
                     owner=invoicer
                 ).count() > 1,
                 'searchForm': PaymentFilterControlForm(),
+                'payment_list': Payment.objects.select_related().filter(
+                    payor__in=Invoicee.objects.filter(
+                        invoicer__in=Invoicer.objects.get(
+                            manager=self.request.user
+                        )
+                    )
+                ).filter(
+                    paymentDay__gte=self.request.GET['beginDate']
+                ).filter(
+                   paymentDay__lte=self.request.GET['endDate']
+                ).filter(
+                    payor__name__icontains=self.request.GET['payor']
+                ),
             })
         if not context['payment_list']:
             error(
