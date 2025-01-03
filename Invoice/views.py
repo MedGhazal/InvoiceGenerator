@@ -724,7 +724,7 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
 class PaymentListView(ListView, LoginRequiredMixin):
 
     model = Payment
-    queryset = Payment.objects.select_related()
+    # queryset = Payment.objects.select_related()
     template_name = './Payment-index.html'
 
     def render_to_response(self, context, **response_kwargs):
