@@ -762,18 +762,20 @@ class PaymentListView(ListView, LoginRequiredMixin):
                         'endDate': self.request.GET['endDate'],
                     }
                 ),
-                'payment_list': Payment.objects.select_related(
+                'payment_list': Payment.objects.filter(
+                    paymentDay__gte=self.request.GET['beginDate']
+                ).filter(
+                    paymentDay__lte=self.request.GET['endDate']
+                ).select_related(
                     'payor'
                 ).filter(
-                    payor__in=Invoicee.objects.filter(
+                    payor__in=Invoicee.objects.select_related(
+                        'invoicer'
+                    ).filter(
                         invoicer=Invoicer.objects.get(
                             manager=self.request.user
                         )
                     )
-                ).filter(
-                    paymentDay__gte=self.request.GET['beginDate']
-                ).filter(
-                   paymentDay__lte=self.request.GET['endDate']
                 ).filter(
                     payor__name__icontains=self.request.GET['payor']
                 ),
@@ -785,7 +787,12 @@ class PaymentListView(ListView, LoginRequiredMixin):
                 ).filter(
                     owner=invoicer
                 ).count() > 1,
-                'searchForm': PaymentFilterControlForm(),
+                'searchForm': PaymentFilterControlForm(
+                    initial={
+                        'beginDate': f'01-01-{date.today().year}',
+                        'endDate': f'31-12-{date.today().year}',
+                    }
+                ),
                 'payment_list': Payment.objects.select_related(
                     'payor'
                 ).filter(
@@ -795,11 +802,9 @@ class PaymentListView(ListView, LoginRequiredMixin):
                         )
                     )
                 ).filter(
-                    paymentDay__gte=self.request.GET['beginDate']
+                    paymentDay__gte=f'01-01-{date.today().year}'
                 ).filter(
-                   paymentDay__lte=self.request.GET['endDate']
-                ).filter(
-                    payor__name__icontains=self.request.GET['payor']
+                    paymentDay__gte=f'31-12-{date.today().year}'
                 ),
             })
         if not context['payment_list']:
