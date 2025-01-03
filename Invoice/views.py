@@ -751,6 +751,7 @@ class PaymentListView(ListView, LoginRequiredMixin):
             success(self.request, _('ResultsSuccesfullyFiltered'))
             context.update({
                 'invoicerHasManyBankAccounts': BankAccount.objects.select_related(
+                    'owner'
                 ).filter(
                     owner=invoicer
                 ).count() > 1,
@@ -761,7 +762,15 @@ class PaymentListView(ListView, LoginRequiredMixin):
                         'endDate': self.request.GET['endDate'],
                     }
                 ),
-                'payment_list': Payment.objects.select_related().filter(
+                'payment_list': Payment.objects.select_related(
+                    'payor'
+                ).filter(
+                    payor__in=Invoicee.objects.filter(
+                        invoicer=Invoicer.objects.get(
+                            manager=self.request.user
+                        )
+                    )
+                ).filter(
                     paymentDay__gte=self.request.GET['beginDate']
                 ).filter(
                    paymentDay__lte=self.request.GET['endDate']
@@ -772,13 +781,16 @@ class PaymentListView(ListView, LoginRequiredMixin):
         else:
             context.update({
                 'invoicerHasManyBankAccounts': BankAccount.objects.select_related(
+                    'owner'
                 ).filter(
                     owner=invoicer
                 ).count() > 1,
                 'searchForm': PaymentFilterControlForm(),
-                'payment_list': Payment.objects.select_related().filter(
+                'payment_list': Payment.objects.select_related(
+                    'payor'
+                ).filter(
                     payor__in=Invoicee.objects.filter(
-                        invoicer__in=Invoicer.objects.get(
+                        invoicer=Invoicer.objects.get(
                             manager=self.request.user
                         )
                     )
