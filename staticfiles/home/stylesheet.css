@@ -125,7 +125,7 @@ header {
 /* aside */
 aside {
 	padding: 1% 1vh;
-	margin: 2.5vh 1.5% 0;
+	margin: 1vh 1% 0;
 	display: inline-flex;
 	flex-direction: column;
 	border-radius: 10px;
@@ -160,14 +160,15 @@ aside .nav-box ul li .SubItem:hover {
 
 /* main */
 main {
+	display: flex;
 	background-color: var(--light-color);
 	border-radius: 10px;
 	display: inline-block;
-	width: 82%;
-	margin: 1% 1vh;
-	padding: 1% 1vh;
-	height: 77vh;
-	left: 15%;
+	width: 83%;
+	margin: .5vh .5%;
+	padding: 1%;
+	height: 79vh;
+	left: 14%;
 	overflow: auto;
 	position: fixed;
 }
@@ -308,4 +309,14 @@ footer {
 
 
 /* Responsive Design */
-@media(min-width: 450px) {}
+@media(max-width: 1800px) {
+	aside {
+		display: none;
+	}
+	main {
+		width: 96%;
+		margin-left: 1%;
+		margin-right: 1%;
+		left: 0%;
+	}
+}

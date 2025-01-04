@@ -13,7 +13,7 @@
 </div>
 {% endif %}
 <div class="filter-form-wrapper">
-  <form action="{% url 'home:index' %}" method="POST" class="filter-form">
+  <form hx-get="{% url 'home:index' %}" hx-target="main" hx-indicator="#indicator" hx-swap="innerHTML" class="filter-form">
     <div class="form-main">
       <h2>{% translate "HomeCONTROLSText" %}</h2>
       {% csrf_token %}

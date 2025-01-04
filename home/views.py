@@ -2,23 +2,11 @@ from datetime import date
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.utils.translation import gettext as _
-from django.contrib.messages import error
-from django.urls import reverse
 
 from Invoicer.models import Invoicer
-from Invoicee.models import Invoicee
-from Invoice.models import Invoice, Project, Fee
-from django.http import HttpResponseRedirect
-
+from Invoice.models import Invoice
 from .forms import (
     ContactDataForm,
-)
-from Invoice.forms import (
-    InvoiceForm,
-    ProjectForm,
-    FeeForm,
-    FeeFormset,
 )
 from .utils import (
     getInvoiceesInformation,
@@ -36,36 +24,34 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
     homeControlForm = InvoiceFilterControlForm()
 
     context = {}
-    if request.user.is_superuser:
-        invoices = Invoice.objects
-    else:
-        invoices = Invoice.objects.exclude(
-            status=0
-        ).select_related(
-            'invoicer'
-        ).filter(
-            invoicer=Invoicer.objects.get(manager=request.user)
-        )
 
-    if request.method == 'POST':
-        form = request.POST
-        beginDate = form['beginDate']
-        endDate = form['endDate']
-        invoices = invoices.filter(
-            facturationDate__gte=beginDate
-        ).filter(
-            facturationDate__lte=endDate
-        )
-    elif request.method == 'GET':
+    if request.GET:
+        beginDate = request.GET['beginDate']
+        endDate = request.GET['endDate']
+    else:
         beginDate = f'{date.today().year}-01-01'
         endDate = f'{date.today().year}-12-31'
-        invoices = invoices.filter(
+
+    if request.user.is_superuser:
+        invoices = Invoice.objects.select_related().exclude(
+            state__in=[2, 3]
+        ).filter(
+            facturationDate__gte=beginDate
+        ).filter(
+            facturationDate__lte=endDate
+        )
+    else:
+        invoices = Invoice.objects.select_related().exclude(
+            state__in=[2, 3]
+        ).filter(
+            invoicer=Invoicer.objects.get(manager=request.user)
+        ).filter(
             facturationDate__gte=beginDate
         ).filter(
             facturationDate__lte=endDate
         )
 
-    currencies = set(invoices.values_list('baseCurrency', flat=True))
+    currencies = invoices.values_list('baseCurrency', flat=True).distinct()
 
     invoicesInformation = getInvoicesInformation(invoices, currencies)
     invoiceesInformation = getInvoiceesInformation(

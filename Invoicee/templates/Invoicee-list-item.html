@@ -4,13 +4,28 @@
     <td>{{ invoicee.invoicer.name }}</td>
     {% endif %}
     <td>{{ invoicee.name }}</td>
+    {% if invoicee.address|length > 15 %}
+    <td><button
+    helptext="{{ invoicee.address }}">{{ invoicee.address|slice:15 }}...
+    </button></td>
+    {% else %}
     <td>{{ invoicee.address }}</td>
+    {% endif %}
     {% if private %}
     <td>{% if invoicee.cin %}{{ invoicee.cin }}{% else %}-{% endif %}</td>
     {% else %}
     <td>{% if invoicee.ice %}{{ invoicee.ice }}{% else %}-{% endif %}</td>
     {% endif %}
-    <td>{{ invoicee.numOutstandingInvoices }}</td>
+    <td>
+        {% if invoicee.outStandingAmounts %}
+        <ul>
+        {% for outStandingAmount in invoicee.outStandingAmounts %}
+        <li>{{ outStandingAmount.amount }}{{ outStandingAmount.currency }}</li>
+        {% endfor %}
+        </ul>
+        {{ invoicee.outStandingAmount }}
+        {% else %}-{% endif %}
+    </td>
     <td class="borderless">
         <button 
             helptext="{% translate 'InvoiceePreviewExplanation' %}"

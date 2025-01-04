@@ -17,6 +17,7 @@ from django.core.validators import (
 from django.utils.translation import gettext_lazy as _
 
 from Invoice.models import Invoice
+from Core.utils import get_currency_symbol
 
 
 class Invoicee(Model):
@@ -90,12 +91,27 @@ class Invoicee(Model):
         return reverse_lazy('Invoicee:invoicee', args=[self.id])
 
     @property
-    def numOutstandingInvoices(self):
-        return Invoice.objects.exclude(
-            status__in=[0, 1]
+    def outStandingAmounts(self):
+        invoices = Invoice.objects.exclude(
+            state=2
+        ).select_related(
+            'invoicee'
         ).filter(
             invoicee=self
-        ).count()
+        )
+        currencies = invoices.values('baseCurrency').distinct()
+        return [
+            {
+                'currency': get_currency_symbol(currency['baseCurrency']),
+                'amount': sum(
+                    invoice.owedAmount - invoice.paidAmount
+                    for invoice in invoices.filter(
+                        baseCurrency=currency['baseCurrency']
+                    )
+                )
+            }
+            for currency in currencies
+        ]
 
     @property
     def paidAmount(self):
