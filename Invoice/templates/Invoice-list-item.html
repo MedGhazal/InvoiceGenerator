@@ -38,8 +38,16 @@
         class="overdue"
         {% endif %}
     >{{ invoice.totalAfterVAT }}</td>
+    <td 
+        helptext="{% translate 'TotalAfterVAT' %}"
+        {% if invoice.state == 3 %}
+        class="cleared"
+        {% elif invoice.status == 3 %}
+        class="overdue"
+        {% endif %}
+    >{{ invoice.outstandingAmount }}</td>
+    {% if invoice.wellFormed %}
     <td class="borderless">
-        {% if invoice.wellFormed %}
         <button 
             helptext="{% translate 'InvoicePreviewExplanation' %}"
             type="button"
@@ -49,17 +57,17 @@
             hx-target="main">
             {% include './symbols/eye.svg' %}
         </button>
-        {% endif %}
     </td>
+    {% endif %}
+    {% if invoice.state == 0 or invoice.state == 1 %}
     <td class="borderless">
-        {% if invoice.status == 0 or invoice.status == 1 %}
         <a href="{% url 'Invoice:modify' invoice.id %}" helptext="{% translate 'InvoiceModifyExplanation' %}">
             {% include './symbols/edit.svg' %}
         </a>
-        {% endif %}
     </td>
+    {% endif %}
+    {% if invoice.wellFormed and invoice.state == 0 %}
     <td class="borderless">
-        {% if invoice.wellFormed and invoice.state == 0 %}
         <button
             hx-get="{% url 'Invoice:validate-invoice' invoice.id %}"
             hx-swap="outerHTML"
@@ -67,20 +75,20 @@
             hx-target="#table-row-{{ invoice.id }}">
             {% include './symbols/check-square.svg' %}
         </button>
-        {% endif %}
     </td>
+    {% endif %}
+    {% if invoice.wellFormed and invoice.state == 1 %}
     <td class="borderless">
-        {% if invoice.wellFormed and invoice.state == 1 %}
         <button 
             hx-get="{% url 'Invoice:invoice-estimate' invoice.id %}"
             hx-swap="innerHTML"
             helptext="{% translate 'InvoiceEstimateExplanation' %}">
             {% include './symbols/check-circle.svg' %}
         </button>
-        {% endif %}
     </td>
+    {% endif %}
+    {% if invoice.state != 0 and invoice.state != 1 and invoice.state != 3 and not invoice.state != 5 and invoice.paymentMethod != 'CN' %}
     <td class="borderless">
-        {% if not invoice.state == 0 and not invoice.state == 1 and not invoice.state == 3 and not invoice.state == 5 %}
         <button
             hx-get="{% url 'Invoice:create-creditNote' invoice.id %}"
             hx-swap="innerHTML"
@@ -88,10 +96,10 @@
             hx-target="main">
             {% include './symbols/corner-down-left.svg' %}
         </button>
-        {% endif %}
     </td>
+    {% endif %}
+    {% if invoice.state == 0 or invoice.state == 1 %}
     <td class="borderless">
-        {% if invoice.state == 0 or invoice.state == 1 %}
         <button 
             hx-get="{% url 'Invoice:delete-invoice' invoice.id %}"
             hx-swap="innerHTML"
@@ -99,13 +107,13 @@
             helptext="{% translate 'DeleteInvoiceButtonExplanation' %}">
             {% include './symbols/trash.svg' %}
         </button>
-        {% endif %}
     </td>
+    {% endif %}
+    {% if invoice.downloadable %}
     <td class="borderless">
-        {% if invoice.downloadable %}
         <a href="{% url 'Invoice:download' invoice.id %}" helptext="{% translate 'DownloadInvoiceButtonExplanation' %}">
             {% include './symbols/download.svg' %}
         </a>
-        {% endif %}
     </td>
+    {% endif %}
 </tr>

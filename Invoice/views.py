@@ -53,7 +53,8 @@ def download_invoice(request, invoice):
 
 
 class BaseInvoiceListView(ListView, LoginRequiredMixin):
-    model = Invoice
+
+    queryset = Invoice.objects.select_related('invoicer', 'invoicee')
     template_name = './Invoice-index.html'
 
     def render_to_response(self, context, **response_kwargs):
@@ -108,9 +109,9 @@ class BaseInvoiceListView(ListView, LoginRequiredMixin):
             ).filter(
                 facturationDate__lte=self.request.GET['endDate']
             )
-        return queryset.select_related(
-            'invoicer'
-        ).filter(
+        if self.request.user.is_superuser:
+            return queryset
+        return queryset.filter(
             invoicer=Invoicer.objects.get(manager=self.request.user)
         )
 
@@ -118,43 +119,24 @@ class BaseInvoiceListView(ListView, LoginRequiredMixin):
 class InvoiceListView(BaseInvoiceListView):
 
     def get_queryset(self, *args, **kwargs):
-        queryset = super().get_queryset(*args, **kwargs)
-        queryset.filter(state__in=[0, 2])
+        queryset = super().get_queryset(*args, **kwargs).filter(
+            state__in=[0, 2, 3]
+        )
         return queryset
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        invoices = context['invoice_list'].filter(state__in=[0, 2])
-        context.update({'invoice_list': invoices})
-        return context
 
 
 class CreditNoteListView(BaseInvoiceListView):
 
     def get_queryset(self, *args, **kwargs):
-        queryset = super().get_queryset(*args, **kwargs)
-        queryset.filter(state=4)
+        queryset = super().get_queryset(*args, **kwargs).filter(state=4)
         return queryset
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        invoices = context['invoice_list'].filter(state=4)
-        context.update({'invoice_list': invoices})
-        return context
 
 
 class EstimateListView(BaseInvoiceListView):
 
     def get_queryset(self, *args, **kwargs):
-        queryset = super().get_queryset(*args, **kwargs)
-        queryset.filter(state=1)
+        queryset = super().get_queryset(*args, **kwargs).filter(state=1)
         return queryset
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        invoices = context['invoice_list'].filter(state=1)
-        context.update({'invoice_list': invoices})
-        return context
 
 
 class InvoiceDetailView(DetailView, LoginRequiredMixin):

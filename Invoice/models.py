@@ -144,17 +144,17 @@ class Invoice(Model):
 
     def __str__(self):
         if self.state == 0:
-            return f'{self.invoicer}|{self.invoicee}:B'.replace('\n', ' ')
+            return f'{self.invoicer}|{self.invoicee}:B{self.id}'
         elif self.state == 1:
-            return f'{self.invoicer}|{self.invoicee}:D'.replace('\n', ' ')
-        elif not self.state == 0:
+            return f'{self.invoicer}|{self.invoicee}:D{self.id}'
+        elif self.state == 4:
+            return f'{self.invoicer}|{self.invoicee}:CN{self.count}'
+        else:
             repr = f'{self.invoicer}|{self.invoicee}:F{self.count}'
             if self.owedAmount > 0:
                 currencySymbol = get_currency_symbol(self.baseCurrency)
                 repr += f':{self.owedAmount}{currencySymbol}'
             return repr.replace('\n', ' ')
-        else:
-            return ''
 
     @property
     def number(self):
@@ -162,8 +162,10 @@ class Invoice(Model):
             return f'{date.today().year}-B-{self.id}'
         elif self.state == 1:
             return f'{date.today().year}-D-{self.id}'
+        elif self.state == 4:
+            return f'{self.facturationDate.year}-A-{self.count}'
         else:
-            return f'{self.facturationDate.year}-{self.count}'
+            return f'{self.facturationDate.year}-F-{self.count}'
 
     def clean(self):
         if (
@@ -221,6 +223,13 @@ class Invoice(Model):
         super(Invoice, self).save()
 
     @property
+    def outstandingAmount(self):
+        if self.owedAmount > 0:
+            return self.owedAmount - self.paidAmount
+        else:
+            return 0
+
+    @property
     def wellFormed(self):
         wellFormed = self.project_set.count() > 0
         return wellFormed and all(
@@ -229,7 +238,7 @@ class Invoice(Model):
 
     @property
     def downloadable(self):
-        return self.wellFormed and (self.state in [0, 1])
+        return self.wellFormed
 
     @property
     def totalBeforeVAT(self):
