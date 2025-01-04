@@ -1,7 +1,8 @@
 from glob import glob
 from datetime import date
 from decimal import Decimal
-from os import system, chdir, getcwd, remove
+from subprocess import run
+from os import chdir, getcwd, remove
 from os.path import join
 from django.utils.translation import gettext as _
 
@@ -289,7 +290,7 @@ def compile_texFile(texFileName):
     current_path = getcwd()
     targetPath = join(getcwd(), TEMPTEXFILESDIR)
     chdir(targetPath)
-    system(f'xelatex {texFileName}')
+    run(['xelatex', texFileName])
     for file in glob('*.aux'):
         remove(file)
     for file in glob('*.log'):
