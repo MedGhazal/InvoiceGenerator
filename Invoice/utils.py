@@ -26,10 +26,9 @@ from Core.exceptions import (
 
 def create_credit_note(invoice):
     if (
-        not invoice.state == 0
-        and invoice.state == 1
-        and invoice.state == 3
+        invoice.state == 2
         and invoice.paidAmount == 0
+        and invoice.paymentMethod != 'CN'
     ):
         invoice.paymentMethod = 'CN'
         invoice.owedAmount = 0
@@ -44,7 +43,7 @@ def create_credit_note(invoice):
         creditNote.paymentMethod = 'CN'
         creditNote.salesAccount = invoice.salesAccount
         creditNote.vatAccount = invoice.vatAccount
-        creditNote.state = 3
+        creditNote.state = 4
         creditNote.owedAmount = 0
         creditNote.save()
         project = Project()

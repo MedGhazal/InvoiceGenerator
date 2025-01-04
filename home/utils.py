@@ -1,6 +1,8 @@
 from itertools import chain
 from decimal import Decimal
 
+from django.db.models import Sum
+
 from Invoicer.models import Invoicer
 from Invoicee.models import Invoicee
 from Invoice.models import Fee, Project, Invoice
@@ -69,28 +71,35 @@ def getPaidAmountOfInvoicee(invoicee, beginDate, endDate):
     return paidAmount
 
 
-def packageInvoiceeInformation(invoicee, beginDate, endDate):
-    paid = getPaidAmountOfInvoicee(invoicee, beginDate, endDate)
-    outStanding = getOutstandingAmountOfInvoicee(invoicee, beginDate, endDate)
-    currencies = set(paid.keys()).union(set(outStanding.keys()))
-    return [
-        (
-            invoicee.name,
-            invoicee.country,
-            printAmountWithCurrency(outStanding.get(currency), currency),
-            printAmountWithCurrency(paid.get(currency), currency),
-        )
-        for currency in currencies
+def getInvoiceesInformation(invoices, currencies):
+    invoiceesData = [
+        [
+            {
+                'name': invoiceeData['invoicee__name'],
+                'country': invoiceeData['invoicee__country'],
+                'totalOwed': printAmountWithCurrency(
+                    invoiceeData['totalOwed'],
+                    get_currency_symbol(currency)
+                ),
+                'totalPaid': printAmountWithCurrency(
+                    invoiceeData['totalPaid'],
+                    get_currency_symbol(currency)
+                ),
+            } for invoiceeData in invoices.filter(
+                baseCurrency=currency
+            ).values('invoicee').annotate(
+                totalPaid=Sum('paidAmount')
+            ).annotate(
+                totalOwed=Sum('owedAmount')
+            ).values(
+                'invoicee__name',
+                'invoicee__country',
+                'totalPaid',
+                'totalOwed'
+            )
+        ] for currency in currencies
     ]
-
-
-def getInvoiceesInformation(invoicees, beginDate, endDate):
-    return list(
-        chain.from_iterable(
-            packageInvoiceeInformation(invoicee, beginDate, endDate)
-            for invoicee in invoicees
-        )
-    )
+    return chain.from_iterable(invoiceesData)
 
 
 def getInvoicesInformation(invoices, currencies):
@@ -171,27 +180,25 @@ def getProjectsInformation(invoices, currencies):
             'title', flat=True
         )
     )
-    return list(
-        chain.from_iterable(
+    return chain.from_iterable(
+        [
             [
-                [
-                    nature,
-                    printAmountWithCurrency(
-                        sum(
-                            invoice.owedAmount
-                            for invoice in invoices.filter(
-                                project__title=nature
-                            ).filter(
-                                baseCurrency=currency
-                            )
-                        ),
-                        get_currency_symbol(currency)
-                    )
-                ]
-                for currency in currencies
+                nature,
+                printAmountWithCurrency(
+                    sum(
+                        invoice.owedAmount
+                        for invoice in invoices.filter(
+                            project__title=nature
+                        ).filter(
+                            baseCurrency=currency
+                        )
+                    ),
+                    get_currency_symbol(currency)
+                )
             ]
-            for nature in natures
-        )
+            for currency in currencies
+        ]
+        for nature in natures
     )
 
 

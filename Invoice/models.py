@@ -184,13 +184,30 @@ class Invoice(Model):
         self.description = f'{self.invoicer}|{self.invoicee}'
         if self.state == 0 or self.state == 1:
             self.count = None
-        elif not self.state == 0 and (
+        elif self.state == 4 and (
             self.count is None
             or isinstance(self.count, DatabaseDefault)
             or self.count == 0
         ):
-            invoices = invoices.exclude(
-                state__in=[0, 1],
+            invoices = invoices.filter(
+                state=4,
+            ).filter(
+                invoicer=self.invoicer,
+            ).filter(
+                facturationDate__gte=f'{self.facturationDate.year}-01-01',
+            ).filter(
+                facturationDate__lte=f'{self.facturationDate.year}-12-31',
+            )
+            self.count = 1 if invoices.count() == 0 else max(
+                invoice.count for invoice in invoices
+            ) + 1
+        elif self.state == 2 and (
+            self.count is None
+            or isinstance(self.count, DatabaseDefault)
+            or self.count == 0
+        ):
+            invoices = invoices.filter(
+                state__in=[2, 3],
             ).filter(
                 invoicer=self.invoicer,
             ).filter(

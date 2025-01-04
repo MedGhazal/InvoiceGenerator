@@ -29,16 +29,12 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
     if request.GET:
         beginDate = request.GET['beginDate']
         endDate = request.GET['endDate']
-        invoicees = Invoicee.objects.select_related().filter(
-            name__icontains=request.GET['invoicee']
-        )
     else:
         beginDate = f'{date.today().year}-01-01'
         endDate = f'{date.today().year}-12-31'
-        invoicees = Invoicee.objects.select_related('invoice').all()
 
     if request.user.is_superuser:
-        invoices = Invoice.objects.select_related().exclude(
+        invoices = Invoice.objects.select_related('invoicee').exclude(
             state__in=[2, 3]
         ).filter(
             facturationDate__gte=beginDate
@@ -46,7 +42,9 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
             facturationDate__lte=endDate
         )
     else:
-        invoices = Invoice.objects.select_related().exclude(
+        invoices = Invoice.objects.select_related(
+            'invoicer', 'invoicee'
+        ).exclude(
             state__in=[2, 3]
         ).filter(
             invoicer=Invoicer.objects.get(manager=request.user)
@@ -55,20 +53,11 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         ).filter(
             facturationDate__lte=endDate
         )
-        invoicees = Invoicee.objects.filter(
-            invoicer=Invoicer.objects.get(manager=request.user)
-        )
-
-    invoices = invoices.filter(invoicee__in=invoicees)
 
     currencies = invoices.values_list('baseCurrency', flat=True).distinct()
 
     invoicesInformation = getInvoicesInformation(invoices, currencies)
-    invoiceesInformation = getInvoiceesInformation(
-        invoicees,
-        beginDate,
-        endDate,
-    )
+    invoiceesInformation = getInvoiceesInformation(invoices, currencies)
     paymentMethodDistribution = getPaymentMethodDistribution(
         invoices,
         currencies,

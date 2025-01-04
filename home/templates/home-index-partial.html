@@ -117,14 +117,12 @@
     </tr></thead>
     <tbody>
       {% for invoiceeInformation in invoiceesInformation %}
-      {% if invoiceeInformation.2 != '-' %}
       <tr>
-        <td>{{ invoiceeInformation.0 }}</td>
-        <td>{{ invoiceeInformation.1 }}</td>
-        <td>{{ invoiceeInformation.2 }}</td>
-        <td>{{ invoiceeInformation.3 }}</td>
+        <td>{{ invoiceeInformation.name }}</td>
+        <td>{{ invoiceeInformation.country }}</td>
+        <td>{{ invoiceeInformation.totalOwed }}</td>
+        <td>{{ invoiceeInformation.totalPaid }}</td>
       </tr>
-      {% endif %}
       {% endfor %}
     </tbody>
   </table>
