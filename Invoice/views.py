@@ -44,7 +44,7 @@ def download_invoice(request, invoice):
             response = FileResponse(
                 pdfFile, content_type='application/pdf', filename=file,
             )
-        remove(pathToFile)
+        # remove(pathToFile)
         return response
     except LateXError as e:
         error(request, ' '.join(e.args))
