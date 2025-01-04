@@ -35,7 +35,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
     else:
         beginDate = f'{date.today().year}-01-01'
         endDate = f'{date.today().year}-12-31'
-        invoicees = Invoicee.objects.all()
+        invoicees = Invoicee.objects.select_related('invoice').all()
 
     if request.user.is_superuser:
         invoices = Invoice.objects.select_related().exclude(
