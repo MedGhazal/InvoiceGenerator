@@ -53,13 +53,6 @@
     {% include 'header.html' %}
     {% include 'aside.html' %}
     <main>
-{% get_available_languages as languages %}
-{% translate 'ChangeLanguageTo' %}
-{% for lang_code, lang_name in languages %}
-    {% language lang_code %}
-    <a href="{% url 'set_language' %}">{{ lang_name }}</a>
-    {% endlanguage %}
-{% endfor %}
       {% include './symbols/loader.svg' %}
       {% block content %} {% endblock %}
     </main>

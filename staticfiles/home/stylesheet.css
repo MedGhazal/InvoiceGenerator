@@ -184,7 +184,7 @@ footer {
 	position: fixed;
 	top: 92vh;
 	display: grid;
-	grid-template-columns: 90% 10%;
+	grid-template-columns: 20% 70% 10%;
 }
 .copyright {
 	padding: 10px;
@@ -197,17 +197,24 @@ footer {
 }
 .footer-social:hover {
 	transform: scale(1.5);
-	transition: .1s ease-in-out;
+	transition: .25s ease-in-out;
 }
-.form-logout {
+.form-footer-wrapper {
+	width: 100%;
 	align-self: center;
+	padding: 0 20px;
+	/* background-color: var(); */
+	/* color: var(--secondary-color); */
 }
-.form-logout button {
-	border: 0;
-	background-color: var(--primary-color);
-	color: var(--secondary-color);
+.form-footer-wrapper form {
+	display: flex;
+	flex-direction: row;
 }
-.form-logout button:hover {
+.form-footer-wrapper select {
+	display: flex;
+	width: 70px;
+}
+.form-footer-wrapper button:hover {
 	background-color: var(--secondary-color);
 	color: var(--primary-color);
 	border-radius: 10px 20px;
