@@ -1,16 +1,15 @@
 from itertools import chain
-from decimal import Decimal
 
 from django.db.models import Sum
+from django.db.utils import NotSupportedError
 
-from Invoicer.models import Invoicer
-from Invoicee.models import Invoicee
-from Invoice.models import Fee, Project, Invoice
+from Invoice.models import Project, Invoice
 from Core.utils import (
     lformat_decimal,
     get_currency_symbol,
 )
 from Core.models import PaymentMethod
+from InvoiceGenerator.settings import DATABASES
 
 
 def printAmountWithCurrency(amount, currencySymbol):
@@ -72,6 +71,7 @@ def getPaidAmountOfInvoicee(invoicee, beginDate, endDate):
 
 
 def getInvoiceesInformation(invoices, currencies):
+    invoices = invoices.exclude(state=3)
     invoiceesData = [
         [
             {
@@ -173,32 +173,20 @@ def getPaymentMethodDistribution(invoices, currencies):
 
 
 def getProjectsInformation(invoices, currencies):
-    natures = set(
-        Project.objects.filter(
-            invoice__in=invoices
-        ).values_list(
-            'title', flat=True
-        )
-    )
     return chain.from_iterable(
         [
             [
-                nature,
+                nature['project__title'],
                 printAmountWithCurrency(
-                    sum(
-                        invoice.owedAmount
-                        for invoice in invoices.filter(
-                            project__title=nature
-                        ).filter(
-                            baseCurrency=currency
-                        )
-                    ),
+                    nature['totalPaid'],
                     get_currency_symbol(currency)
                 )
-            ]
-            for currency in currencies
-        ]
-        for nature in natures
+            ] for nature in invoices.filter(
+                baseCurrency=currency
+            ).values('project__title').annotate(
+                totalPaid=Sum('paidAmount')
+            )
+        ] for currency in currencies
     )
 
 
@@ -206,11 +194,7 @@ def getTotalTurnoversInvoices(invoices, currencies):
     return [
         (
             printAmountWithCurrency(
-                sum(
-                    owedAmount for owedAmount in invoices.filter(
-                        baseCurrency=currency
-                    ).values_list('owedAmount', flat=True)
-                ),
+                invoices.aggregate(totalPaid=Sum('paidAmount'))['totalPaid'],
                 get_currency_symbol(currency),
             )
         )
