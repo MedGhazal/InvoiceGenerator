@@ -40,11 +40,11 @@ def download_invoice(request, invoice):
     try:
         file = generate_invoice_file(invoice)
         pathToFile = join(getcwd(), TEMPTEXFILESDIR, file)
-        with open(pathToFile, 'rb') as pdfFile:
-            response = FileResponse(
-                pdfFile, content_type='application/pdf', filename=file,
-            )
-        # remove(pathToFile)
+        response = FileResponse(
+            open(pathToFile, 'rb'),
+            content_type='application/pdf',
+            filename=file,
+        )
         return response
     except LateXError as e:
         error(request, ' '.join(e.args))
