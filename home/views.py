@@ -24,8 +24,6 @@ from Core.forms import InvoiceFilterControlForm
 def index(request, invoicer=None, beginDate=None, endDate=None):
     homeControlForm = InvoiceFilterControlForm()
 
-    context = {}
-
     if request.GET:
         beginDate = request.GET['beginDate']
         endDate = request.GET['endDate']
@@ -34,7 +32,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         endDate = f'{date.today().year}-12-31'
 
     if request.user.is_superuser:
-        invoices = Invoice.objects.select_related('invoicee').exclude(
+        invoices = Invoice.objects.select_related('invoicee').filter(
             state__in=[2, 3]
         ).filter(
             facturationDate__gte=beginDate
@@ -44,7 +42,7 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
     else:
         invoices = Invoice.objects.select_related(
             'invoicer', 'invoicee'
-        ).exclude(
+        ).filter(
             state__in=[2, 3]
         ).filter(
             invoicer=Invoicer.objects.get(manager=request.user)
@@ -55,14 +53,12 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         )
 
     currencies = invoices.values_list('baseCurrency', flat=True).distinct()
-
     invoicesInformation = getInvoicesInformation(invoices, currencies)
     invoiceesInformation = getInvoiceesInformation(invoices, currencies)
     paymentMethodDistribution = getPaymentMethodDistribution(
         invoices,
         currencies,
     )
-
     projectsInformation = getProjectsInformation(invoices, currencies)
     totalTurnovers = getTotalTurnoversInvoices(invoices, currencies)
 
