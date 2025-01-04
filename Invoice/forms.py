@@ -1,9 +1,8 @@
-from django.forms import ModelForm
+from django.forms import ModelForm, DateInput
 from django.forms.models import inlineformset_factory
-from django.forms import DateInput
+from django.forms.widgets import Textarea
 from django.utils.translation import gettext_lazy as _
 
-from Invoicee.models import Invoicee
 from .models import Invoice, Project, Fee, Payment
 
 from django_select2.forms import ModelSelect2Widget
@@ -42,10 +41,7 @@ class PaymentForm(ModelForm):
         ]
         widgets = {
             'paymentDay': DateInput(
-                attrs={
-                    'type': 'date',
-                    'pattern': r'\d{4}-\d{2}-\d{2}',
-                }
+                attrs={'type': 'date', 'pattern': r'\d{4}-\d{2}-\d{2}'}
             ),
         }
 
@@ -99,3 +95,4 @@ class FeeForm(ModelForm):
     class Meta:
         model = Fee
         fields = ['description', 'rateUnit', 'count', 'vat']
+        widgets = {'description': Textarea(attrs={'rows': 2})}

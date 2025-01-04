@@ -2,14 +2,14 @@
 <h1>{% translate 'Home' %}</h1>
 {% if messages %}
 <div class="messages-content">
-    <ul class="messages">
-        {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
-            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}{% translate 'Error' %}: {% endif %}
-            {{ message }}
-        </li>
-        {% endfor %}
-    </ul>
+  <ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+      {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}{% translate 'Error' %}: {% endif %}
+      {{ message }}
+    </li>
+    {% endfor %}
+  </ul>
 </div>
 {% endif %}
 <div class="filter-form-wrapper">
@@ -25,7 +25,11 @@
   </form>
 </div>
 <div class="home-main">
-  <div class="home-main-text">{% translate "HomeMAINText" %}</div>
+  <div class="home-main-text">
+  {% blocktranslate with beginDate=beginDate endDate=endDate %}
+  HomeMAINText for the period of {{ beginDate }} to {{ endDate }}
+  {% endblocktranslate %}
+  </div>
   <table class="StateTable"><thead>
     <tr>
       <th class="HeaderColumn">{% translate "PaymentMode" %}</th>
@@ -33,26 +37,44 @@
     </tr></thead>
     <tbody>
       <tr>
-        <td class="HeaderColumn">{% translate "CASH" %}</td>
-        {% for amountPayedCash in paymentMethodDistribution.CS %}
+        <td class="HeaderColumn">{% translate "Bank Transfer" %}</td>
+        {% for amountPayedCash in paymentMethodDistribution.TR %}
         <td>{{ amountPayedCash }}</td>
         {% endfor %}
       </tr>
       <tr>
-        <td class="HeaderColumn">{% translate "TRANSFER" %}</td>
-        {% for amountPayedTransfer in paymentMethodDistribution.TR %}
+        <td class="HeaderColumn">{% translate "Cash Payment" %}</td>
+        {% for amountPayedTransfer in paymentMethodDistribution.CS %}
         <td>{{ amountPayedTransfer }}</td>
         {% endfor %}
       </tr>
       <tr>
-        <td class="HeaderColumn">{% translate "CHEQUE" %}</td>
+        <td class="HeaderColumn">{% translate "Check" %}</td>
         {% for amountPayedCheck in paymentMethodDistribution.CK %}
         <td>{{ amountPayedCheck }}</td>
         {% endfor %}
       </tr>
       <tr>
-        <td class="HeaderColumn">{% translate "DIVERS" %}</td>
-        {% for amountPayedDivers in paymentMethodDistribution.DV %}
+        <td class="HeaderColumn">{% translate "CreditCard" %}</td>
+        {% for amountPayedDivers in paymentMethodDistribution.CD %}
+        <td>{{ amountPayedDivers }}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="HeaderColumn">{% translate "DebitCard" %}</td>
+        {% for amountPayedDivers in paymentMethodDistribution.DC %}
+        <td>{{ amountPayedDivers }}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="HeaderColumn">{% translate "DirectDebit" %}</td>
+        {% for amountPayedDivers in paymentMethodDistribution.DD %}
+        <td>{{ amountPayedDivers }}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="HeaderColumn">{% translate "BillOfExchange" %}</td>
+        {% for amountPayedDivers in paymentMethodDistribution.BE %}
         <td>{{ amountPayedDivers }}</td>
         {% endfor %}
       </tr>
@@ -117,7 +139,7 @@
       <th>{% translate "SumAfterVATPeriod" %}</th>
     </tr></thead>
     <tbody>
-      {% for invoiceInformation in invoicesInformation %}
+      {% for currency, invoiceInformation in invoicesInformation.items %}
       <tr>
         <td>{{ invoiceInformation.0 }}</td>
         <td>{{ invoiceInformation.1 }}</td>

@@ -1,3 +1,4 @@
+from django.forms.widgets import Textarea
 from django.shortcuts import render
 from django.views.generic import (
     ListView,
@@ -44,6 +45,7 @@ class InvoiceeUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         invoiceeForm = context['form']
+        invoiceeForm.fields['address'].widget = Textarea(attrs={'rows': 2})
         invoicee = context['invoicee']
         if invoicee.is_person:
             invoiceeForm.fields.pop('ice')
@@ -217,7 +219,9 @@ class InvoiceeCreateView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context.update({'private': False, 'update': False})
+        invoiceeForm = context['form']
+        invoiceeForm.fields['address'].widget = Textarea(attrs={'rows': 2})
+        context.update({'private': False, 'update': False, 'form': invoiceeForm})
         return context
 
     def form_valid(self, form):

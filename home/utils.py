@@ -8,6 +8,7 @@ from Core.utils import (
     lformat_decimal,
     get_currency_symbol,
 )
+from Core.models import PaymentMethod
 
 
 def printAmountWithCurrency(amount, currencySymbol):
@@ -18,29 +19,15 @@ def printAmountWithCurrency(amount, currencySymbol):
 
 
 def getVATOfInvoices(invoices):
-    return sum(
-        round(fee.rateUnit * fee.count * Decimal(fee.vat / 100), 2)
-        for fee in Fee.objects.filter(
-            project__in=Project.objects.filter(
-                invoice__in=invoices
-            )
-        )
-    )
+    return sum(invoice.totalVAT for invoice in invoices)
 
 
 def getBeforeVATOfInvoices(invoices):
-    return sum(
-        fee.rateUnit * fee.count
-        for fee in Fee.objects.filter(
-            project__in=Project.objects.filter(
-                invoice__in=invoices
-            )
-        )
-    )
+    return sum(invoice.totalBeforeVAT for invoice in invoices)
 
 
 def getAfterVATOfInvoices(invoices):
-    return sum(invoices.values_list('owedAmount', flat=True))
+    return sum(invoice.totalAfterVAT for invoice in invoices)
 
 
 def getOutstandingAmountOfInvoicee(invoicee, beginDate, endDate):
@@ -97,61 +84,63 @@ def packageInvoiceeInformation(invoicee, beginDate, endDate):
     ]
 
 
-def getInvoiceesInformation(user, beginDate, endDate):
+def getInvoiceesInformation(invoicees, beginDate, endDate):
     return list(
         chain.from_iterable(
             packageInvoiceeInformation(invoicee, beginDate, endDate)
-            for invoicee in Invoicee.objects.filter(
-                invoicer__in=Invoicer.objects.filter(manager=user)
-            )
+            for invoicee in invoicees
         )
     )
 
 
 def getInvoicesInformation(invoices, currencies):
-    return [
-        (
-            currency,
-            invoices.filter(baseCurrency=currency).count(),
-            invoices.filter(baseCurrency=currency).filter(status=3).count(),
+    invoiceData = {}
+    for currency in currencies:
+        invoices = invoices.filter(baseCurrency=currency)
+        paidInvoices = invoices.filter(state=3)
+        outStandingInvoices = invoices.filter(state=2)
+        invoiceData[currency] = (
+            get_currency_symbol(currency),
+            invoices.count(),
+            paidInvoices.count(),
             printAmountWithCurrency(
                 sum(
-                    owedAmount - paidAmount
-                    for owedAmount, paidAmount in invoices.filter(
-                        baseCurrency=currency
-                    ).filter(
-                        status__in=[3, 1]
+                    owed - paid
+                    for owed, paid in outStandingInvoices.filter(
+                        paidAmount__gt=0
                     ).values_list(
                         'owedAmount', 'paidAmount'
                     )
-                    if paidAmount >= 0
                 ),
                 get_currency_symbol(currency),
             ),
             printAmountWithCurrency(
-                getVATOfInvoices(invoices.filter(baseCurrency=currency)),
+                getVATOfInvoices(invoices),
                 get_currency_symbol(currency),
             ),
             printAmountWithCurrency(
-                getBeforeVATOfInvoices(invoices.filter(baseCurrency=currency)),
+                getBeforeVATOfInvoices(invoices),
                 get_currency_symbol(currency),
             ),
             printAmountWithCurrency(
-                getAfterVATOfInvoices(invoices.filter(baseCurrency=currency)),
+                getAfterVATOfInvoices(invoices),
                 get_currency_symbol(currency),
             ),
         )
-        for currency in currencies
-    ]
+    return invoiceData
 
 
 def getPaymentMethodDistribution(invoices, currencies):
+    paymentMethods = PaymentMethod.values
+    paymentMethods.remove('DV')
     distributionAmountsPaidOnPaymentMethod = [
-        (
+        [
             printAmountWithCurrency(
                 sum(
                     invoices.filter(
-                        paymentMethod='CS'
+                        paidAmount__gt=0
+                    ).filter(
+                        paymentMethod=paymentMethod
                     ).filter(
                         baseCurrency=currency
                     ).values_list(
@@ -160,55 +149,17 @@ def getPaymentMethodDistribution(invoices, currencies):
                     )
                 ),
                 get_currency_symbol(currency),
-            ),
-            printAmountWithCurrency(
-                sum(
-                    invoices.filter(
-                        paymentMethod='TR'
-                    ).filter(
-                        baseCurrency=currency
-                    ).values_list(
-                        'paidAmount',
-                        flat=True,
-                    )
-                ),
-                get_currency_symbol(currency),
-            ),
-            printAmountWithCurrency(
-                sum(
-                    invoices.filter(
-                        paymentMethod='CK'
-                    ).filter(
-                        baseCurrency=currency
-                    ).values_list(
-                        'paidAmount',
-                        flat=True,
-                    )
-                ),
-                get_currency_symbol(currency),
-            ),
-            printAmountWithCurrency(
-                sum(
-                    invoices.filter(
-                        paymentMethod='DV'
-                    ).filter(
-                        baseCurrency=currency
-                    ).values_list(
-                        'paidAmount',
-                        flat=True,
-                    )
-                ),
-                get_currency_symbol(currency),
-            ),
-        )
+            )
+            for paymentMethod in paymentMethods
+        ]
         for currency in currencies
     ]
     return {
         paymentMethod: [
-            distributionAmountsPaid[i]
-            for distributionAmountsPaid in distributionAmountsPaidOnPaymentMethod
+            distributionAmountPaid[i]
+            for distributionAmountPaid in distributionAmountsPaidOnPaymentMethod
         ]
-        for i, paymentMethod in enumerate(['CS', 'TR', 'CK', 'DV'])
+        for i, paymentMethod in enumerate(paymentMethods)
     }
 
 

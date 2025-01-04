@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 
 from Invoicer.models import Invoicer
+from Invoicee.models import Invoicee
 from Invoice.models import Invoice
 from .forms import (
     ContactDataForm,
@@ -28,9 +29,13 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
     if request.GET:
         beginDate = request.GET['beginDate']
         endDate = request.GET['endDate']
+        invoicees = Invoicee.objects.select_related().filter(
+            name__icontains=request.GET['invoicee']
+        )
     else:
         beginDate = f'{date.today().year}-01-01'
         endDate = f'{date.today().year}-12-31'
+        invoicees = Invoicee.objects.all()
 
     if request.user.is_superuser:
         invoices = Invoice.objects.select_related().exclude(
@@ -50,16 +55,20 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
         ).filter(
             facturationDate__lte=endDate
         )
+        invoicees = Invoicee.objects.filter(
+            invoicer=Invoicer.objects.get(manager=request.user)
+        )
+
+    invoices = invoices.filter(invoicee__in=invoicees)
 
     currencies = invoices.values_list('baseCurrency', flat=True).distinct()
 
     invoicesInformation = getInvoicesInformation(invoices, currencies)
     invoiceesInformation = getInvoiceesInformation(
-        request.user,
+        invoicees,
         beginDate,
         endDate,
     )
-
     paymentMethodDistribution = getPaymentMethodDistribution(
         invoices,
         currencies,
@@ -69,12 +78,14 @@ def index(request, invoicer=None, beginDate=None, endDate=None):
     totalTurnovers = getTotalTurnoversInvoices(invoices, currencies)
 
     context = {
+        'beginDate': beginDate,
+        'endDate': endDate,
         'numCurrencies': len(currencies),
-        'totalTurnovers': totalTurnovers,
-        'paymentMethodDistribution': paymentMethodDistribution,
         'invoicesInformation': invoicesInformation,
         'invoiceesInformation': invoiceesInformation,
         'projectsInformation': projectsInformation,
+        'totalTurnovers': totalTurnovers,
+        'paymentMethodDistribution': paymentMethodDistribution,
         'form': homeControlForm,
     }
     if request.META.get('HTTP_HX_REQUEST'):
