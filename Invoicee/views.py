@@ -62,7 +62,7 @@ class InvoiceeUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
 
 class InvoiceeListView(ListView, LoginRequiredMixin):
 
-    model = Invoicee
+    model = Invoicee.objects.select_related('invoicer')
     template_name = './Invoicee-index.html'
 
     def render_to_response(self, context, **response_kwargs):
@@ -97,7 +97,7 @@ class InvoiceeListView(ListView, LoginRequiredMixin):
     def get_queryset(self, is_person=False):
         if self.request.GET.get('invoiceeName'):
             success(self.request, _('ResultsSuccessfullyFilterd'))
-            queryset = Invoicee.objects.filter(
+            queryset = Invoicee.objects.select_related().filter(
                 invoicer=Invoicer.objects.get(manager=self.request.user)
             ).filter(
                 name__icontains=self.request.GET['invoiceeName']
@@ -105,7 +105,7 @@ class InvoiceeListView(ListView, LoginRequiredMixin):
                 is_person=is_person
             )
         else:
-            queryset = Invoicee.objects.filter(
+            queryset = Invoicee.objects.select_related().filter(
                 invoicer=Invoicer.objects.get(manager=self.request.user)
             ).filter(
                 is_person=is_person
@@ -122,12 +122,7 @@ class PrivateInvoiceeListView(InvoiceeListView):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context.update({
-            'private': True,
-            'hasMultipleInvoicers': Invoicer.objects.filter(
-                manager=self.request.user
-            ).count() > 1
-        })
+        context.update({'private': True})
         return context
 
     def get_queryset(self):

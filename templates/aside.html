@@ -52,5 +52,30 @@
             {% block extraAsideItems %} {% endblock %}
         </ul>
     </div>
+	{% if user.is_authenticated %}
+	<div class="form-aside-wrapper">
+		<div class="helptext">{% translate 'ChooseTheLanguage' %}</div>
+		<form action="{% url 'set_language' %}" method="post">{% csrf_token %}
+			<input name="next" type="hidden" value="{{ redirect_to }}">
+			<select name="language">
+				{% get_current_language as LANGUAGE_CODE %}
+				{% get_available_languages as LANGUAGES %}
+				{% get_language_info_list for LANGUAGES as languages %}
+				{% for language in languages %}
+				<option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
+					{{ language.name_local }} ({{ language.code }})
+				</option>
+				{% endfor %}
+			</select>
+			<button type="submit">{% translate 'GO' %}</button>
+		</form>
+	</div>
+	<div class="form-aside-wrapper">
+		<form action="{% url 'logout' %}" method="post">
+			{% csrf_token %}
+			<button type="submit">{% translate 'Log Out' %}</button>
+		</form>
+	</div>
+	{% endif %}
 </aside>
 {% endif %}

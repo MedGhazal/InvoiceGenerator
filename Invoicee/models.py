@@ -6,9 +6,10 @@ from django.db.models import (
     IntegerField,
     TextChoices,
     BooleanField,
-    SET_NULL,
+    Sum,
     CASCADE,
 )
+from django.db.models.expressions import F
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator,
@@ -92,48 +93,53 @@ class Invoicee(Model):
 
     @property
     def outStandingAmounts(self):
-        invoices = Invoice.objects.exclude(
-            state=2
-        ).select_related(
-            'invoicee'
-        ).filter(
-            invoicee=self
-        )
+        invoices = self.invoice_set.filter(state=2).filter(owedAmount__gte=0)
         currencies = invoices.values('baseCurrency').distinct()
         return [
             {
                 'currency': get_currency_symbol(currency['baseCurrency']),
-                'amount': sum(
-                    invoice.owedAmount - invoice.paidAmount
-                    for invoice in invoices.filter(
-                        baseCurrency=currency['baseCurrency']
-                    )
-                )
+                'amount': invoices.filter(
+                    baseCurrency=currency
+                ).annotate(
+                    tbpaid=F('owedAmount')-F('paidAmount')
+                ).aggregate(
+                    outstanding=Sum('tbpaid')
+                )['oustanding']
             }
             for currency in currencies
         ]
 
     @property
-    def paidAmount(self):
-        return sum(
-            invoice.paidAmount
-            for invoice in Invoice.objects.filter(
-                invoicee=self
-            ).exclude(
-                status__in=[0, 1]
-            )
-        )
+    def paidAmounts(self):
+        invoices = self.invoice_set.filter(state=2).filter(owedAmount__gte=0)
+        currencies = invoices.values('baseCurrency').distinct()
+        return [
+            {
+                'currency': get_currency_symbol(currency['baseCurrency']),
+                'amount': invoices.filter(
+                    baseCurrency=currency
+                ).aggregate(
+                    paid=Sum('paidAmount')
+                )['paid']
+            }
+            for currency in currencies
+        ]
 
     @property
-    def owedAmount(self):
-        return sum(
-            invoice.owedAmount
-            for invoice in Invoice.objects.filter(
-                invoicee=self
-            ).exclude(
-                status__in=[0, 1]
-            )
-        )
+    def owedAmounts(self):
+        invoices = self.invoice_set.filter(state=2).filter(owedAmount__gte=0)
+        currencies = invoices.values('baseCurrency').distinct()
+        return [
+            {
+                'currency': get_currency_symbol(currency['baseCurrency']),
+                'amount': invoices.filter(
+                    baseCurrency=currency
+                ).aggregate(
+                    owed=Sum('owedAmount')
+                )['owed']
+            }
+            for currency in currencies
+        ]
 
     class Meta:
         verbose_name = _('INVOICEE')

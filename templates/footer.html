@@ -1,37 +1,11 @@
 {% load i18n %}
 <footer>
-	{% if user.is_authenticated %}
-	<div class="form-footer-wrapper">
-		<form action="{% url 'set_language' %}" method="post">{% csrf_token %}
-			<input name="next" type="hidden" value="{{ redirect_to }}">
-			<select name="language">
-				{% get_current_language as LANGUAGE_CODE %}
-				{% get_available_languages as LANGUAGES %}
-				{% get_language_info_list for LANGUAGES as languages %}
-				{% for language in languages %}
-				<option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
-					{{ language.name_local }} ({{ language.code }})
-				</option>
-				{% endfor %}
-			</select>
-			<input type="submit" value="Go">
-		</form>
-	</div>
-	{% endif %}
 	<div class="copyright">
 		<div class="f-social">
 			<a href="mailto:infos@lamome.business" class="footer-social"><i class="far fa-envelope"></i></a>
 			<a href="https://www.linkedin.com/company/la-mome-business/" class="footer-social"><i class="fab fa-linkedin"></i></a>
 			<a href="#" class="footer-social"><i class="fab fa-facebook"></i></a>
+			LA MOME Business&copy; 2024
 		</div>
-		LA MOME Business&copy; 2024
 	</div>
-	{% if user.is_authenticated %}
-	<div class="form-footer-wrapper">
-		<form action="{% url 'logout' %}" method="post">
-			{% csrf_token %}
-			<button type="submit">{% translate 'Log Out' %}</button>
-		</form>
-	</div>
-	{% endif %}
 </footer>

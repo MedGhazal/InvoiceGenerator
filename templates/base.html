@@ -1,54 +1,63 @@
 {% load i18n %}
 {% load static %}
 <!DOCTYPE html>
-<html lang="fr" data-lt-installed="true"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="WebApplication for LAMOME Business">
-  <meta name="keywords" content="">
-  <meta name="author" content="Mohamed Ghazal">
-  <meta name="robots" content="index, follow">
-  <meta
-    name="htmx-config"
-    content='{
-    "inlineScriptNonce": "{{ request.csp_nonce }}",
-    "responseHandling":[
-    {"code":"204", "swap": false},
-    {"code":"[23]..", "swap": true},
-    {"code":"405", "swap": true, "error": false, "swapOverride": "location.reload()"},
-    {"code":"4[1-9][1-4|6-7]", "swap": false, "error": true},
-    {"code":"5..", "swap": false, "error": true},
-    {"code":"...", "swap": true}
-    ]
-    }'
-  />
-  <link rel="stylesheet" href="{% static './utils/utils.css' %}">
-  <link rel="stylesheet" href="{% static './home/stylesheet.css' %}">
-  <link rel="stylesheet" href="{% static './home/table.css' %}">
-  <link rel="stylesheet" href="{% static './home/home-content.css' %}">
-  <link rel="stylesheet" href="{% static './Invoice/invoice-detail.css' %}">
-  <link rel="stylesheet" href="{% static './Invoice/invoice-form.css' %}">
-  <link rel="stylesheet" href="{% static './Invoice/Invoice-modify.css' %}">
-  <link rel="stylesheet" href="{% static './Invoice/Invoice-list.css' %}">
-  <link rel="stylesheet" href="{% static './Invoice/Invoice-list.css' %}">
-  <link rel="stylesheet" href="{% static './Invoicee/Invoicee-form.css' %}">
-  <link rel="stylesheet" href="{% static './admin/css/vendor/select2/select2.min.css' %}" media="screen">
-  <link rel="stylesheet" href="{% static './django_select2/django_select2.css' %}" media="screen">
-  <link rel="icon" type="image/x-icon" href="{% static './img/favicon.ico' %}">
-  <script src="{% url 'javascript-catalog' %}"></script>
-  <script src="{% static './js/htmx.min.js' %}"></script>
-  <script src="{% static './js/jquery.min.js' %}"></script>
-  <script src="{% static './admin/js/vendor/select2/select2.full.min.js' %}"></script>
-  <script src="{% static './admin/js/vendor/select2/i18n/en.js' %}"></script>
-  <script src="{% static './django_select2/django_select2.js' %}"></script>
-  {% block title %} {% endblock %}
-  <link 
-    rel="stylesheet" 
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" 
-    integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" 
-    crossorigin="anonymous" 
-    referrerpolicy="no-referrer"/>
-</head>
+<html 
+  {% get_current_language as LANGUAGE_CODE %}
+  {% if LANGUAGE_CODE == 'ar' %}
+  dir="rtl"
+  {% endif %}
+  lang="fr" data-lt-installed="true"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="WebApplication for LAMOME Business">
+    <meta name="keywords" content="">
+    <meta name="author" content="Mohamed Ghazal">
+    <meta name="robots" content="index, follow">
+    <meta
+      name="htmx-config"
+      content='{
+      "inlineScriptNonce": "{{ request.csp_nonce }}",
+      "responseHandling":[
+      {"code":"204", "swap": false},
+      {"code":"[23]..", "swap": true},
+      {"code":"405", "swap": true, "error": false, "swapOverride": "location.reload()"},
+      {"code":"4[1-9][1-4|6-7]", "swap": false, "error": true},
+      {"code":"5..", "swap": false, "error": true},
+      {"code":"...", "swap": true}
+      ]
+      }'
+    />
+    <link rel="stylesheet" href="{% static './utils/utils.css' %}">
+    <link rel="stylesheet" href="{% static './home/stylesheet.css' %}">
+    <link rel="stylesheet" href="{% static './home/table.css' %}">
+    <link rel="stylesheet" href="{% static './home/home-content.css' %}">
+    <link rel="stylesheet" href="{% static './Invoice/invoice-detail.css' %}">
+    <link rel="stylesheet" href="{% static './Invoice/invoice-form.css' %}">
+    <link rel="stylesheet" href="{% static './Invoice/Invoice-modify.css' %}">
+    <link rel="stylesheet" href="{% static './Invoice/Invoice-list.css' %}">
+    <link rel="stylesheet" href="{% static './Invoice/Invoice-list.css' %}">
+    <link rel="stylesheet" href="{% static './Invoicee/Invoicee-form.css' %}">
+    <link rel="stylesheet" href="{% static './admin/css/vendor/select2/select2.min.css' %}" media="screen">
+    <link rel="stylesheet" href="{% static './django_select2/django_select2.css' %}" media="screen">
+    {% get_current_language as LANGUAGE_CODE %}
+    {% if LANGUAGE_CODE == 'ar' %}
+    <link rel="stylesheet" href="{% static './utils/arabic_extra.css' %}" media="screen">
+    {% endif %}
+    <link rel="icon" type="image/x-icon" href="{% static './img/favicon.ico' %}">
+    <script src="{% url 'javascript-catalog' %}"></script>
+    <script src="{% static './js/htmx.min.js' %}"></script>
+    <script src="{% static './js/jquery.min.js' %}"></script>
+    <script src="{% static './admin/js/vendor/select2/select2.full.min.js' %}"></script>
+    <script src="{% static './admin/js/vendor/select2/i18n/en.js' %}"></script>
+    <script src="{% static './django_select2/django_select2.js' %}"></script>
+    {% block title %} {% endblock %}
+    <link 
+      rel="stylesheet" 
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" 
+      integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" 
+      crossorigin="anonymous" 
+      referrerpolicy="no-referrer"/>
+  </head>
   <body>
     {% include 'header.html' %}
     {% include 'aside.html' %}

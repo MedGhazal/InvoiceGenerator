@@ -97,8 +97,7 @@ header {
 	flex-direction: row;
 	width: fit-content;
 	height: 7vh;
-	margin: auto;
-	margin-top: 1vh;
+	margin: 1vh auto;
 }
 .complete-logo {
 	width: 60px;
@@ -157,6 +156,30 @@ aside .nav-box ul li .SubItem:hover {
 	color: var(--primary-color);
 	background-color: var(--light-color);
 }
+.form-aside-wrapper {
+	display: flex;
+	flex-direction: column;
+	padding: 15px 0 0 15px;
+	margin: 0 15px;
+}
+.form-aside-wrapper form {
+	display: flex;
+	flex-direction: row;
+}
+.form-aside-wrapper form button {
+	font-size: .8rem;
+	padding: 0;
+	margin: 0 5px;
+	border: 0;
+	background: 0lh;
+	align-items: flex-end;
+	transition: all .25s ease-in-out;
+}
+.form-aside-wrapper form button:hover {
+	color: var(--primary-color);
+	text-decoration: underline;
+}
+
 
 /* main */
 main {
@@ -165,9 +188,9 @@ main {
 	border-radius: 10px;
 	display: inline-block;
 	width: 83%;
-	margin: .5vh .5%;
-	padding: 1%;
-	height: 79vh;
+	margin: 1vh .5%;
+	padding: 1vh 1%;
+	height: 81vh;
 	left: 14%;
 	overflow: auto;
 	position: fixed;
@@ -182,9 +205,8 @@ footer {
 	text-align: center;
 	height: 8vh;
 	position: fixed;
-	top: 92vh;
+	top: 95vh;
 	display: grid;
-	grid-template-columns: minmax(100px, 10%) 80% minmax(100px, 10%);
 }
 .copyright {
 	padding: 10px;
@@ -198,30 +220,6 @@ footer {
 .footer-social:hover {
 	transform: scale(1.5);
 	transition: .25s ease-in-out;
-}
-.form-footer-wrapper {
-	align-self: center;
-	padding: 0 20px;
-	width: fit-content;
-}
-.form-footer-wrapper form {
-	display: flex;
-	flex-direction: row;
-}
-.form-footer-wrapper select {
-	display: flex;
-	width: 70px;
-}
-.form-footer-wrapper button {
-	display: block;
-	background-color: var(--primary-color);
-	color: var(--secondary-color);
-	margin-right: 0;
-}
-.form-footer-wrapper button:hover {
-	background-color: var(--secondary-color);
-	color: var(--primary-color);
-	border-radius: 10px 20px;
 }
 
 /* login-form */
