@@ -55,7 +55,7 @@ def download_invoice(request, invoice):
 
 class BaseInvoiceListView(ListView, LoginRequiredMixin):
 
-    queryset = Invoice.objects.select_related('payor', 'bankAccount')
+    queryset = Invoice.objects.select_related('invoicer', 'invoicee')
     template_name = './Invoice-index.html'
 
     def render_to_response(self, context, **response_kwargs):
