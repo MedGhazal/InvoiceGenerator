@@ -104,7 +104,7 @@ class Invoicee(Model):
                     tbpaid=F('owedAmount')-F('paidAmount')
                 ).aggregate(
                     outstanding=Sum('tbpaid')
-                )['oustanding']
+                )['outstanding']
             }
             for currency in currencies
         ]
