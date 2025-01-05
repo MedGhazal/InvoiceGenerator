@@ -94,7 +94,9 @@ class Invoicee(Model):
     @property
     def outStandingAmounts(self):
         invoices = self.invoice_set.filter(state=2).filter(owedAmount__gte=0)
-        currencies = invoices.values('baseCurrency').distinct()
+        currencies = invoices.values('baseCurrency').distinct().values_list(
+            'baseCurrency', flat=True
+        )
         return [
             {
                 'currency': get_currency_symbol(currency['baseCurrency']),
