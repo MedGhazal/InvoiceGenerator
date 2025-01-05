@@ -46,6 +46,8 @@
         class="overdue"
         {% endif %}
     >{{ invoice.outstandingAmount }}</td>
+    <td 
+    >{{ invoice.baseCurrency }}</td>
     {% if invoice.wellFormed %}
     <td class="borderless">
         <button 
