@@ -86,12 +86,6 @@ class BaseInvoiceListView(ListView, LoginRequiredMixin):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        invoices = context['invoice_list'].filter(
-            facturationDate__gte=f'{date.today().year}-01-01'
-        ).filter(
-            facturationDate__lte=f'{date.today().year}-12-31'
-        )
-        invoiceFilterControlForm = InvoiceFilterControlForm()
         if self.request.GET:
             invoiceFilterControlForm = InvoiceFilterControlForm(
                 initial={
@@ -106,7 +100,6 @@ class BaseInvoiceListView(ListView, LoginRequiredMixin):
         ).count() > 1
         context.update({
             'form': invoiceFilterControlForm,
-            'invoice_list': invoices,
             'managerHasMultipleInvoicers': managerHasMultipleInvoicers,
         })
         return context
@@ -118,10 +111,14 @@ class BaseInvoiceListView(ListView, LoginRequiredMixin):
                 facturationDate__gte=self.request.GET['beginDate']
             ).filter(
                 facturationDate__lte=self.request.GET['endDate']
+            ).filter(
+                invoicer=Invoicer.objects.get(manager=self.request.user)
             )
-        if self.request.user.is_superuser:
-            return queryset
         return queryset.filter(
+            facturationDate__gte=f'01-01-{date.today().year}'
+        ).filter(
+            facturationDate__lte=f'31-12-{date.today().year}'
+        ).filter(
             invoicer=Invoicer.objects.get(manager=self.request.user)
         )
 
@@ -907,7 +904,8 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
 class PaymentListView(ListView, LoginRequiredMixin):
 
     model = Payment
-    queryset = Payment.objects.select_related('invoice', 'payor', 'bankAccount')
+    queryset = Payment.objects.select_related(
+        'invoice', 'payor', 'bankAccount')
     template_name = './Payment-index.html'
 
     def render_to_response(self, context, **response_kwargs):
