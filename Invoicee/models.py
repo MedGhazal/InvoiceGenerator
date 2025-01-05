@@ -99,7 +99,7 @@ class Invoicee(Model):
         )
         return [
             {
-                'currency': get_currency_symbol(currency['baseCurrency']),
+                'currency': get_currency_symbol(currency),
                 'amount': invoices.filter(
                     baseCurrency=currency
                 ).annotate(
