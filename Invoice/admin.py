@@ -640,7 +640,7 @@ class PaymentInvoicerFilter(SimpleListFilter):
 @register(Payment)
 class PaymentAdmin(ModelAdmin):
 
-    list_select_related = ['invoice', 'invoicee']
+    list_select_related = ['payor', 'bankAccount']
     list_per_page = 25
     list_filter = (
         'paymentMethod',

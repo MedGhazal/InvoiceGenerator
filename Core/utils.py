@@ -1,6 +1,16 @@
 from babel.numbers import format_decimal
 from babel.dates import format_date
 from .models import PaymentMethod
+from django.http import HttpResponseRedirect
+
+
+class HTTPResponseHXRedirect(HttpResponseRedirect):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self["HX-Redirect"] = self["Location"]
+
+    status_code = 200
 
 
 def get_currency_symbol(currencyCode):

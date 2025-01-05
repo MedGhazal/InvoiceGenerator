@@ -32,9 +32,9 @@ class InvoicerFilter(SimpleListFilter):
 class InvoiceeAdmin(ModelAdmin):
 
     list_select_related = ['invoicer']
-    list_filter = ('country', InvoicerFilter)
+    list_filter = ('country', InvoicerFilter, 'is_person')
     list_display = ('name', 'ice', 'cin', 'get_balance')
-    search_fields = ('name',)
+    search_fields = ('name', 'is_person')
     fields = (
         'invoicer',
         'name',

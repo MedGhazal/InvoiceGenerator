@@ -11,11 +11,14 @@ from django.contrib.messages import success
 from django.contrib.messages.views import SuccessMessageMixin
 from django.utils.translation import gettext as _
 from django.contrib.messages import error
+from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
 
 from .models import Invoicee
 from Invoicer.models import Invoicer
 from Invoice.models import Invoice
 from Core.forms import InvoiceFilterControlForm, InvoiceeFilterControlForm
+from Core.utils import HTTPResponseHXRedirect
 
 
 class InvoiceeUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
@@ -26,7 +29,22 @@ class InvoiceeUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
     success_message = _('InvoiceeSuccessfullyUpdated')
 
     def render_to_response(self, context, **response_kwargs):
-        if self.request.META.get('HTTP_HX_REQUEST'):
+        if self.request.user.is_superuser:
+            if self.request.META.get('HTTP_HX_REQUEST'):
+                return HTTPResponseHXRedirect(
+                    reverse_lazy(
+                        'admin:Invoicee_invoicee_change',
+                        args=[self.object.id]
+                    )
+                )
+            else:
+                return HttpResponseRedirect(
+                    reverse_lazy(
+                        'admin:Invoicee_invoicee_change',
+                        args=[self.object.id]
+                    )
+                )
+        elif self.request.META.get('HTTP_HX_REQUEST'):
             return render(
                 self.request,
                 './Invoicee-form-partial.html',
@@ -62,11 +80,20 @@ class InvoiceeUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
 
 class InvoiceeListView(ListView, LoginRequiredMixin):
 
-    model = Invoicee.objects.select_related('invoicer')
+    queryset = Invoicee.objects.select_related('invoicer')
     template_name = './Invoicee-index.html'
 
     def render_to_response(self, context, **response_kwargs):
-        if self.request.META.get('HTTP_HX_REQUEST'):
+        if self.request.user.is_superuser:
+            if self.request.META.get('HTTP_HX_REQUEST'):
+                return HTTPResponseHXRedirect(
+                    reverse_lazy('admin:Invoicee_invoicee_changelist'),
+                )
+            else:
+                return HttpResponseRedirect(
+                    reverse_lazy('admin:Invoicee_invoicee_changelist')
+                )
+        elif self.request.META.get('HTTP_HX_REQUEST'):
             return render(
                 self.request,
                 './Invoicee-index-partial.html',
@@ -135,6 +162,21 @@ class InvoiceeDetailView(DetailView, LoginRequiredMixin):
     template_name = './Invoicee-detail.html'
 
     def render_to_response(self, context, **response_kwargs):
+        if self.request.user.is_superuser:
+            if self.request.META.get('HTTP_HX_REQUEST'):
+                return HTTPResponseHXRedirect(
+                    reverse_lazy(
+                        'admin:Invoicee_invoicee_change',
+                        args=[self.object.id]
+                    )
+                )
+            else:
+                return HttpResponseRedirect(
+                    reverse_lazy(
+                        'admin:Invoicee_invoicee_change',
+                        args=[self.object.id]
+                    )
+                )
         if self.request.META.get('HTTP_HX_REQUEST'):
             return render(
                 self.request,
@@ -196,6 +238,15 @@ class InvoiceeCreateView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
     success_message = _('InvoiceeHasBeenCreatedSuccessfully')
 
     def render_to_response(self, context, **response_kwargs):
+        if self.request.user.is_superuser:
+            if self.request.META.get('HTTP_HX_REQUEST'):
+                return HTTPResponseHXRedirect(
+                    reverse_lazy('admin:Invoicee_invoicee_add')
+                )
+            else:
+                return HttpResponseRedirect(
+                    reverse_lazy('admin:Invoicee_invoicee_add')
+                )
         if self.request.META.get('HTTP_HX_REQUEST'):
             return render(
                 self.request,

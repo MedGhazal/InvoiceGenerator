@@ -18,11 +18,13 @@ from django.http import FileResponse, HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 from django.utils.translation import gettext_lazy as _
+from django.urls import reverse_lazy
 
 from Core.forms import InvoiceFilterControlForm, PaymentFilterControlForm
 
 from Invoicer.models import Invoicer, BankAccount
 from Invoicee.models import Invoicee
+from Core.utils import HTTPResponseHXRedirect
 from .models import Invoice, Project, Fee, Payment
 from .forms import ProjectForm, FeeForm, InvoiceForm, PaymentForm
 from .utils import (
@@ -53,10 +55,19 @@ def download_invoice(request, invoice):
 
 class BaseInvoiceListView(ListView, LoginRequiredMixin):
 
-    queryset = Invoice.objects.select_related('invoicer', 'invoicee')
+    queryset = Invoice.objects.select_related('payor', 'bankAccount')
     template_name = './Invoice-index.html'
 
     def render_to_response(self, context, **response_kwargs):
+        if self.request.user.is_superuser:
+            if self.request.META.get('HTTP_HX_REQUEST'):
+                return HTTPResponseHXRedirect(
+                    reverse_lazy('admin:Invoice_invoice_changelist')
+                )
+            else:
+                return HttpResponseRedirect(
+                    reverse_lazy('admin:Invoicee_invoice_changelist')
+                )
         if self.request.META.get('HTTP_HX_REQUEST'):
             return render(
                 self.request,
@@ -147,6 +158,17 @@ class InvoiceDetailView(DetailView, LoginRequiredMixin):
         return context
 
     def render_to_response(self, context, **response_kwargs):
+        if self.request.user.is_superuser:
+            if self.request.META.get('HTTP_HX_REQUEST'):
+                return HTTPResponseHXRedirect(
+                    reverse_lazy('admin:Invoice_invoice_change'),
+                    args=[self.object.id],
+                )
+            else:
+                return HttpResponseRedirect(
+                    reverse_lazy('admin:Invoice_invoice_change'),
+                    args=[self.object.id],
+                )
         if self.request.META.get('HTTP_HX_REQUEST'):
             return render(
                 self.request,
@@ -166,6 +188,15 @@ class InvoiceDetailView(DetailView, LoginRequiredMixin):
 
 @login_required()
 def add_estimate(request):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_invoice_add')
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoicee_invoice_add')
+            )
     invoiceForm = InvoiceForm()
     invoiceForm.fields.pop('facturationDate')
     invoiceForm.fields.pop('dueDate')
@@ -199,6 +230,15 @@ def add_estimate(request):
 
 @login_required()
 def add_estimate_for(request, invoicee):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_invoice_add')
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoicee_invoice_add')
+            )
     invoiceForm = InvoiceForm()
     invoicee = Invoicee.objects.get(id=invoicee)
     invoiceForm.fields.pop('invoicee')
@@ -236,6 +276,15 @@ def add_estimate_for(request, invoicee):
 
 @login_required()
 def add_invoice_for(request, invoicee):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_invoice_add')
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoicee_invoice_add')
+            )
     invoicee = Invoicee.objects.get(id=invoicee)
     invoiceForm = InvoiceForm()
     invoiceForm.fields.pop('invoicee')
@@ -280,6 +329,15 @@ def add_invoice_for(request, invoicee):
 
 @login_required()
 def add_invoice(request):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_invoice_add')
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoicee_invoice_add')
+            )
     invoiceForm = InvoiceForm()
     invoicer = Invoicer.objects.get(manager=request.user)
     bankAccounts = BankAccount.objects.filter(owner=invoicer)
@@ -327,6 +385,15 @@ def add_invoice(request):
 
 @login_required()
 def delete_invoice(request, invoice):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_invoice_delete', args=[invoice])
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoice_invoice_delete', args=[invoice])
+            )
     invoice = Invoice.objects.get(id=invoice)
     if invoice.state != 0 and invoice.state != 1:
         return render(request, 'errorPages/405.html', status=405)
@@ -337,6 +404,15 @@ def delete_invoice(request, invoice):
 
 @login_required()
 def create_creditNoteOfInvoice(request, invoice):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_invoice_changelist')
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoice_invoice_changelist')
+            )
     invoice = Invoice.objects.get(id=invoice)
     if invoice.state == 0:
         return render(request, 'errorPages/405.html', status=405)
@@ -348,6 +424,15 @@ def create_creditNoteOfInvoice(request, invoice):
 @require_POST
 @login_required()
 def validate_invoice(request, invoice):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_invoice_changelist')
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoice_invoice_changelist')
+            )
     invoice = Invoice.objects.get(id=invoice)
     if invoice.project_set.count() == 0:
         error(request, _('InvoiceHasNoProjects'))
@@ -362,6 +447,15 @@ def validate_invoice(request, invoice):
 
 @login_required()
 def modify_invoice(request, invoice):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_invoice_change', args=[invoice])
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoice_invoice_change', args=[invoice])
+            )
     invoice = Invoice.objects.get(id=invoice)
     invoicer = Invoicer.objects.get(manager=request.user)
     projectForm = ProjectForm()
@@ -430,6 +524,15 @@ def modify_invoice(request, invoice):
 @require_POST
 @login_required()
 def modify_project(request, project):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_project_change', args=[project])
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoice_project_change', args=[project])
+            )
     project = Project.objects.get(id=project)
     project.title = request.POST['title']
     project.save()
@@ -442,6 +545,15 @@ def modify_project(request, project):
 @require_http_methods(['GET', 'POST'])
 @login_required()
 def modify_fee(request, fee):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_fee_change', args=[fee])
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoice_fee_change', args=[fee])
+            )
     fee = Fee.objects.get(id=fee)
     if request.method == 'GET':
         feeForm = FeeForm(instance=fee)
@@ -462,6 +574,15 @@ def modify_fee(request, fee):
 @require_POST
 @login_required()
 def add_projectAndFeesToInvoice(request, invoice):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_project_add')
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoice_project_add')
+            )
     invoice = Invoice.objects.get(id=invoice)
     project = Project()
     project.title = request.POST['title']
@@ -493,6 +614,15 @@ def add_projectAndFeesToInvoice(request, invoice):
 @require_POST
 @login_required()
 def add_feesToProject(request, project):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_project_change', args=[project])
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoice_project_change', args=[project])
+            )
     project = Project.objects.get(id=project)
     if len(request.POST.getlist('description')) > 1:
         for i, description in enumerate(request.POST.getlist('description')):
@@ -520,23 +650,32 @@ def add_feesToProject(request, project):
 @require_POST
 @login_required()
 def invoice_estimate(request, invoice):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_project_changelist')
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoice_project_changelist')
+            )
     invoice = Invoice.objects.get(id=invoice)
     invoice.state = 2
     return HttpResponse(_('EstimateSuccessfullyInvoiced'))
 
 
-class HTTPResponseHXRedirect(HttpResponseRedirect):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self["HX-Redirect"] = self["Location"]
-
-    status_code = 200
-
-
 @require_http_methods(['DELETE'])
 @login_required()
 def delete_fee(request, fee):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_fee_delete', args=[fee])
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoice_fee_delete', args=[fee])
+            )
     fee = Fee.objects.get(id=fee)
     if fee.project.fee_set.count() > 1:
         fee.delete()
@@ -557,6 +696,15 @@ def delete_fee(request, fee):
 @require_http_methods(['DELETE'])
 @login_required()
 def delete_project(request, project):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_project_delete', args=[project])
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoice_project_delete', args=[project])
+            )
     project = Project.objects.get(id=project)
     if project.invoice.project_set.count() > 1:
         project.delete()
@@ -577,6 +725,15 @@ def delete_project(request, project):
 @require_http_methods(['DELETE'])
 @login_required()
 def delete_payment(request, payment):
+    if request.user.is_superuser:
+        if request.META.get('HTTP_HX_REQUEST'):
+            return HTTPResponseHXRedirect(
+                reverse_lazy('admin:Invoice_payment_delete', args=[payment])
+            )
+        else:
+            return HttpResponseRedirect(
+                reverse_lazy('admin:Invoice_payment_delete', args=[payment])
+            )
     payment = Payment.objects.get(id=payment)
     payment.delete()
     success(request, _('PaymentSuccessfullyDeleted'))
@@ -590,6 +747,15 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
     template_name = './Payment-form.html'
 
     def render_to_response(self, context, **response_kwargs):
+        if self.request.user.is_superuser:
+            if self.request.META.get('HTTP_HX_REQUEST'):
+                return HTTPResponseHXRedirect(
+                    reverse_lazy('admin:Invoice_payment_add'),
+                )
+            else:
+                return HttpResponseRedirect(
+                    reverse_lazy('admin:Invoice_payment_add'),
+                )
         if self.request.META.get('HTTP_HX_REQUEST'):
             return render(
                 self.request,
@@ -663,6 +829,17 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
     template_name = './Payment-form.html'
 
     def render_to_response(self, context, **response_kwargs):
+        if self.request.user.is_superuser:
+            if self.request.META.get('HTTP_HX_REQUEST'):
+                return HTTPResponseHXRedirect(
+                    reverse_lazy('admin:Invoice_payment_change'),
+                    args=[self.object.id],
+                )
+            else:
+                return HttpResponseRedirect(
+                    reverse_lazy('admin:Invoice_payment_change'),
+                    args=[self.object.id],
+                )
         if self.request.META.get('HTTP_HX_REQUEST'):
             return render(
                 self.request,
@@ -730,10 +907,19 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
 class PaymentListView(ListView, LoginRequiredMixin):
 
     model = Payment
-    # queryset = Payment.objects.select_related()
+    queryset = Payment.objects.select_related('invoice', 'payor', 'bankAccount')
     template_name = './Payment-index.html'
 
     def render_to_response(self, context, **response_kwargs):
+        if self.request.user.is_superuser:
+            if self.request.META.get('HTTP_HX_REQUEST'):
+                return HTTPResponseHXRedirect(
+                    reverse_lazy('admin:Invoice_payment_changelist'),
+                )
+            else:
+                return HttpResponseRedirect(
+                    reverse_lazy('admin:Invoice_payment_changelist'),
+                )
         if self.request.META.get('HTTP_HX_REQUEST'):
             return render(
                 self.request,
@@ -827,6 +1013,23 @@ class PaymentDetailView(DetailView, LoginRequiredMixin):
     template_name = './Invoice-index.html'
 
     def render_to_response(self, context, **response_kwargs):
+        if self.request.user.is_superuser:
+            if self.request.META.get('HTTP_HX_REQUEST'):
+                return HTTPResponseHXRedirect(
+                    reverse_lazy('admin:Invoice_payment_change'),
+                    args=[self.object.id],
+                )
+            else:
+                return HttpResponseRedirect(
+                    reverse_lazy('admin:Invoice_payment_changelist'),
+                    args=[self.object.id],
+                )
+        if self.request.META.get('HTTP_HX_REQUEST'):
+            return render(
+                self.request,
+                './Payment-index-partial.html',
+                context,
+            )
         if self.request.META.get('HTTP_HX_REQUEST'):
             return render(
                 self.request,
