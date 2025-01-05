@@ -115,9 +115,9 @@ class BaseInvoiceListView(ListView, LoginRequiredMixin):
                 invoicer=Invoicer.objects.get(manager=self.request.user)
             )
         return queryset.filter(
-            facturationDate__gte=f'01-01-{date.today().year}'
+            facturationDate__gte=f'{date.today().year}-01-01'
         ).filter(
-            facturationDate__lte=f'31-12-{date.today().year}'
+            facturationDate__lte=f'{date.today().year}-12-31'
         ).filter(
             invoicer=Invoicer.objects.get(manager=self.request.user)
         )
