@@ -1,5 +1,16 @@
 {% load i18n %}
-<h1>{% translate 'InvoiceListView' %}</h1>
+<h1>
+    {% translate 'InvoiceListView' %}
+    {% if payment %}
+    {% blocktranslate with payment=payment %}
+    of the Payment {{ payment }}  
+    {% endblocktranslate %}
+    {% elif invoicee %}
+    {% blocktranslate with name=invoicee.name %}
+    of the INVOICEE {{ name }}  
+    {% endblocktranslate %}
+    {% endif %}
+</h1>
 {% if messages %}
 <div class="messages-content">
     <ul class="messages">
@@ -11,19 +22,6 @@
         {% endfor %}
     </ul>
 </div>
-{% endif %}
-{% if invoicee %}
-<p>
-    {% blocktrans with name=invoicee.name %}
-    For the INVOICEE {{ name }} the following INVOICES and Estimates has been created.
-    {% endblocktrans %}
-</p>
-{% elif payment %}
-<p>
-    {% blocktrans with payment=payment %}
-    For the Payment {{ payment }} the following INVOICES has been assigned.
-    {% endblocktrans %}
-</p>
 {% endif %}
 <div class="filter-form-wrapper">
     <form 
@@ -63,6 +61,7 @@
                 <th>{% translate 'InvoiceNumber' %}</th>
                 <th>{% translate 'TotalAfterVAT' %}</th>
                 <th>{% translate 'TBPaid' %}</th>
+                <th>{% translate 'Currency' %}</th>
             </tr>
         </thead>
         <tbody>
@@ -112,12 +111,7 @@
             <span class="text">{% translate 'AddNewEstimate' %}</span>
             {% endif %}
         </button>
-        {% if invoicee %}
-        <dialog id="invoice-form-dialog" class="invoice-form-dialog"></dialog>
-        {% endif %}
     </div>
     {% endif %}
 </div>
-{% else %}
-<div class="message">{% translate 'NoInvoiceAvailableForChosenFilterOrUserHasNoInvoicers' %}</div>
 {% endif %}

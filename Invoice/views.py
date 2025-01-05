@@ -1025,12 +1025,6 @@ class PaymentDetailView(DetailView, LoginRequiredMixin):
         if self.request.META.get('HTTP_HX_REQUEST'):
             return render(
                 self.request,
-                './Payment-index-partial.html',
-                context,
-            )
-        if self.request.META.get('HTTP_HX_REQUEST'):
-            return render(
-                self.request,
                 './Invoice-index-partial.html',
                 context,
             )

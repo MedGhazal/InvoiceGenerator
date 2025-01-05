@@ -24,6 +24,7 @@
             hx-get="{% url 'Invoice:payment' payment.id %}"
             hx-swap="innerHTML"
             hx-target="main"
+            hx-push-url="true"
             helptext="{% translate 'ViewPaymentDetailButtonExplanation' %}">
             {% include './symbols/eye.svg' %}
         </button>
