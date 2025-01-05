@@ -47,6 +47,11 @@
         {% endif %}
     >{{ invoice.outstandingAmount }}</td>
     <td 
+        {% if invoice.state == 3 %}
+        class="cleared"
+        {% elif invoice.status == 3 %}
+        class="overdue"
+        {% endif %}
     >{{ invoice.baseCurrency }}</td>
     {% if invoice.wellFormed %}
     <td class="borderless">
