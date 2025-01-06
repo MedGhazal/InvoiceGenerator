@@ -332,5 +332,6 @@ class InvoiceeDetailView(DetailView, LoginRequiredMixin):
             ).count() > 1,
             'invoices': invoices,
             'form': invoiceFilterControlForm,
+            'private': invoicee.is_person,
         })
         return context
