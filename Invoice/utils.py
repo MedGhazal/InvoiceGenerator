@@ -155,7 +155,7 @@ def parse_address(address):
 
 
 def parse_bankdata(invoice, isDomestic=False):
-    if invoice.bankAccount is None or invoice.state == 1:
+    if invoice.bankAccount is None or invoice.state in [1, 4]:
         return ''
     bankData = f'\\textbf{{Banque}}: {invoice.bankAccount.bankName}\\\\'\
         f'\\textbf{{SWIFT/BIC}}: {invoice.bankAccount.bic}\\\\'

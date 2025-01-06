@@ -27,21 +27,12 @@
       ]
       }'
     />
-    <link rel="stylesheet" href="{% static './utils/utils.css' %}">
-    <link rel="stylesheet" href="{% static './home/stylesheet.css' %}">
-    <link rel="stylesheet" href="{% static './home/table.css' %}">
-    <link rel="stylesheet" href="{% static './home/home-content.css' %}">
-    <link rel="stylesheet" href="{% static './Invoice/invoice-detail.css' %}">
-    <link rel="stylesheet" href="{% static './Invoice/invoice-form.css' %}">
-    <link rel="stylesheet" href="{% static './Invoice/Invoice-modify.css' %}">
-    <link rel="stylesheet" href="{% static './Invoice/Invoice-list.css' %}">
-    <link rel="stylesheet" href="{% static './Invoice/Invoice-list.css' %}">
-    <link rel="stylesheet" href="{% static './Invoicee/Invoicee-form.css' %}">
+    <link rel="stylesheet" href="{% static './css/stylesheet.css' %}">
     <link rel="stylesheet" href="{% static './admin/css/vendor/select2/select2.min.css' %}" media="screen">
     <link rel="stylesheet" href="{% static './django_select2/django_select2.css' %}" media="screen">
     {% get_current_language as LANGUAGE_CODE %}
     {% if LANGUAGE_CODE == 'ar' %}
-    <link rel="stylesheet" href="{% static './utils/arabic_extra.css' %}" media="screen">
+    <link rel="stylesheet" href="{% static './css/utils/arabic_extra.css' %}" media="screen">
     {% endif %}
     <link rel="icon" type="image/x-icon" href="{% static './img/favicon.ico' %}">
     <script src="{% url 'javascript-catalog' %}"></script>
