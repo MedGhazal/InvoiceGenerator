@@ -98,7 +98,7 @@
         </button>
     </td>
     {% endif %}
-    {% if invoice.state != 0 and invoice.state != 1 and invoice.state != 3 and not invoice.state != 5 and invoice.paymentMethod != 'CN' %}
+    {% if invoice.state == 2 and invoice.paymentMethod != 'CN' %}
     <td class="borderless">
         <button
             hx-get="{% url 'Invoice:create-creditNote' invoice.id %}"

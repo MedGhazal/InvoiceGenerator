@@ -16,7 +16,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import FileResponse, HttpResponseRedirect, HttpResponse
 from django.urls import reverse
-from django.views.decorators.http import require_POST, require_http_methods
+from django.views.decorators.http import (
+    require_GET,
+    require_POST,
+    require_http_methods,
+)
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse_lazy
 
@@ -418,7 +422,7 @@ def create_creditNoteOfInvoice(request, invoice):
     return HttpResponseRedirect(reverse('Invoice:index'))
 
 
-@require_POST
+@require_GET
 @login_required()
 def validate_invoice(request, invoice):
     if request.user.is_superuser:
