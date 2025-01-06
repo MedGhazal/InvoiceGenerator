@@ -1,0 +1,73 @@
+.invoice-modify-content {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    margin: 0;
+    padding: 0;
+}
+.invoice-form-dialog {
+    margin: auto;
+    padding: 1%;
+    border: 0;
+    border-radius: 10px;
+    background-color: var(--primary-color);
+    width: fit-content;
+}
+
+.fee-dialog {
+    margin: auto;
+    padding: 10px;
+    border: 0;
+    border-radius: 10px;
+    background-color: var(--primary-color);
+}
+.fee-dialog form {
+    display: flex;
+    flex-direction: row;
+}
+
+.project-dialog {
+    margin: auto;
+    padding: 10px;
+    border: 0;
+    border-radius: 10px;
+    background-color: var(--primary-color);
+}
+.project-dialog .fee-form {
+    display: flex;
+    flex-direction: row;
+    padding: 0;
+}
+.project-dialog-form {
+    display: flex;
+    flex-direction: row;
+}
+.fee-dialog-form {
+    display: flex;
+    flex-direction: row;
+}
+
+.project-space {
+    display: block;
+}
+.project-space .title {
+    margin: .5% 1%;
+    padding: .5% 1%;
+    border-bottom: 1px solid var(--primary-color);
+}
+.project-space .item-list {
+    min-width: 450px;
+    margin: 15px;
+}
+.project-space-footer {
+    border-top: 1px solid var(--primary-color);
+    display: flex;
+    justify-content: end;
+}
+.project-controls {
+    display: flex;
+    justify-content: end;
+}
+
+.invoice-button {
+    width: 100%;
+}

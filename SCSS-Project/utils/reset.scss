@@ -1,0 +1,278 @@
+::backdrop {
+	background-image: linear-gradient(
+		45deg,
+		magenta,
+		rebeccapurple,
+		dodgerblue,
+		green
+		);
+	opacity: 0.75;
+}
+
+.helptext {
+	font-size: .8rem;
+	color: var(--light-color);
+	padding: 0;
+}
+form {
+	align-items: center;
+	width: fit-content;
+}
+textarea {
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+	padding: 0.25rem;
+	border: 0;
+	border-radius: 2px;
+}
+input {
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+	border: 0px;
+	border-radius: 5px;
+	padding: 0.25rem;
+	width: max-content;
+}
+input:active {
+	border: 2px;
+	border-color: var(--primary-color);
+}
+input[type="submit"] {
+	border: 0;
+	padding: 0.5rem;
+	color: var(--primary-color);
+	background-color: var(--secondary-color);
+	width: max(20%, 80px);
+	margin: 5% 0  5% max(10%, 10px);
+}
+input[type="submit"]:hover {
+	border-radius: 10px 20px;
+	color: var(--secondary-color);
+	background-color: var(--primary-color);
+}
+form div {
+	display: flex;
+	flex-direction: column;
+	padding: 0.6rem;
+}
+form label {
+	font-size: .8rem;
+	color: var(--light-color);
+}
+select {
+	appearance: none;
+	width: 90%;
+	padding: 0.25rem;
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+	border: 1px var(--primary-color) #caced1;
+	border-radius: 5px;
+	cursor: pointer;
+	width: 100%;
+}
+button {
+	background-color: var(--primary-color);
+	color: var(--secondary-color);
+	border: 1px solid var(--secondary-color);
+	padding: .25rem;
+	margin: .25rem;
+	border-radius: 10px;
+	transition: all .25s ease-in-out;
+	transition: background-color 1s;
+}
+
+button.extensive-button {
+	transition: all .25s ease-in-out;
+	display: flex;
+	flex-direction: row;
+	color: var(--secondary-color);
+	background-color: var(--primary-color);
+	margin: 0;
+	padding: 0;
+	transition: all .25s ease-in-out;
+}
+button.extensive-button .symbol {
+	transition: all .25s ease-in-out;
+	display: block;
+	transition: all .25s ease-in-out;
+	padding: .5rem;
+}
+button.extensive-button .text {
+	display: block;
+	transition: all .25s ease-in-out;
+	color: var(--primary-color);
+	padding: .5rem;
+	transition: all .25s ease-in-out;
+}
+button.extensive-button:hover .text {
+	background-color: var(--secondary-color);
+}
+
+ul.messages {
+	display: block;
+	width: 100%;
+	margin: min(5px, .25%);
+}
+li.error {
+	padding-left: 5px;
+	border-left: 2px solid #ff3300;
+	background-color: #ffe6e6;
+}
+li.info {
+	padding-left: 5px;
+	border-left: 2px solid var(--primary-color);
+	background-color: var(--muted-primary-color);
+}
+li.success {
+	padding-left: 5px;
+	border-left: 2px solid #33cc33;
+	background-color: #ebfaeb;
+}
+li.warning {
+	padding-left: 5px;
+	border-left: 2px solid #ffcc00;
+	background-color: #fffae6;
+}
+li.debug {
+	padding-left: 5px;
+	border-left: 2px solid #660066;
+	background-color: #ffe6ff;
+}
+
+.cleared {
+	background-color: #ebfaeb;
+}
+.overdue {
+	background-color: #ffe6e6;
+}
+
+dialog > button {
+	border-radius: 5px;
+	border-color: var(--muted-primary-color);
+	background-color: var(--primary-color);
+	color: var(--muted-primary-color);
+	margin: .125rem .25rem;
+	padding: .125rem;
+}
+dialog > button:hover {
+	border-color: var(--secondary-color);
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+}
+.form-footer > button {
+	border-radius: 5px;
+	border-color: var(--muted-primary-color);
+	background-color: var(--primary-color);
+	color: var(--muted-primary-color);
+	margin: .125rem .25rem;
+	padding: .125rem;
+}
+.form-footer > button:hover {
+	border-color: var(--secondary-color);
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+}
+
+button.dialog-close-button {
+	display: block;
+	border: 0;
+	padding: .125rem;
+	align-self: start;
+}
+
+.dialog-submit-button {
+	display: block;
+	padding: .125rem;
+	background-color: var(--secondary-color);
+	color: var(--primary-color);
+	transition: all .25s ease-in-out;
+}
+.dialog-close-button:hover {
+	background-color: var(--primary-color);
+	color: var(--secondary-color);
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+}
+.form-header {
+	padding: .125rem;
+	align-self: flex-start;
+	color: var(--muted-primary-color);
+}
+.form-main h2 {
+	color: var(--light-color);
+	font-size: 1rem;
+}
+.form-footer {
+	display: flex;
+	flex-direction: row;
+	margin: .125rem;
+	padding: .125rem;
+	align-self: flex-end;
+}
+
+.form-wrapper {
+	margin: auto;
+	width: fit-content;
+}
+.form {
+	display: block;
+	color: var(--primary-color);
+	background-color: var(--primary-color);
+	border-radius: 10px;
+	margin: auto;
+	padding: 1.5%;
+	min-width: 300px;
+}
+.form-dialog {
+    margin: auto;
+    padding: 1%;
+    border: 0;
+    border-radius: 10px;
+    background-color: var(--primary-color);
+    width: fit-content;
+}
+
+.filter-form-wrapper {
+	display: block;
+}
+
+.filter-form {
+	color: var(--secondary-color);
+	background-color: var(--primary-color);
+	padding: min(10px, .5%);
+	margin: min(5px, .25%);
+	border-radius: 10px;
+	display: flex;
+}
+.filter-form > .form-main {
+	padding: 0;
+}
+.filter-form > .form-main > div {
+	padding: 5px 0;
+}
+.filter-form > .form-footer > .submit-button {
+	margin: 0;	
+}
+
+#indicator {
+	opacity:0;
+	transition: opacity 250ms ease-in;
+	position: absolute;
+	top: 50%;
+	right: 50%;
+	scale: 4;
+	background-color: var(--secondary-color);
+	padding: 20px;
+}
+.htmx-indicator {
+	opacity:0;
+}
+.htmx-request .htmx-indicator{
+	opacity:1;
+}
+.htmx-request .htmx-indicator{
+	opacity:1;
+}
