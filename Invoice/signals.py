@@ -20,6 +20,7 @@ def m2m_changed_payment_invoice_pre_add(payment):
         )
         for invoice in payment.invoice.all():
             invoice.paidAmount -= coverage
+            invoice.state = 2
             invoice.save()
 
 
@@ -30,7 +31,7 @@ def m2m_changed_payment_invoice_post_add(payment):
                 payment.paidAmount / payment.invoice.all().count(), 2
             )
         )
-        invoice.draft = False
+        invoice.state = 2 if invoice.paidAmount < invoice.owedAmount else 3
         invoice.save()
 
 
@@ -41,6 +42,7 @@ def m2m_changed_payment_invoice_pre_remove(payment):
                 payment.paidAmount / payment.invoice.all().count(), 2
             )
         )
+        invoice.state = 2
         invoice.save()
 
 
@@ -52,6 +54,7 @@ def m2m_changed_payment_invoice_post_remove(payment):
                 lastPayment.paidAmount / payment.invoice.all().count(), 2
             )
         )
+        invoice.state = 2 if invoice.paidAmount < invoice.owedAmount else 3
         invoice.save()
 
 
@@ -63,6 +66,7 @@ def m2m_changed_payment_invoice_pre_clear(payment):
                 payment.paidAmount / payment.invoice.all().count(), 2
             )
         )
+        invoice.state = 2
         invoice.save()
 
 

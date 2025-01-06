@@ -16,9 +16,7 @@
         {% endfor %}
         </ul>
     </td>
-    {% if invoicerHasManyBankAccounts %}
-    <td>{{ payment.bankAccount }}</td>
-    {% endif %}
+    <td>{% if payment.bankAccount %}{{ payment.bankAccount }}{% else %}{% translate 'NoBankAccount' %}{% endif %}</td>
     <td class="borderless">
         <button 
             hx-get="{% url 'Invoice:payment' payment.id %}"

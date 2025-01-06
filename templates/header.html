@@ -16,6 +16,7 @@
         {% translate 'Home' %}
       </button></li>
       {% if user.is_authenticated %}
+      {% if not user.is_superuser %}
       <li>
         <button 
           type="button" 
@@ -52,6 +53,7 @@
           {% translate 'Payments' %}
         </button>
       </li>
+      {% endif %}
       {% if user.is_superuser or user.is_staff %}
       <li><a href={% url 'admin:index' %}>{% translate 'ADMIN' %}</a></li>
       {% endif %}

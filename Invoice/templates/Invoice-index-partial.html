@@ -59,7 +59,7 @@
                 <th>{% translate 'PaidAmount' %}</th>
                 <th>{% translate 'PaidInvoices' %}</th>
                 {% if invoicerHasManyBankAccounts %}
-                <th>{% translate 'BankAccounts' %}</th>
+                <th>{% translate 'BankAccount' %}</th>
                 {% endif %}
             </tr>
         </thead>
@@ -102,9 +102,6 @@
     <table>
         <thead>
             <tr>
-                {% if managerHasMultipleInvoicers %}
-                <th style="width: 300px" nonce={{ request.csp_nonce }}>{% translate 'INVOICER' %}</th>
-                {% endif %}
                 {% if not invoicee %}
                 <th style="width: 300px" nonce={{ request.csp_nonce }}>{% translate 'INVOICEE' %}</th>
                 {% endif %}

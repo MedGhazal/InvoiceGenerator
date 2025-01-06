@@ -747,11 +747,6 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
     form_class = PaymentForm
     template_name = './Payment-form.html'
 
-    def form_invalid(self, form):
-        response = super().form_invalid(form)
-        response['HX-Retarget'] = '#payment-form-dialog'
-        return response
-
     def render_to_response(self, context, **response_kwargs):
         if self.request.user.is_superuser:
             if self.request.META.get('HTTP_HX_REQUEST'):
@@ -781,10 +776,12 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        paymentForm = context['form']
+        context.update({'update': False})
+        return context
+
+    def get_form(self):
+        paymentForm = super().get_form()
         invoicer = Invoicer.objects.get(manager=self.request.user)
-        if invoicer.bankAccounts.count() < 2:
-            paymentForm.fields.pop('bankAccount')
         outStandingInvoicesOfInvoicer = Invoice.objects.select_related(
             'invoicer', 'invoicee'
         ).filter(
@@ -794,14 +791,22 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
         ).filter(
             owedAmount__gt=F('paidAmount')
         )
-        paymentForm.fields['payor'].queryset = Invoicee.objects.filter(
+        paymentForm.fields['payor'].queryset = paymentForm.fields[
+            'payor'
+        ].queryset.filter(
             Exists(
                 outStandingInvoicesOfInvoicer.filter(invoicee=OuterRef('id'))
             )
         )
         paymentForm.fields['invoice'].queryset = outStandingInvoicesOfInvoicer
-        context.update({'form': paymentForm, 'update': False})
-        return context
+        paymentForm.fields['bankAccount'].queryset = invoicer.bankAccounts
+        paymentForm.fields['bankAccount'].empty_label = _('NoBankAccount')
+        return paymentForm
+
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        response['HX-Retarget'] = '#payment-form-dialog'
+        return response
 
     def form_valid(self, form):
         form.instance.invoicee = Invoicee.objects.get(
@@ -809,13 +814,6 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
         )
         form.instance.paymentDay = self.request.POST['paymentDay']
         form.instance.paymentMethod = self.request.POST['paymentMethod']
-        invoicer = Invoicer.objects.get(manager=self.request.user)
-        if invoicer.bankAccounts.count() < 2:
-            form.instance.bankAccount = invoicer.bankAccounts.fist()
-        else:
-            form.instance.bankAccount = BankAccount.objects.get(
-                id=self.request.POST['bankAccount']
-            )
         form.instance.paidAmount = Decimal(self.request.POST['paidAmount'])
         form.instance.paidInvoices = Invoice.objects.filter(
             id__in=self.request.POST['invoice']
@@ -830,11 +828,6 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
     form_class = PaymentForm
     template_name = './Payment-form.html'
 
-    def form_invalid(self, form):
-        response = super().form_invalid(form)
-        response['HX-Retarget'] = '#payment-form-dialog'
-        return response
-
     def render_to_response(self, context, **response_kwargs):
         if self.request.user.is_superuser:
             if self.request.META.get('HTTP_HX_REQUEST'):
@@ -866,10 +859,14 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        paymentForm = context['form']
+        context.update({'update': True})
+        return context
+
+    def get_form(self):
+        paymentForm = super().get_form()
         invoicer = Invoicer.objects.get(manager=self.request.user)
-        if invoicer.bankAccounts.count() < 2:
-            paymentForm.fields.pop('bankAccount')
+        paymentForm.fields['bankAccount'].queryset = invoicer.bankAccounts
+        paymentForm.fields['bankAccount'].empty_label = _('NoBankAccount')
         outStandingInvoicesOfInvoicer = Invoice.objects.filter(
             invoicer=invoicer
         ).filter(
@@ -880,8 +877,11 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
                 outStandingInvoicesOfInvoicer.filter(invoicee=OuterRef('id'))
             )
         )
-        context.update({'form': paymentForm, 'update': True})
-        return context
+
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        response['HX-Retarget'] = '#payment-form-dialog'
+        return response
 
     def form_valid(self, form):
         form.instance.invoicee = Invoicee.objects.get(
@@ -889,13 +889,6 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
         )
         form.instance.paymentDay = self.request.POST['paymentDay']
         form.instance.paymentMethod = self.request.POST['paymentMethod']
-        invoicer = Invoicer.objects.get(manager=self.request.user)
-        if invoicer.bankAccounts.count() < 2:
-            form.instance.bankAccount = invoicer.bankAccounts.fist()
-        else:
-            form.instance.bankAccount = BankAccount.objects.get(
-                id=self.request.POST['bankAccount']
-            )
         form.instance.paidAmount = Decimal(self.request.POST['paidAmount'])
         form.instance.paidInvoices = Invoice.objects.filter(
             id__in=self.request.POST['invoice']
@@ -939,15 +932,9 @@ class PaymentListView(ListView, LoginRequiredMixin):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        invoicer = Invoicer.objects.get(manager=self.request.user)
         if self.request.GET:
             success(self.request, _('ResultsSuccesfullyFiltered'))
             context.update({
-                'invoicerHasManyBankAccounts': BankAccount.objects.select_related(
-                    'owner'
-                ).filter(
-                    owner=invoicer
-                ).count() > 1,
                 'searchForm': PaymentFilterControlForm(
                     initial={
                         'payor': self.request.GET['payor'],
@@ -975,11 +962,6 @@ class PaymentListView(ListView, LoginRequiredMixin):
             })
         else:
             context.update({
-                'invoicerHasManyBankAccounts': BankAccount.objects.select_related(
-                    'owner'
-                ).filter(
-                    owner=invoicer
-                ).count() > 1,
                 'searchForm': PaymentFilterControlForm(
                     initial={
                         'beginDate': f'01-01-{date.today().year}',
@@ -989,7 +971,9 @@ class PaymentListView(ListView, LoginRequiredMixin):
                 'payment_list': Payment.objects.select_related(
                     'payor'
                 ).filter(
-                    payor__in=Invoicee.objects.filter(
+                    payor__in=Invoicee.objects.select_related(
+                        'invoicer'
+                    ).filter(
                         invoicer=Invoicer.objects.get(
                             manager=self.request.user
                         )
@@ -1043,15 +1027,9 @@ class PaymentDetailView(DetailView, LoginRequiredMixin):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        invoicer = Invoicer.objects.get(manager=self.request.user)
         payment = context['payment']
         if self.request.GET:
             context.update({
-                'invoicerHasManyBankAccounts': BankAccount.objects.select_related(
-                    'owner'
-                ).filter(
-                    owner=invoicer
-                ).count() > 1,
                 'payment': payment,
                 'invoice_list': payment.invoice.filter(
                     facturationDate__gte=self.request.GET['beginDate']
@@ -1067,11 +1045,6 @@ class PaymentDetailView(DetailView, LoginRequiredMixin):
             })
         else:
             context.update({
-                'invoicerHasManyBankAccounts': BankAccount.objects.select_related(
-                    'owner'
-                ).filter(
-                    owner=invoicer
-                ).count() > 1,
                 'payment': payment,
                 'invoice_list': payment.invoice.all(),
                 'form': InvoiceFilterControlForm(

@@ -419,7 +419,12 @@ class Payment(Model):
         related_name='paymentInvoice',
         related_query_name='paymentInvoice',
     )
-    bankAccount = ForeignKey('Invoicer.BankAccount', on_delete=CASCADE)
+    bankAccount = ForeignKey(
+        'Invoicer.BankAccount',
+        on_delete=CASCADE,
+        null=True,
+        blank=True,
+    )
     history = HistoricalRecords()
 
     def __str__(self):
