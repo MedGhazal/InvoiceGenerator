@@ -12,3 +12,13 @@ LateX template and a user defined logo.
     Handelts adding, removing and modifying invoicees for each invoicer, these objects are used to create the invoices and have the nessecary informations as specified in the docs.
 #### Invoicer
     Handels the user of the systems and stores the informations pertained to each invoices as specified in the docs.
+
+
+### Usage
+#### SCSS-Project
+##### Compling the SCSS-Project
+Required: SASS
+'''sass --watch SCSS-Project/main.scss staticfiles/css/stylesheet.css```
+##### Minifying stylesheet.css 
+Required: cssp-cli
+csso ./staticfiles/css/stylesheet.css -o ./staticfiles/css/stylesheet.css

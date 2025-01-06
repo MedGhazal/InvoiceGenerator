@@ -1,11 +1,11 @@
-@import "./utils/reset.scss";
-@import "./utils/table.scss";
+@use "./utils/reset.scss";
+@use "./utils/table.scss";
 
-@import "./Invoice/invoice-detail.scss";
-@import "./Invoice/invoice-form.scss";
-@import "./Invoice/invoice-modify.scss";
+@use "./Invoice/invoice-detail.scss";
+@use "./Invoice/invoice-form.scss";
+@use "./Invoice/invoice-modify.scss";
 
-@import "./Invoicee/invoicee-form.scss";
+@use "./Invoicee/invoicee-form.scss";
 
-@import "./home/base.scss";
-@import "./home/content.scss";
+@use "./home/base.scss";
+@use "./home/content.scss";
