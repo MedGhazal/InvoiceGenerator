@@ -351,7 +351,7 @@ def add_invoice(request):
             invoicer = Invoicer.objects.get(
                 manager=request.user
             )
-        if bankAccounts.count() < 2:
+        if bankAccounts.count() > 1:
             bankAccount = bankAccounts.get(
                 id=int(request.POST.get('bankAccount'))
             )
