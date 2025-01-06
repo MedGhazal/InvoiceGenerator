@@ -22,6 +22,7 @@
                 nonce={{request.csp_nonce}}
             >{% translate 'AddEstimate' %}</button></li>
             <li><button 
+                hx-indicator="#indicator"
                 hx-get="{% url 'Invoice:add-invoice' %}" class="MainItem"
                 hx-target="#invoice-form-dialog"
                 hx-on:click="document.getElementById('invoice-form-dialog').showModal();"
@@ -29,6 +30,7 @@
                 nonce={{request.csp_nonce}}
             >{% translate 'AddInvoice' %}</button></li>
             <li><button 
+                hx-indicator="#indicator"
                 hx-get="{% url 'Invoice:add-payment' %}" class="MainItem"
                 hx-target="#payment-form-dialog"
                 hx-on:click="document.getElementById('payment-form-dialog').showModal();"
@@ -36,6 +38,7 @@
                 nonce={{request.csp_nonce}}
             >{% translate 'AddPayment' %}</button></li>
             <li><button 
+                hx-indicator="#indicator"
                 hx-get="{% url 'Invoicee:add-invoicee' %}" class="MainItem"
                 hx-target="#invoicee-form-dialog"
                 hx-on:click="document.getElementById('invoicee-form-dialog').showModal();"
@@ -43,6 +46,7 @@
                 nonce={{request.csp_nonce}}
             >{% translate 'AddInvoicee' %}</button></li>
             <li><button 
+                hx-indicator="#indicator"
                 hx-get="{% url 'Invoicee:add-private-invoicee' %}" class="MainItem"
                 hx-target="#invoicee-form-dialog"
                 hx-on:click="document.getElementById('invoicee-form-dialog').showModal();"
@@ -52,7 +56,6 @@
             {% block extraAsideItems %} {% endblock %}
         </ul>
     </div>
-	{% if user.is_authenticated %}
 	<div class="form-aside-wrapper">
 		<div class="helptext">{% translate 'ChooseTheLanguage' %}</div>
 		<form action="{% url 'set_language' %}" method="post">{% csrf_token %}
@@ -76,6 +79,5 @@
 			<button type="submit">{% translate 'Log Out' %}</button>
 		</form>
 	</div>
-	{% endif %}
 </aside>
 {% endif %}

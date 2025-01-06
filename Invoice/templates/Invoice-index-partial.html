@@ -26,6 +26,7 @@
 <div class="filter-form-wrapper">
     <form 
         hx-push-url="true" 
+        hx-indicator="#indicator"
         hx-get=
         {% if invoicee %}
         "{% url 'Invoicee:invoicee' invoicee.id %}"
@@ -47,8 +48,57 @@
         </div>
     </form>
 </div>
+{% if payment %}
+<div class="item-list">
+    <div class="item-list-header">{% translate 'PaymentDetail' %}</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 300px" nonce={{ request.csp_nonce }}>{% translate 'INVOICEE' %}</th>
+                <th>{% translate 'PaymentDay' %}</th>
+                <th>{% translate 'PaidAmount' %}</th>
+                <th>{% translate 'PaidInvoices' %}</th>
+                {% if invoicerHasManyBankAccounts %}
+                <th>{% translate 'BankAccounts' %}</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% include './payment-list-item.html' with payment=payment %}
+        </tbody>
+    </table>
+</div>
+{% elif invoicee %}
+<div class="item-list">
+    <div class="item-list-header">{% translate 'INVOICEEDetail' %}</div>
+    <table>
+        <thead>
+            <tr>
+                <th>{% translate 'Name' %}</th>
+                <th>{% translate 'Address' %}</th>
+                {% if private %}
+                <th>{% translate 'CIN' %}</th>
+                {% else %}
+                <th>{% translate 'ICE' %}</th>
+                {% endif %}
+                <th>{% translate 'OutStandingAmount' %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% include './Invoicee-list-item.html' with invoicee=invoicee %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endif %}
 {% if invoice_list %}
 <div class="item-list">
+    {% if payment %}
+    <div class="item-list-header">{% translate 'INVOICESOfPayment' %}</div>
+    {% elif invoicee %}
+    <div class="item-list-header">{% translate 'INVOICESOfInvoicee' %}</div>
+    {% endif %}
     <table>
         <thead>
             <tr>
@@ -69,9 +119,6 @@
             {% include './Invoice-list-item.html' with invoicee=invoicee payment=payment invoice=invoice %}
             {% endfor %}
         </tbody>
-        <tfoot>
-            <tr></tr>
-        </tfoot>
     </table>
     <div class="item-list-footer">
         {% if not payment %}

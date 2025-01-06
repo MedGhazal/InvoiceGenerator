@@ -33,6 +33,7 @@ class Invoicee(Model):
         verbose_name=_('CIN'),
         null=True,
         blank=True,
+        help_text=_('CINHelpText'),
     )
     country = CharField(
         max_length=20,
@@ -59,6 +60,7 @@ class Invoicee(Model):
         null=True,
         blank=True,
         verbose_name=_('SIRET/ICE'),
+        help_text=_('ICEHelpText'),
     )
     name = CharField(
         max_length=30,
@@ -75,6 +77,7 @@ class Invoicee(Model):
             ),
         ],
         verbose_name=_('ADDRESS'),
+        help_text=_('AddressHelpText'),
     )
     bookKeepingNumber = IntegerField(
         db_default=0,

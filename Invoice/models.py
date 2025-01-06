@@ -411,6 +411,7 @@ class Payment(Model):
         max_digits=10,
         db_default=0,
         verbose_name=_('PaidAmount'),
+        validators=[MinValueValidator(0)],
     )
     invoice = ManyToManyField(
         'Invoice.Invoice',

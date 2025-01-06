@@ -1,8 +1,8 @@
 {% load static %}
 {% load i18n %}
-{% if not dialogForm %}
+    {% if not dialogForm %}
 <div class="form-wrapper">
-{% endif %}
+    {% endif %}
     <form
         hx-post=
         {% if update %}
@@ -12,12 +12,11 @@
         {% endif %}
         hx-push-url="true"
         hx-swap="innerHTML"
-        hx-target="main"
-        class="form">
+        hx-target="main">
         <div class="form-header">
             {% if dialogForm %}
             <botton type="button" hx-on:click="document.getElementById('payment-form-dialog').close()" class="dialog-close-button">
-            {% include './symbols/x-square.svg' %}
+                {% include './symbols/x-square.svg' %}
             </botton>
             {% endif %}
         </div>
@@ -26,11 +25,11 @@
             {{ form }}
         </div>
         <div class="form-footer">
-            <button type="submit" class="dialog-submit-button" hx-on:click="location.reload()">
+            <button type="submit" class="dialog-submit-button">
                 {% translate 'SaveInvoice' %}
             </button>
         </div>
     </form>
-{% if not dialogForm %}
+    {% if not dialogForm %}
 </div>
 {% endif %}

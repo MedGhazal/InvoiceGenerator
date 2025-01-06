@@ -1,6 +1,9 @@
 {% load i18n %}
+    {% if not dialogForm %}
+<div class="form-wrapper">
+{% endif %}
 <form 
-    class="invoicee form"
+    class="invoicee-form form"
     hx-post="
     {% if update %}
     {% url 'Invoicee:modify-invoicee' invoicee.id %}
@@ -11,19 +14,22 @@
     {% endif %}
     " 
     hx-trigger="submit"
+    hx-indicator="#indicator"
     hx-swap="innerHTML"
     hx-target="main">
     <div class="form-header">
+        {% if dialogForm %}
         <botton type="button" hx-on:click="document.getElementById('invoicee-form-dialog').close()" class="dialog-close-button" tabindex="0">
-        {% include './symbols/x-square.svg' %}
+            {% include './symbols/x-square.svg' %}
         </botton>
+        {% endif %}
     </div>
     <div class="form-main">
         {% csrf_token %}
         {{ form }}
     </div>
     <div class="form-footer">
-        <button type="submit" class="dialog-submit-button" hx-on:Click="document.getElementById('invoicee-form-dialog').close()">
+        <button type="submit" class="dialog-submit-button">
             {% if update %}
             {% translate 'Save' %}
             {% else %}
@@ -32,3 +38,6 @@
         </button>
     </div>
 </form>
+{% if not dialogForm %}
+<div class="form-wrapper">
+{% endif %}

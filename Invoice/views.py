@@ -743,6 +743,11 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
     form_class = PaymentForm
     template_name = './Payment-form.html'
 
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        response['HX-Retarget'] = '#payment-form-dialog'
+        return response
+
     def render_to_response(self, context, **response_kwargs):
         if self.request.user.is_superuser:
             if self.request.META.get('HTTP_HX_REQUEST'):
@@ -754,6 +759,7 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
                     reverse_lazy('admin:Invoice_payment_add'),
                 )
         if self.request.META.get('HTTP_HX_REQUEST'):
+            context.update({'dialogForm': True})
             return render(
                 self.request,
                 './Payment-form-partial.html',
@@ -780,6 +786,8 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
         ).filter(
             invoicer=invoicer
         ).filter(
+            state__in=[1, 2]
+        ).filter(
             owedAmount__gt=F('paidAmount')
         )
         paymentForm.fields['payor'].queryset = Invoicee.objects.filter(
@@ -788,14 +796,7 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
             )
         )
         paymentForm.fields['invoice'].queryset = outStandingInvoicesOfInvoicer
-        if self.request.META.get('HTTP_HX_REQUEST'):
-            context.update({
-                'form': paymentForm,
-                'dialogForm': True,
-                'update': False,
-            })
-        else:
-            context.update({'form': paymentForm, 'update': False})
+        context.update({'form': paymentForm, 'update': False})
         return context
 
     def form_valid(self, form):
@@ -825,6 +826,11 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
     form_class = PaymentForm
     template_name = './Payment-form.html'
 
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        response['HX-Retarget'] = '#payment-form-dialog'
+        return response
+
     def render_to_response(self, context, **response_kwargs):
         if self.request.user.is_superuser:
             if self.request.META.get('HTTP_HX_REQUEST'):
@@ -838,6 +844,7 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
                     args=[self.object.id],
                 )
         if self.request.META.get('HTTP_HX_REQUEST'):
+            context.update({'dialogForm': True})
             return render(
                 self.request,
                 './Payment-form-partial.html',
@@ -869,15 +876,7 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
                 outStandingInvoicesOfInvoicer.filter(invoicee=OuterRef('id'))
             )
         )
-        paymentForm.fields['invoice'].queryset = outStandingInvoicesOfInvoicer
-        if self.request.META.get('HTTP_HX_REQUEST'):
-            context.update({
-                'form': paymentForm,
-                'dialogForm': True,
-                'update': True,
-            })
-        else:
-            context.update({'form': paymentForm, 'update': True})
+        context.update({'form': paymentForm, 'update': True})
         return context
 
     def form_valid(self, form):

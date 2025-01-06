@@ -14,7 +14,7 @@
 {% endif %}
 <div class="filter-form-wrapper">
     <form 
-    hx-push-url="true" 
+        hx-push-url="true" 
         hx-get=
         {% if private %}
         "{% url 'Invoicee:pinvoicees' %}" 
@@ -34,8 +34,8 @@
         </div>
     </form>
 </div>
-{% if invoicee_list %}
 <div class="item-list">
+    {% if invoicee_list %}
     <table>
         <thead>
             <tr>
@@ -60,6 +60,24 @@
             </tr>
         </tbody>
     </table>
+    {% endif %}
+    <div class="item-list-footer">
+        {% if private %}
+        <button 
+            hx-indicator="#indicator"
+            hx-get="{% url 'Invoicee:add-private-invoicee' %}" class="MainItem"
+            hx-target="#invoicee-form-dialog"
+            hx-on:click="document.getElementById('invoicee-form-dialog').showModal();"
+            hx-swap="innerHTML"
+        >{% translate 'AddPrivateInvoicee' %}</button>
+        {% else %}
+        <button 
+            hx-indicator="#indicator"
+            hx-get="{% url 'Invoicee:add-invoicee' %}" class="MainItem"
+            hx-target="#invoicee-form-dialog"
+            hx-on:click="document.getElementById('invoicee-form-dialog').showModal();"
+            hx-swap="innerHTML"
+        >{% translate 'AddInvoicee' %}</button>
+        {% endif %}
+    </div>
 </div>
-{% else %}
-{% endif %}

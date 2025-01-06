@@ -1,4 +1,4 @@
-from django.forms.widgets import Textarea
+from django.forms.widgets import Textarea, TextInput
 from django.shortcuts import render
 from django.views.generic import (
     ListView,
@@ -7,10 +7,9 @@ from django.views.generic import (
     CreateView,
 )
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.messages import success
+from django.contrib.messages import success, error
 from django.contrib.messages.views import SuccessMessageMixin
 from django.utils.translation import gettext as _
-from django.contrib.messages import error
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 
@@ -21,12 +20,123 @@ from Core.forms import InvoiceFilterControlForm, InvoiceeFilterControlForm
 from Core.utils import HTTPResponseHXRedirect
 
 
+class InvoiceeCreateView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
+
+    model = Invoicee
+    template_name = './Invoicee-form.html'
+    fields = ('name', 'address', 'country', 'ice')
+    success_message = _('InvoiceeHasBeenCreatedSuccessfully')
+
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        response['HX-Retarget'] = '#invoicee-form-dialog'
+        return response
+
+    def get_form(self):
+        invoiceeForm = super().get_form()
+        invoiceeForm.fields['address'].widget = Textarea(
+            attrs={'rows': 2, 'required': True},
+        )
+        if invoiceeForm.fields.get('ice'):
+            invoiceeForm.fields['ice'].widget.attrs.update(
+                {'pattern': '\\d{14,16}', 'required': True},
+            )
+        else:
+            invoiceeForm.fields['cin'].required = True
+        return invoiceeForm
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.user.is_superuser:
+            if self.request.META.get('HTTP_HX_REQUEST'):
+                return HTTPResponseHXRedirect(
+                    reverse_lazy('admin:Invoicee_invoicee_add')
+                )
+            else:
+                return HttpResponseRedirect(
+                    reverse_lazy('admin:Invoicee_invoicee_add')
+                )
+        if self.request.META.get('HTTP_HX_REQUEST'):
+            context.update({'dialogForm': True})
+            return render(
+                self.request,
+                './Invoicee-form-partial.html',
+                context,
+            )
+        else:
+            context.update({'dialogForm': False})
+            response_kwargs.setdefault('content_type', self.content_type)
+            return self.response_class(
+                request=self.request,
+                template=self.get_template_names(),
+                context=context,
+                using=self.template_engine,
+                **response_kwargs,
+            )
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context.update({'private': False, 'update': False})
+        return context
+
+    def form_valid(self, form):
+        form.instance.name = self.request.POST['name']
+        form.instance.address = self.request.POST['address']
+        if self.request.POST.get('ice'):
+            form.instance.is_person = False
+        else:
+            form.instance.is_person = True
+        form.instance.ice = self.request.POST.get('ice')
+        form.instance.cin = self.request.POST.get('cin')
+        if self.request.POST.get('invoicer'):
+            form.instance.invoicer = Invoicer.objects.get(
+                id=self.request.POST['invoicer']
+            )
+        else:
+            form.instance.invoicer = Invoicer.objects.get(
+                manager=self.request.user
+            )
+        response = super().form_valid(form)
+        success(self.request, _('InvoiceeSuccessfullyAdded'))
+        return response
+
+
+class PrivateInvoiceeCreateView(InvoiceeCreateView):
+
+    fields = ('name', 'address', 'country', 'cin')
+    success_message = _('PrivateInvoiceeInvoiceeHasBeenCreatedSuccessfully')
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context.update({'private': True, 'update': False})
+        return context
+
+
 class InvoiceeUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
 
     model = Invoicee
     template_name = './Invoicee-form.html'
     fields = ('name', 'ice', 'cin', 'address', 'country')
     success_message = _('InvoiceeSuccessfullyUpdated')
+
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        response['HX-Retarget'] = '#invoicee-form-dialog'
+        return response
+
+    def get_form(self):
+        invoiceeForm = super().get_form()
+        invoiceeForm.fields['address'].widget = Textarea(
+            attrs={'rows': 2, 'required': True},
+        )
+        if self.object.is_person:
+            invoiceeForm.fields.pop('ice')
+            invoiceeForm.fields['cin'].required = True
+        else:
+            invoiceeForm.fields.pop('cin')
+            invoiceeForm.fields['ice'].widget.attrs.update(
+                {'pattern': '\\d{14,16}', 'required': True},
+            )
+        return invoiceeForm
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.user.is_superuser:
@@ -45,6 +155,7 @@ class InvoiceeUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
                     )
                 )
         elif self.request.META.get('HTTP_HX_REQUEST'):
+            context.update({'dialogForm': True})
             return render(
                 self.request,
                 './Invoicee-form-partial.html',
@@ -64,11 +175,6 @@ class InvoiceeUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
         context = super().get_context_data(*args, **kwargs)
         invoiceeForm = context['form']
         invoiceeForm.fields['address'].widget = Textarea(attrs={'rows': 2})
-        invoicee = context['invoicee']
-        if invoicee.is_person:
-            invoiceeForm.fields.pop('ice')
-        else:
-            invoiceeForm.fields.pop('cin')
         context.update({
             'update': True,
             'hasMultipleInvoicers': Invoicer.objects.filter(
@@ -227,76 +333,4 @@ class InvoiceeDetailView(DetailView, LoginRequiredMixin):
             'invoices': invoices,
             'form': invoiceFilterControlForm,
         })
-        return context
-
-
-class InvoiceeCreateView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
-
-    model = Invoicee
-    template_name = './Invoicee-form.html'
-    fields = ('name', 'address', 'country', 'ice')
-    success_message = _('InvoiceeHasBeenCreatedSuccessfully')
-
-    def render_to_response(self, context, **response_kwargs):
-        if self.request.user.is_superuser:
-            if self.request.META.get('HTTP_HX_REQUEST'):
-                return HTTPResponseHXRedirect(
-                    reverse_lazy('admin:Invoicee_invoicee_add')
-                )
-            else:
-                return HttpResponseRedirect(
-                    reverse_lazy('admin:Invoicee_invoicee_add')
-                )
-        if self.request.META.get('HTTP_HX_REQUEST'):
-            return render(
-                self.request,
-                './Invoicee-form-partial.html',
-                context,
-            )
-        else:
-            response_kwargs.setdefault('content_type', self.content_type)
-            return self.response_class(
-                request=self.request,
-                template=self.get_template_names(),
-                context=context,
-                using=self.template_engine,
-                **response_kwargs,
-            )
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        invoiceeForm = context['form']
-        invoiceeForm.fields['address'].widget = Textarea(attrs={'rows': 2})
-        context.update({'private': False, 'update': False, 'form': invoiceeForm})
-        return context
-
-    def form_valid(self, form):
-        form.instance.name = self.request.POST['name']
-        form.instance.address = self.request.POST['address']
-        if self.request.POST.get('ice'):
-            form.instance.is_person = False
-        else:
-            form.instance.is_person = True
-        form.instance.ice = self.request.POST.get('ice')
-        form.instance.cin = self.request.POST.get('cin')
-        if self.request.POST.get('invoicer'):
-            form.instance.invoicer = Invoicer.objects.get(
-                id=self.request.POST['invoicer']
-            )
-        else:
-            form.instance.invoicer = Invoicer.objects.get(
-                manager=self.request.user
-            )
-        response = super().form_valid(form)
-        return response
-
-
-class PrivateInvoiceeCreateView(InvoiceeCreateView):
-
-    fields = ('name', 'address', 'country', 'cin')
-    success_message = _('PrivateInvoiceeInvoiceeHasBeenCreatedSuccessfully')
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        context.update({'private': True, 'update': False})
         return context

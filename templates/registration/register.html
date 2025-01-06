@@ -1,16 +1,18 @@
 {% extends 'base.html' %}
 {% load i18n %}
   {% block content %}
-<div class='register-form'>
-  <h1>{% translate 'REGISTER' %}</h1>
-  <form action="{% url 'home:register' %}" method="POST">
+<div class='login-form-wrapper'>
+  <form action="{% url 'home:register' %}" method="POST" class="login-form">
+    <div class="login-form-header">
+    <h1>{% translate 'REGISTER' %}</h1>
+    </div>
+    <div class="login-form-main">
     {% csrf_token %} 
-    <!-- {{form}} -->
-    {% for field in form %}
-      {{ field.errors }}
-      {{ field.label_tag }} {{ field }}
-    {% endfor %}
+    {{ form }}
+    </div>
+    <div class="login-form-footer">
     <button>{% translate 'SUBMIT' %}</button>
+    </div>
   </form>
 </div>
 {% endblock %}

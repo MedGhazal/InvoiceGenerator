@@ -3,7 +3,7 @@
 {% if not dialogForm %}
 <div class="form-wrapper">
 {% endif %}
-    <form method="post" 
+    <form 
         hx-post=
         "{% if invoicee %}
         {% if invoice %}
@@ -21,11 +21,11 @@
         hx-push-url="true"
         hx-swap="innerHTML"
         hx-target="main"
-        class="invoice-form form">
+        hx-indicator="#indicator">
         <div class="form-header">
             {% if dialogForm %}
             <botton type="button" hx-on:click="location.reload()" class="dialog-close-button">
-            {% include './symbols/x-square.svg' %}
+                {% include './symbols/x-square.svg' %}
             </botton>
             {% endif %}
         </div>
@@ -55,6 +55,6 @@
         dropdownParent: $('#invoice-form-dialog')
     });
     </script>
-{% if not dialogForm %}
+    {% if not dialogForm %}
 </div>
 {% endif %}

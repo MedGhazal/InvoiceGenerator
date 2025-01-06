@@ -81,11 +81,10 @@ a:hover, button:hover {
 /* utility classes */
 .helptext {
 	color: var(--muted-primary-color);
-	size: 0.6rem;
 }
 .errorlist {
-	color: var(--error-color);
-	size: 0.6rem;
+	color: #ff9900;
+	font-size: 0.8rem;
 }
 
 /* Header */
@@ -195,6 +194,12 @@ main {
 	overflow: auto;
 	position: fixed;
 }
+.expanded {
+	display: grid;
+	width: 97%;
+	position: relative;
+	left: 0%;
+}
 
 /* footer */
 footer {
@@ -223,38 +228,40 @@ footer {
 }
 
 /* login-form */
-.login-form {
-	align-content: center;
+.login-form-wrapper {
+	display: block;
 	border-radius: 5px;
 	background-color: var(--light-color);
 	margin: auto;
 	padding: 2%;
-	position: absolute;
-	width: 36%;
-	top: 30%;
-	right: 30%;
+	width: min(400px, 100%);
+	justify-items: flex-start;
 }
-.login-form form {
-	align-items: center;
+.login-form {
+	width: 100%;
+}
+.login-form label {
+	color: var(--muted-primary-color);
+	padding: 0;
+	margin: 0;
+}
+.login-form-footer {
 	display: flex;
-	flex-direction: column;
+	align-items: end;
+	padding: 0;
 }
-.login-form button {
+.login-form-footer button {
 	border: 0;
 	color: var(--secondary-color);
 	background-color: var(--primary-color);
 	padding: 0.5rem;
+	margin: 5px 0;
+	width: max-content;
 }
 .login-form button:hover {
-	border-radius: 10px 20px;
+	border-radius: 15px 20px;
 	color: var(--primary-color);
 	background-color: var(--secondary-color);
-}
-.login-form div {
-	padding: 0.6rem;
-	margin: auto;
-	display: grid;
-	grid-template-columns: 50% 50%;
 }
 .login-form input {
 	background-color: var(--secondary-color);
@@ -262,58 +269,11 @@ footer {
 	border: 0px;
 	border-radius: 5px;
 	padding: 0.6rem;
+	width: 100%;
 }
 .login-form input:active {
 	border: 2px;
 	border-color: var(--primary-color);
-}
-.login-form label {
-	margin: auto;
-	padding: 0.6rem;
-}
-
-/* register-form */
-.register-form {
-	align-content: center;
-	border-radius: 5px;
-	background-color: var(--light-color);
-	margin: auto;
-	padding: 2%;
-	height: max-content;
-	width: fit-content;
-}
-.register-form form {
-	align-items: center;
-}
-.register-form button {
-	border: 0;
-	color: var(--secondary-color);
-	background-color: var(--primary-color);
-	padding: 0.5rem;
-}
-.register-form button:hover {
-	border-radius: 10px 20px;
-	color: var(--primary-color);
-	background-color: var(--secondary-color);
-}
-.register-form div {
-	padding: 0.6rem;
-}
-.register-form input {
-	background-color: var(--secondary-color);
-	color: var(--primary-color);
-	border: 0px;
-	border-radius: 5px;
-	padding: 0.6rem;
-	width: 100%;
-}
-.register-form input:active {
-	border: 2px;
-	border-color: var(--primary-color);
-}
-.register-form label {
-	margin: auto;
-	padding: 0.6rem;
 }
 
 

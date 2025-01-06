@@ -215,7 +215,16 @@ button.dialog-close-button {
 
 .form-wrapper {
 	margin: auto;
-	height: 100%;
+	width: fit-content;
+}
+.form {
+	display: block;
+	color: var(--primary-color);
+	background-color: var(--primary-color);
+	border-radius: 10px;
+	margin: auto;
+	padding: 1.5%;
+	min-width: 300px;
 }
 .form-dialog {
     margin: auto;
@@ -248,9 +257,18 @@ button.dialog-close-button {
 	margin: 0;	
 }
 
-.htmx-indicator {
+#indicator {
 	opacity:0;
 	transition: opacity 250ms ease-in;
+	position: absolute;
+	top: 50%;
+	right: 50%;
+	scale: 4;
+	background-color: var(--secondary-color);
+	padding: 20px;
+}
+.htmx-indicator {
+	opacity:0;
 }
 .htmx-request .htmx-indicator{
 	opacity:1;

@@ -83,54 +83,56 @@ table.StateTable .HeaderColumn {
     border-left: 2px solid var(--muted-primary-color); 
 }
 .item-list .borderless {
-    border: 0;
+  border: 0;
+  background-color: var(--secondary-color);
+  padding: .15rem;
 }
 .item-list tbody tr td {
-	padding: .1rem .5rem;
-	border-bottom: 1px solid var(--primary-color);
+  padding: .1rem .5rem;
+  border-bottom: 1px solid var(--primary-color);
 }
 .item-list tbody tr:nth-child(odd) {
-	background-color: var(--table-first-color);
+  background-color: var(--table-first-color);
 }
 .item-list tbody tr:nth-child(even) {
-	background-color: var(--table-second-color);
+  background-color: var(--table-second-color);
 }
 .item-list table button, .item-list table a {
-	padding: 0;
-	margin: 0;
-	background-color: inherit;
-	color: var(--primary-color);
-	border: 0;
-	padding: .1rem;
-	border-radius: 5px;
-	position: relative;
+  padding: 0;
+  margin: 0;
+  background-color: inherit;
+  color: var(--primary-color);
+  border: 0;
+  padding: .1rem;
+  border-radius: 5px;
+  position: relative;
 }
 .item-list table button::after {
-	content: attr(helptext);
-	display: block;
-	position: absolute;
-	top: 22px; left: 0;
-	opacity: 0;
-	width: 150px;
-	font-size: 13px;
-	font-weight: 700;
-	line-height: 1.5em;
-	padding: 0.5em 0.8em;
-	background: rgba(0,0,0,0.8);
-	color: #fff;
-	pointer-events: none; /* This prevents the box from apearing when hovered. */
-	transition: opacity 500ms, top 500ms;
+  content: attr(helptext);
+  display: block;
+  position: absolute;
+  top: 22px; left: 0;
+  opacity: 0;
+  width: 150px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5em;
+  padding: 0.5em 0.8em;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  pointer-events: none; /* This prevents the box from apearing when hovered. */
+  transition: opacity 500ms, top 500ms;
 }
 .item-list table button::before {
-	content: '';
-	display: block;
-	position: absolute;
-	top: 12px; left: 20px;
-	opacity: 0;
-	width: 0; height: 0;
-	border: solid transparent 5px;
-	border-bottom-color: rgba(0,0,0,0.8);
-	transition: opacity 500ms, top 500ms;
+  content: '';
+  display: block;
+  position: absolute;
+  top: 12px; left: 20px;
+  opacity: 0;
+  width: 0; height: 0;
+  border: solid transparent 5px;
+  border-bottom-color: rgba(0,0,0,0.8);
+  transition: opacity 500ms, top 500ms;
 }
 .item-list table button:hover {z-index: 2;}
 .item-list table button:hover::after,
@@ -138,12 +140,15 @@ table.StateTable .HeaderColumn {
 .item-list table button:hover::after {top: 30px;}
 .item-list table button:hover::before {top: 20px;}
 .item-list table button:hover, .item-list table a:hover {
-	border: 0;
-	background-color: var(--primary-color);
-	color: var(--secondary-color);
+  border: 0;
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
 }
 .item-list-footer {
   display: flex;
   flex-direction: row;
   justify-content: end;
+}
+.item-list-header {
+  border-bottom: 1px solid var(--primary-color);
 }

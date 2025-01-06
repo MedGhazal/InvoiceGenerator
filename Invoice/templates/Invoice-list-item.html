@@ -59,7 +59,9 @@
             helptext="{% translate 'InvoicePreviewExplanation' %}"
             type="button"
             hx-get="{% url 'Invoice:preview' invoice.id %}"
+            hx-indicator="#indicator"
             hx-push-url="true"
+            hx-indicator="#indicator"
             hx-swap="innerHTML"
             hx-target="main">
             {% include './symbols/eye.svg' %}
@@ -77,6 +79,7 @@
     <td class="borderless">
         <button
             hx-get="{% url 'Invoice:validate-invoice' invoice.id %}"
+            hx-indicator="#indicator"
             hx-swap="outerHTML"
             helptext="{% translate 'ValidateInvoiceExplantion' %}"
             hx-target="#table-row-{{ invoice.id }}">
@@ -88,6 +91,7 @@
     <td class="borderless">
         <button 
             hx-get="{% url 'Invoice:invoice-estimate' invoice.id %}"
+            hx-indicator="#indicator"
             hx-swap="innerHTML"
             helptext="{% translate 'InvoiceEstimateExplanation' %}">
             {% include './symbols/check-circle.svg' %}
@@ -99,6 +103,7 @@
         <button
             hx-get="{% url 'Invoice:create-creditNote' invoice.id %}"
             hx-swap="innerHTML"
+            hx-indicator="#indicator"
             helptext="{% translate 'CreateCreditNoteExplanation' %}"
             hx-target="main">
             {% include './symbols/corner-down-left.svg' %}
@@ -110,6 +115,7 @@
         <button 
             hx-get="{% url 'Invoice:delete-invoice' invoice.id %}"
             hx-swap="innerHTML"
+            hx-indicator="#indicator"
             hx-target="main"
             helptext="{% translate 'DeleteInvoiceButtonExplanation' %}">
             {% include './symbols/trash.svg' %}

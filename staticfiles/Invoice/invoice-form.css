@@ -6,10 +6,6 @@
     background-color: var(--primary-color);
     width: fit-content;
 }
-.invoice-form-wrapper {
-	margin: auto;
-	height: 100%;
-}
 .invoice-form {
 	display: block;
 	color: var(--primary-color);
