@@ -6,6 +6,7 @@
   </div>
   <div class="nav-box">
     <ul>
+      {% if user.is_authenticated %}
       <li><button 
         type="button" 
         hx-get="{% url 'home:index' %}" 
@@ -15,7 +16,6 @@
         hx-swap="innerHTML">
         {% translate 'Home' %}
       </button></li>
-      {% if user.is_authenticated %}
       {% if not user.is_superuser %}
       <li>
         <button 
