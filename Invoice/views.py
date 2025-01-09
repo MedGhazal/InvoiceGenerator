@@ -199,16 +199,13 @@ def add_estimate(request):
                 reverse_lazy('admin:Invoicee_invoice_add')
             )
     invoiceForm = InvoiceForm()
+    invoicer = Invoicer.objects.get(manager=request.user)
+    invoiceForm.fields['bankAccount'].queryset = invoicer.bankAccounts
+    invoiceForm.fields['bankAccount'].empty_label = _('NoBankAccount')
+    invoiceForm.fields['invoicee'].queryset = invoicer.invoicee_set.all()
     invoiceForm.fields.pop('facturationDate')
     invoiceForm.fields.pop('dueDate')
-    invoiceForm.fields.pop('bankAccount')
     if request.method == 'POST':
-        if request.POST.get('invoicer'):
-            invoicer = Invoicer.objects.get(
-                id=int(request.POST.get('invoicer'))
-            )
-        else:
-            invoicer = Invoicer.objects.get(manager=request.user)
         invoiceData = {
             'invoicer': invoicer,
             'invoicee': Invoicee.objects.get(
@@ -241,18 +238,14 @@ def add_estimate_for(request, invoicee):
                 reverse_lazy('admin:Invoicee_invoice_add')
             )
     invoiceForm = InvoiceForm()
+    invoicer = Invoicer.objects.get(manager=request.user)
     invoicee = Invoicee.objects.get(id=invoicee)
+    invoiceForm.fields['bankAccount'].queryset = invoicer.bankAccounts
+    invoiceForm.fields['bankAccount'].empty_label = _('NoBankAccount')
     invoiceForm.fields.pop('invoicee')
     invoiceForm.fields.pop('facturationDate')
     invoiceForm.fields.pop('dueDate')
-    invoiceForm.fields.pop('bankAccount')
     if request.method == 'POST':
-        if request.POST.get('invoicer'):
-            invoicer = Invoicer.objects.get(
-                id=int(request.POST.get('invoicer'))
-            )
-        else:
-            invoicer = Invoicer.objects.get(manager=request.user)
         invoiceData = {
             'invoicer': invoicer,
             'invoicee': invoicee,
@@ -286,23 +279,17 @@ def add_invoice_for(request, invoicee):
             return HttpResponseRedirect(
                 reverse_lazy('admin:Invoicee_invoice_add')
             )
+    invoicer = Invoicer.objects.get(manager=request.user)
     invoicee = Invoicee.objects.get(id=invoicee)
     invoiceForm = InvoiceForm()
+    bankAccounts = invoicer.bankAccounts
+    invoiceForm.fields['bankAccount'].queryset = bankAccounts
+    invoiceForm.fields['bankAccount'].empty_label = _('NoBankAccount')
     invoiceForm.fields.pop('invoicee')
-    invoicer = Invoicer.objects.get(manager=request.user)
-    bankAccounts = BankAccount.objects.filter(owner=invoicer)
-    if bankAccounts.count() < 2:
-        invoiceForm.fields.pop('bankAccount')
-    else:
-        invoiceForm.fields['bankAccount'].queryset = bankAccounts
     if request.method == 'POST':
-        invoicer = Invoicer.objects.get(manager=request.user)
-        if bankAccounts.count() > 1:
-            bankAccount = bankAccounts.get(
-                id=int(request.POST.get('bankAccount'))
-            )
-        else:
-            bankAccount = bankAccounts.first()
+        bankAccount = bankAccounts.get(
+            id=int(request.POST.get('bankAccount'))
+        ) if request.POST.get('bankAccount') else None
         invoiceData = {
             'invoicer': invoicer,
             'invoicee': invoicee,
@@ -341,26 +328,13 @@ def add_invoice(request):
             )
     invoiceForm = InvoiceForm()
     invoicer = Invoicer.objects.get(manager=request.user)
-    bankAccounts = BankAccount.objects.filter(owner=invoicer)
-    if bankAccounts.count() < 2:
-        invoiceForm.fields.pop('bankAccount')
-    else:
-        invoiceForm.fields['bankAccount'].queryset = bankAccounts
+    invoiceForm.fields['bankAccount'].queryset = invoicer.bankAccounts
+    invoiceForm.fields['bankAccount'].empty_label = _('NoBankAccount')
+    invoiceForm.fields['invoicee'].queryset = invoicer.invoicee_set.all()
     if request.method == 'POST':
-        if request.POST.get('invoicer'):
-            invoicer = Invoicer.objects.get(
-                id=int(request.POST.get('invoicer'))
-            )
-        else:
-            invoicer = Invoicer.objects.get(
-                manager=request.user
-            )
-        if bankAccounts.count() > 1:
-            bankAccount = bankAccounts.get(
-                id=int(request.POST.get('bankAccount'))
-            )
-        else:
-            bankAccount = bankAccounts.first()
+        bankAccount = invoicer.bankAccounts.get(
+            id=int(request.POST.get('bankAccount'))
+        ) if request.POST.get('bankAccount') else None
         invoiceData = {
             'invoicer': invoicer,
             'invoicee': Invoicee.objects.get(
@@ -458,7 +432,7 @@ def modify_invoice(request, invoice):
                 reverse_lazy('admin:Invoice_invoice_change', args=[invoice])
             )
     invoice = Invoice.objects.get(id=invoice)
-    invoicer = Invoicer.objects.get(manager=request.user)
+    invoicer = invoice.invoicer
     projectForm = ProjectForm()
     feeForm = FeeForm()
     projectSet = []
@@ -494,21 +468,14 @@ def modify_invoice(request, invoice):
         invoice.save()
         success(request, _('InvoiceSuccessfullyModified'))
     invoiceForm = InvoiceForm(instance=invoice)
-    bankAccounts = BankAccount.objects.filter(owner=invoicer)
-    if bankAccounts.count() < 2:
-        invoiceForm.fields.pop('bankAccount')
-    else:
-        invoiceForm.fields['bankAccount'].queryset = bankAccounts
+    bankAccounts = invoicer.bankAccounts
+    invoiceForm.fields['bankAccount'].empty_label = _('NoBankAccount')
+    invoiceForm.fields['bankAccount'].queryset = invoicer.bankAccounts
     if invoice.state == 1:
         invoiceForm.fields.pop('facturationDate')
         invoiceForm.fields.pop('dueDate')
-    invoiceForm.fields['invoicee'].queryset = Invoicee.objects.select_related(
-        'invoicer'
-    ).filter(
-        invoicer=invoicer
-    )
-    if invoice.state == 1:
         invoiceForm.fields.pop('paymentMethod')
+    invoiceForm.fields['invoicee'].queryset = invoicer.invoicee_set.all()
     context = {
         'invoice': invoice,
         'invoiceForm': invoiceForm,
@@ -648,7 +615,7 @@ def add_feesToProject(request, project):
     )
 
 
-@require_POST
+@require_GET
 @login_required()
 def invoice_estimate(request, invoice):
     if request.user.is_superuser:
@@ -662,7 +629,9 @@ def invoice_estimate(request, invoice):
             )
     invoice = Invoice.objects.get(id=invoice)
     invoice.state = 2
-    return HttpResponse(_('EstimateSuccessfullyInvoiced'))
+    invoice.save()
+    success(request, _('EstimateSuccessfullyInvoiced'))
+    return render(request, './Invoice-list-item.html', {'invoice': invoice})
 
 
 @require_http_methods(['DELETE'])
@@ -787,7 +756,7 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
         ).filter(
             invoicer=invoicer
         ).filter(
-            state__in=[1, 2]
+            state__in=[0, 2]
         ).filter(
             owedAmount__gt=F('paidAmount')
         )

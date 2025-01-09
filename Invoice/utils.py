@@ -508,7 +508,8 @@ def processInvoiceDraftDataAndSave(invoiceData, estimate=None):
             invoiceData['facturationDate'],
         )
         invoice.dueDate = date.fromisoformat(invoiceData['dueDate'])
-        invoice.bankAccount = invoiceData['bankAccount']
+        if invoiceData['bankAccount']:
+            invoice.bankAccount = invoiceData['bankAccount']
     invoice.baseCurrency = invoiceData['baseCurrency']
     invoice.paymentMethod = invoiceData['paymentMethod']
     invoice.salesAccount = 0

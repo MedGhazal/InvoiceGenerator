@@ -1,8 +1,8 @@
 {% load static %}
 {% load i18n %}
-{% if not dialogForm %}
+    {% if not dialogForm %}
 <div class="form-wrapper">
-{% endif %}
+    {% endif %}
     <form 
         hx-post=
         "{% if invoicee %}
@@ -50,9 +50,15 @@
             </button>
         </div>
     </form>
+    {% get_current_language as LANGUAGE_CODE %}
     <script nonce="{{ request.csp_nonce }}">
     $('#invoicee').djangoSelect2({
-        dropdownParent: $('#invoice-form-dialog')
+        dropdownParent: $('#invoice-form-dialog'),
+        width: '300px',
+        language: 'fr',
+        {% if LANGUAGE_CODE == 'ar' %}
+        dir:'rtl',
+        {% endif %}
     });
     </script>
     {% if not dialogForm %}

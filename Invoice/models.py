@@ -3,17 +3,15 @@ from decimal import Decimal
 
 from django.urls import reverse_lazy
 from django.db.models import (
-    Q, F, When, Case, Value,
+    Q, F, When, Case, Value, Avg, Sum,
     Model,
     ForeignKey,
     IntegerField,
     CharField,
-    BooleanField,
     DateField,
     DecimalField,
     GeneratedField,
     ManyToManyField,
-    OneToOneField,
     CASCADE,
 )
 from django.db.models.lookups import LessThanOrEqual
@@ -53,6 +51,7 @@ class Invoice(Model):
         on_delete=CASCADE,
         verbose_name=_('BankAccount'),
         null=True,
+        blank=True,
     )
     count = IntegerField(
         db_default=0,
@@ -282,31 +281,36 @@ class Project(Model):
         verbose_name=_('Title'),
     )
 
+    def delete(self, *args, **kwargs):
+        invoice = self.invoice
+        invoice.owedAmount -= self.totalAfterVAT
+        invoice.save()
+        super().delete(*args, **kwargs)
+
     @property
     def totalBeforeVAT(self):
-        return sum(fee.totalBeforeVAT for fee in self.fee_set.all())
+        return self.fee_set.aggregate(totalBeforeVAT=Sum('rateUnit'))[
+            'totalBeforeVAT'
+        ]
 
     @property
     def totalVAT(self):
-        return sum(fee.totalVAT for fee in self.fee_set.all())
+        return self.fee_set.annotate(
+            VAT=F('rateUnit')*F('vat')/100
+        ).aggregate(
+            total=Sum('VAT')
+        )['total']
 
     @property
     def totalAfterVAT(self):
-        return sum(fee.totalAfterVAT for fee in self.fee_set.all())
+        return self.totalBeforeVAT + self.totalVAT
 
     @property
     def avgVAT(self):
-        if self.fee_set.all().count() > 0:
-            return (
-                sum(fee.vat for fee in self.fee_set.all()) 
-                / self.fee_set.count()
-            )
-        else:
-            return 0
+        return self.fee_set.aggregate(averageVAT=Avg('vat'))['averageVAT']
 
     @property
     def numFees(self):
-        print(self.fee_set.count())
         return self.fee_set.count()
 
     def __str__(self):
@@ -351,16 +355,12 @@ class Fee(Model):
     def save(self, *args, **kwargs):
         super(Fee, self).save(*args, **kwargs)
         invoice = self.project.invoice
-        invoice.owedAmount += self.rateUnit * self.count * Decimal(
-            round(1 + self.vat / 100, 2)
-        )
+        invoice.owedAmount += self.totalAfterVAT
         invoice.save()
 
     def delete(self, *args, **kwargs):
         invoice = self.project.invoice
-        invoice.owedAmount -= self.rateUnit * self.count * Decimal(
-            round(1 + self.vat / 100, 2)
-        )
+        invoice.owedAmount -= self.totalAfterVAT
         invoice.save()
         super(Fee, self).delete(*args, **kwargs)
 
@@ -451,6 +451,7 @@ class Payment(Model):
         coverage = round(self.paidAmount / self.invoice.count(), 2)
         for invoice in self.invoice.all():
             invoice.paidAmount -= coverage
+            invoice.state = 2
             invoice.save()
         super(Payment, self).delete()
 

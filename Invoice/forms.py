@@ -1,30 +1,10 @@
 from django.forms import ModelForm, DateInput
-from django.forms.models import inlineformset_factory
 from django.forms.widgets import Textarea
 from django.utils.translation import gettext_lazy as _
 
 from .models import Invoice, Project, Fee, Payment
 
 from django_select2.forms import ModelSelect2Widget
-
-
-ProjectFormset = inlineformset_factory(
-    Invoice,
-    Project,
-    extra=0,
-    min_num=1,
-    fields=['title'],
-    exclude=[],
-)
-FeeFormset = inlineformset_factory(
-    Project,
-    Fee,
-    can_delete_extra=False,
-    extra=0,
-    min_num=1,
-    fields=['description', 'rateUnit', 'count', 'vat'],
-    exclude=['bookKeepingAmount'],
-)
 
 
 class PaymentForm(ModelForm):
@@ -76,7 +56,9 @@ class InvoiceForm(ModelForm):
             'invoicee': ModelSelect2Widget(
                 search_fields=['name__icontains'],
                 attrs={
+                    'class': 'invoicee-autocomplete-select',
                     'data-placeholder': _('ChooseINVOICEE'),
+                    'data-minimum-input-length': 5,
                     'id': 'invoicee',
                 }
             ),
