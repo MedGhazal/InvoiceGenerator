@@ -55,8 +55,8 @@ class InvoiceForm(ModelForm):
             'bankAccount',
             'baseCurrency',
             'paymentMethod',
-            'dueDate',
             'facturationDate',
+            'dueDate',
         ]
         widgets = {
             'dueDate': DateInput(
