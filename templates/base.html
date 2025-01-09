@@ -39,32 +39,38 @@
     <script src="{% static './js/htmx.min.js' %}"></script>
     <script src="{% static './js/jquery.min.js' %}"></script>
     <script src="{% static './admin/js/vendor/select2/select2.full.min.js' %}"></script>
+    {% if LANGUAGE_CODE == 'fr' %}
     <script src="{% static './admin/js/vendor/select2/i18n/fr.js' %}"></script>
+    {% elif LANGUAGE_CODE == 'ar' %}
+    <script src="{% static './admin/js/vendor/select2/i18n/ar.js' %}"></script>
+    {% elif LANGUAGE_CODE == 'en-US' %}
+    <script src="{% static './admin/js/vendor/select2/i18n/en.js' %}"></script>
+    {% endif %}
     <script src="{% static './django_select2/django_select2.js' %}"></script>
     {% block title %} {% endblock %}
-    <link 
-      rel="stylesheet" 
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" 
-      integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" 
-      crossorigin="anonymous" 
-      referrerpolicy="no-referrer"/>
-  </head>
-  <body>
-    {% include 'header.html' %}
-    {% include 'aside.html' %}
-    {% include './symbols/loader.svg' %}
-    <main {% if not user.is_authenticated %} class="expanded" {% endif %} 
-      hx-swap="innerHTML"
-      hx-on:htmx:after-settle=" const arr = Array.from(document.getElementsByClassName('form-dialog')); arr.forEach(item => { item.close() }); "
-    >
-      {% block content %} {% endblock %}
-    </main>
-    {% include 'footer.html' %}
-    <script defer nonce="{{ request.csp_nonce }}">
-    $(document).keyup(function(e) {if (e.keyCode == 27) {window.location.reload();}})
-    </script>
-    <dialog id="invoicee-form-dialog" class="form-dialog"></dialog>
-    <dialog id="invoice-form-dialog" class="form-dialog"></dialog>
-    <dialog id="payment-form-dialog" class="form-dialog"></dialog>
-  </body>
+<link 
+  rel="stylesheet" 
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" 
+  integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" 
+  crossorigin="anonymous" 
+  referrerpolicy="no-referrer"/>
+</head>
+<body>
+  {% include 'header.html' %}
+  {% include 'aside.html' %}
+  {% include './symbols/loader.svg' %}
+  <main {% if not user.is_authenticated %} class="expanded" {% endif %} 
+    hx-swap="innerHTML"
+    hx-on:htmx:after-settle=" const arr = Array.from(document.getElementsByClassName('form-dialog')); arr.forEach(item => { item.close() }); "
+  >
+    {% block content %} {% endblock %}
+  </main>
+  {% include 'footer.html' %}
+  <script defer nonce="{{ request.csp_nonce }}">
+  $(document).keyup(function(e) {if (e.keyCode == 27) {window.location.reload();}})
+  </script>
+  <dialog id="invoicee-form-dialog" class="form-dialog"></dialog>
+  <dialog id="invoice-form-dialog" class="form-dialog"></dialog>
+  <dialog id="payment-form-dialog" class="form-dialog"></dialog>
+</body>
 </html>
