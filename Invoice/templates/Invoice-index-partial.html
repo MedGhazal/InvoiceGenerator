@@ -92,70 +92,70 @@
     </table>
 </div>
 {% endif %}
-{% if invoice_list %}
 <div class="item-list">
     {% if payment %}
     <div class="item-list-header">{% translate 'INVOICESOfPayment' %}</div>
     {% elif invoicee %}
     <div class="item-list-header">{% translate 'INVOICESOfInvoicee' %}</div>
-    {% endif %}
-    <table>
-        <thead>
-            <tr>
-                {% if not invoicee %}
-                <th style="width: 300px" nonce={{ request.csp_nonce }}>{% translate 'INVOICEE' %}</th>
+        {% endif %}
+        {% if invoice_list %}
+        <table>
+            <thead>
+                <tr>
+                    {% if not invoicee %}
+                    <th style="width: 300px" nonce={{ request.csp_nonce }}>{% translate 'INVOICEE' %}</th>
+                    {% endif %}
+                    <th>{% translate 'InvoiceNumber' %}</th>
+                    <th>{% translate 'TotalAfterVAT' %}</th>
+                    <th>{% translate 'TBPaid' %}</th>
+                    <th>{% translate 'Currency' %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoice_list %}
+                {% include './Invoice-list-item.html' with invoicee=invoicee payment=payment invoice=invoice %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+        <div class="item-list-footer">
+            {% if not payment %}
+            <button 
+                class="extensive-button"
+                type="button"
+                {% if invoicee %}
+                hx-get="{% url 'Invoice:add-invoice-for' invoicee.id %}"
+                {% else %}
+                hx-get="{% url 'Invoice:add-invoice' %}"
                 {% endif %}
-                <th>{% translate 'InvoiceNumber' %}</th>
-                <th>{% translate 'TotalAfterVAT' %}</th>
-                <th>{% translate 'TBPaid' %}</th>
-                <th>{% translate 'Currency' %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for invoice in invoice_list %}
-            {% include './Invoice-list-item.html' with invoicee=invoicee payment=payment invoice=invoice %}
-            {% endfor %}
-        </tbody>
-    </table>
-    <div class="item-list-footer">
-        {% if not payment %}
-        <button 
-            class="extensive-button"
-            type="button"
-            {% if invoicee %}
-            hx-get="{% url 'Invoice:add-invoice-for' invoicee.id %}"
-            {% else %}
-            hx-get="{% url 'Invoice:add-invoice' %}"
-            {% endif %}
-            hx-target="#invoice-form-dialog"
-            hx-on:click="document.getElementById('invoice-form-dialog').showModal();"
-            hx-swap="innerHTML">
-            {% include './symbols/file-plus.svg' %}
-            {% if invoicee %}
-            <span class="text">{% translate 'AddNewInoivceToINVOICEE' %}</span>
-            {% else %}
-            <span class="text">{% translate 'AddNewInvoice' %}</span>
-            {% endif %}
-        </button>
-        <button 
-            class="extensive-button"
-            type="button"
-            {% if invoicee %}
-            hx-get="{% url 'Invoice:add-estimate-for' invoicee.id %}"
-            {% else %}
-            hx-get="{% url 'Invoice:add-estimate' %}"
-            {% endif %}
-            hx-target="#invoice-form-dialog"
-            hx-on:click="document.getElementById('invoice-form-dialog').showModal();"
-            hx-swap="innerHTML">
-            {% include './symbols/shopping-bag.svg' %}
-            {% if invoicee %}
-            <span class="text">{% translate 'AddNewEstimateToINVOICEE' %}</span>
-            {% else %}
-            <span class="text">{% translate 'AddNewEstimate' %}</span>
-            {% endif %}
-        </button>
+                hx-target="#invoice-form-dialog"
+                hx-on:click="document.getElementById('invoice-form-dialog').showModal();"
+                hx-swap="innerHTML">
+                {% include './symbols/file-plus.svg' %}
+                {% if invoicee %}
+                <span class="text">{% translate 'AddNewInoivceToINVOICEE' %}</span>
+                {% else %}
+                <span class="text">{% translate 'AddNewInvoice' %}</span>
+                {% endif %}
+            </button>
+            <button 
+                class="extensive-button"
+                type="button"
+                {% if invoicee %}
+                hx-get="{% url 'Invoice:add-estimate-for' invoicee.id %}"
+                {% else %}
+                hx-get="{% url 'Invoice:add-estimate' %}"
+                {% endif %}
+                hx-target="#invoice-form-dialog"
+                hx-on:click="document.getElementById('invoice-form-dialog').showModal();"
+                hx-swap="innerHTML">
+                {% include './symbols/shopping-bag.svg' %}
+                {% if invoicee %}
+                <span class="text">{% translate 'AddNewEstimateToINVOICEE' %}</span>
+                {% else %}
+                <span class="text">{% translate 'AddNewEstimate' %}</span>
+                {% endif %}
+            </button>
+        </div>
     </div>
-    {% endif %}
-</div>
 {% endif %}

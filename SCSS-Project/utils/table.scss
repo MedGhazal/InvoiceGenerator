@@ -63,7 +63,7 @@ table.StateTable .HeaderColumn {
 }
 .item-list table {
 	padding: 1%;
-	margin: 2%;
+	margin: 1%;
 	border-collapse: collapse;
 	border-bottom: 2px solid var(--primary-color);
 }
@@ -145,6 +145,7 @@ table.StateTable .HeaderColumn {
   color: var(--secondary-color);
 }
 .item-list-footer {
+  margin-top: 10px;
   display: flex;
   flex-direction: row;
   justify-content: end;
