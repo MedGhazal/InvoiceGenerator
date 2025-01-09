@@ -55,6 +55,7 @@
                 nonce={{request.csp_nonce}}
             >{% translate 'AddPrivateInvoicee' %}</button></li>
             {% endif %}
+            <li><a href="{% url 'kagi:two-factor-settings' %}" class="MainItem">{% translate 'AccountMFASetting' %}</a></li>
             {% block extraAsideItems %} {% endblock %}
         </ul>
     </div>

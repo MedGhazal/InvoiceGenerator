@@ -1,0 +1,14 @@
+.mfa-auth-methods-status {
+    display: flex;
+    flex-direction: column;
+}
+.mfa-auth-method-status {
+    display: flex;
+    flex-direction: row;
+}
+.mfa-auth-method-symbol .x-cirle {
+    color: red;
+}
+.mfa-auth-method-symbol .check-circle {
+    color: green;
+}
