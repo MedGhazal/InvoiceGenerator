@@ -157,12 +157,13 @@ def parse_address(address):
 def parse_bankdata(invoice, isDomestic=False):
     if invoice.bankAccount is None or invoice.state in [1, 4]:
         return ''
-    bankData = f'\\textbf{{Banque}}: {invoice.bankAccount.bankName}\\\\'\
-        f'\\textbf{{SWIFT/BIC}}: {invoice.bankAccount.bic}\\\\'
+    bankAccount = invoice.bankAccount
+    bankData = f'\\textbf{{Banque}}: {bankAccount.bankName}\\\\'\
+        f'\\textbf{{SWIFT/BIC}}: {bankAccount.bic}\\\\'
     if isDomestic:
-        bankData += f'\\textbf{{RIB}}: {invoice.bankAccount.rib}\\\\'
+        bankData += f'\\textbf{{RIB}}: {bankAccount.rib}\\\\'
     else:
-        bankData += f'\\textbf{{IBAN}}: {invoice.bankAccount.iban}\\\\'
+        bankData += f'\\textbf{{IBAN}}: {bankAccount.iban}\\\\'
     return bankData
 
 
@@ -186,10 +187,10 @@ def get_country(institution):
 
 def get_invoiceeID(invoicer, invoicee):
     if invoicee.is_person and invoicer.country.lower() == 'mar':
-        return f'\\textbf{{CIN}}: {invoicee.cin}\\newline'
+        return f'\\textbf{{CIN}}: {invoicee.cin}\\\\'
     else:
         invoicee_ice_designation = get_ice_designation(invoicee)
-        return f'\\textbf{{{invoicee_ice_designation}}}: {invoicee.ice}\\newline'
+        return f'\\textbf{{{invoicee_ice_designation}}}: {invoicee.ice}\\\\'
 
 
 def get_invoice_block(invoice, invoiceStatus, invoiceType):
@@ -267,7 +268,7 @@ def get_placeHolder_data(invoice):
         '%INVOICEENAME%': invoice.invoicee.name,
         '%FACTURATIONYEAR%': facturationPeriod,
         '%DUEDATE%': str(invoice.dueDate),
-        '%PAYMENTMODE%': f'\\textbf{{Methode de payement}}: {_(paymentMethodLabel)}\\newline',
+        '%PAYMENTMODE%': f'\\textbf{{Methode de payement}}: {_(paymentMethodLabel)}\\\\',
         '%NOTE%': textNote if isForeign else '',
         '%PATHTOLOGO%': str(invoice.invoicer.logo),
         '%INVOICEBLOCK%': invoiceBlock,
@@ -517,3 +518,85 @@ def processInvoiceDraftDataAndSave(invoiceData, estimate=None):
     invoice.state = 1 if estimate else 0
     invoice.save()
     return invoice.id
+
+
+def parse_bankData_payment(payment, isDomestic):
+    if payment.bankAccount is None:
+        return ''
+    bankAccount = payment.bankAccount
+    bankData = f'\\textbf{{Banque}}: {bankAccount.bankName}\\\\'\
+        f'\\textbf{{SWIFT/BIC}}: {bankAccount.bic}\\\\'
+    if isDomestic:
+        bankData += f'\\textbf{{RIB}}: {bankAccount.rib}\\\\'
+    else:
+        bankData += f'\\textbf{{IBAN}}: {bankAccount.iban}\\\\'
+    return bankData
+
+
+def get_placeHolder_data_receipt(payment):
+    invoicee = payment.payor
+    invoicer = invoicee.invoicer
+    invoicer_ice_designation = get_ice_designation(invoicer)
+    invoiceeCountry = get_country(invoicee)
+    invoicerCountry = get_country(invoicer)
+    invoicee_id = get_invoiceeID(invoicer, invoicee)
+    paymentMethodLabel = get_paymentMethod_label(payment.paymentMethod)
+    invoicerAddress = f'{parse_address(invoicer.address)} {invoicerCountry}'
+    invoicerFullname = f'{invoicer.name} {invoicer.legalinformation.legalForm}'
+    invoiceeAddress = f'{parse_address(invoicee.address)} {invoiceeCountry}'
+    invoices = payment.invoice
+    currency = invoices.values_list('baseCurrency', flat=True)[0]
+    bankBlock = parse_bankData_payment(
+        payment, isDomestic=(currency == invoicer.bookKeepingCurrency)
+    )
+    currency = get_currency_symbol_latex(currency)
+    paymentFooter = f'''
+\\hline\\hline
+\\multicolumn{{1}}{{l}}{{\\textbf{{Total TTC ({currency})}}}}&
+\\multicolumn{{1}}{{c}}{{{lformat_decimal(payment.paidAmount)}}}\\\\\\hline
+'''
+    coverage = round(payment.paidAmount / invoices.count())
+    invoices = '\\\\'.join(
+        f'Paiement pour la facture {invoice.number}&{lformat_decimal(coverage)}'
+        for invoice in invoices.all()
+    )
+    return {
+        '%INVOICERADRESS%': invoicerAddress,
+        '%INVOICERNAME%': invoicer.name,
+        '%INVOICERFULLNAME%': invoicerFullname,
+        '%INVOICERICE%': f'{invoicer_ice_designation}: {invoicer.legalinformation.ice}',
+        '%RC%': invoicer.legalinformation.rc,
+        '%PATENTE%': invoicer.legalinformation.patente,
+        '%CNSS%': invoicer.legalinformation.cnss,
+        '%IF%': invoicer.legalinformation.fiscal,
+        '%TELEFON%': invoicer.telefon,
+        '%INVOICEEADRESS%': invoiceeAddress,
+        '%INVOICEEICE%': invoicee_id,
+        '%INVOICEENAME%': invoicee.name,
+        '%PAYMENTDATE%': lformat_date(payment.paymentDay),
+        '%PAYMENTMODE%': f'\\textbf{{Methode de payement}}: {_(paymentMethodLabel)}\\\\',
+        '%PATHTOLOGO%': str(invoicer.logo),
+        '%BANKBLOCK%': bankBlock,
+        '%INVOICES%': invoices,
+        '%PAYMENTFOOTER%': paymentFooter,
+    }
+
+
+def generate_receipt_tex(payment):
+    template = join(getcwd(), TEMPTEXFILESDIR, 'receipt.tex')
+    with open(template, 'r', encoding='utf-8') as texFile:
+        rawTex = texFile.read()
+    data = get_placeHolder_data_receipt(payment)
+    for key, value in data.items():
+        rawTex = rawTex.replace(key, value)
+    return rawTex
+
+
+def generate_receipt_file(payment):
+    rawTex = generate_receipt_tex(payment)
+    fileName = f'{payment.payor.name}-P{payment.paymentDay}'
+    texFilePath = join(getcwd(), TEMPTEXFILESDIR, f'{fileName}.tex')
+    with open(texFilePath, 'w', encoding='utf-8') as texFile:
+        texFile.write(rawTex)
+    compile_texFile(texFilePath)
+    return f'{fileName}.pdf'.replace(' ', '')

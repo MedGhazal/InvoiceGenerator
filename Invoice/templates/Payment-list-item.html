@@ -36,6 +36,11 @@
             helptext="{% translate 'PaymentModifyExplanation' %}">{% include './symbols/edit.svg' %}</button>
     </td>
     <td class="borderless">
+        <a href="{% url 'Invoice:download-receipt' payment.id %}" helptext="{% translate 'DownloadReceiptButtonExplanation' %}">
+            {% include './symbols/download.svg' %}
+        </a>
+    </td>
+    <td class="borderless">
         <button 
             hx-delete="{% url 'Invoice:delete-payment' payment.id %}"
             hx-confirm="{% translate 'PaymentDeleteConfimMessage' %}"

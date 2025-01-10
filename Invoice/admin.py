@@ -10,6 +10,7 @@ from zipfile import (
     ZIP_DEFLATED,
     ZipFile,
 )
+from django.contrib.admin.widgets import AdminDateWidget
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.safestring import mark_safe
@@ -33,6 +34,7 @@ from rangefilter.filters import DateRangeFilter
 from Invoicee.models import Invoicee
 from Invoicer.models import Invoicer
 from .models import Invoice, Project, Fee, Payment
+from .forms import PaymentForm
 from .utils import (
     create_credit_note,
     generate_invoice_file,
@@ -652,19 +654,15 @@ class PaymentAdmin(ModelAdmin):
         'get_invoice',
     )
     autocomplete_fields = ('payor',)
+    form = PaymentForm
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(PaymentAdmin, self).get_form(request, obj, **kwargs)
         invoices = form.base_fields['invoice'].queryset
+        form.base_fields['paymentDay'].widget = AdminDateWidget()
         if request.user.is_superuser:
             form.base_fields['invoice'].queryset = invoices.filter(
                 paidAmount__lt=F('owedAmount')
-            ).order_by('-id')
-        else:
-            form.base_fields['invoice'].queryset = invoices.filter(
-                paidAmount__lt=F('owedAmount')
-            ).filter(
-                invoicer__in=Invoicer.objects.filter(manager=request.user)
             ).order_by('-id')
         return form
 
@@ -686,51 +684,7 @@ class PaymentAdmin(ModelAdmin):
         if request.user.is_superuser:
             return querySet
         return querySet.filter(
-            invoice__in=Invoice.objects.all().filter(
-                invoicer__in=Invoicer.objects.filter(manager=request.user),
-            )
+            payor__in=Invoicer.objects.get(
+                manager=request.user
+            ).invoicee_set.all()
         )
-
-    # def delete_model(self, request, payment):
-    #     payment.delete()
-
-    # def delete_queryset(self, request, payments):
-    #     for payment in payments:
-    #         coverage = round(payment.paidAmount / payment.invoice.count(), 2)
-    #         for invoice in payment.invoice.all():
-    #             invoice.paidAmount -= coverage
-    #             invoice.save()
-    #         payment.delete()
-
-    def save_model(self, request, payment, form, change):
-        payment.save()
-
-    def has_view_permission(self, request, obj=None):
-        if obj is not None:
-            return (
-                request.user.is_superuser
-                or obj.invoice.filter(
-                    invoicer__in=Invoicer.objects.filter(manager=request.user)
-                ).exists()
-            )
-        return True
-
-    def has_change_permission(self, request, obj=None):
-        if obj is not None:
-            return (
-                request.user.is_superuser
-                or obj.invoice.filter(
-                    invoicer__in=Invoicer.objects.filter(manager=request.user)
-                ).exists()
-            )
-        return True
-
-    def has_delete_permission(self, request, obj=None):
-        if obj is not None:
-            return (
-                request.user.is_superuser
-                or obj.invoice.filter(
-                    invoicer__in=Invoicer.objects.filter(manager=request.user)
-                ).exists()
-            )
-        return True

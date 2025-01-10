@@ -55,10 +55,6 @@
     $('#invoicee').djangoSelect2({
         dropdownParent: $('#invoice-form-dialog'),
         width: '300px',
-        language: 'fr',
-        {% if LANGUAGE_CODE == 'ar' %}
-        dir:'rtl',
-        {% endif %}
     });
     </script>
     {% if not dialogForm %}

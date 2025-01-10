@@ -143,28 +143,30 @@ class Invoice(Model):
 
     def __str__(self):
         if self.state == 0:
-            return f'{self.invoicer}|{self.invoicee}:B{self.id}'
+            return f'{self.invoicer}|{self.invoicee}:{_('BState')}{self.id}'
         elif self.state == 1:
-            return f'{self.invoicer}|{self.invoicee}:D{self.id}'
+            return f'{self.invoicer}|{self.invoicee}:{_('DState')}{self.id}'
         elif self.state == 4:
-            return f'{self.invoicer}|{self.invoicee}:CN{self.count}'
+            return f'{self.invoicer}|{self.invoicee}:{_('CNState')}{self.count}'
         else:
-            repr = f'{self.invoicer}|{self.invoicee}:F{self.count}'
+            repr = f'{self.invoicer}|{self.invoicee}:{_('FState')}{self.count}'
             if self.owedAmount > 0:
+                if self.owedAmount <= self.paidAmount:
+                    return repr + '-'
                 currencySymbol = get_currency_symbol(self.baseCurrency)
-                repr += f':{self.owedAmount}{currencySymbol}'
+                repr += f':{self.owedAmount - self.paidAmount}{currencySymbol}'
             return repr.replace('\n', ' ')
 
     @property
     def number(self):
         if self.state == 0:
-            return f'{date.today().year}-B-{self.id}'
+            return f'{date.today().year}-{_('BState')}-{self.id}'
         elif self.state == 1:
-            return f'{date.today().year}-D-{self.id}'
+            return f'{date.today().year}-{_('DState')}-{self.id}'
         elif self.state == 4:
-            return f'{self.facturationDate.year}-A-{self.count}'
+            return f'{self.facturationDate.year}-{_('CNSTATE')}-{self.count}'
         else:
-            return f'{self.facturationDate.year}-F-{self.count}'
+            return f'{self.facturationDate.year}-{_('FState')}-{self.count}'
 
     def clean(self):
         if (
@@ -418,6 +420,7 @@ class Payment(Model):
         verbose_name=_('PaidInvoices'),
         related_name='paymentInvoice',
         related_query_name='paymentInvoice',
+        help_text=_('ManyToManyFieldHelpText'),
     )
     bankAccount = ForeignKey(
         'Invoicer.BankAccount',
@@ -431,25 +434,27 @@ class Payment(Model):
         return f'{self.payor}|{self.paymentDay}'
 
     def save(self, *args, **kwargs):
-        lastPayment = self.history.last()
-        if lastPayment is not None:
-            coverage = round(
-                Decimal(lastPayment.paidAmount / self.invoice.count()),
-                2,
-            )
-            for invoice in self.invoice.all():
-                invoice.paidAmount -= coverage
-                invoice.save()
+        # lastPayment = self.history.last()
+        # if lastPayment is not None:
+        #     coverage = round(
+        #         Decimal(lastPayment.paidAmount / self.invoice.count()),
+        #         2,
+        #     )
+        #     for invoice in self.invoice.all():
+        #         invoice.paidAmount -= coverage
+        #         invoice.save()
         super(Payment, self).save()
-        if self.invoice.count() > 0:
-            coverage = round(Decimal(self.paidAmount / self.invoice.count()), 2)
-            for invoice in self.invoice.all():
-                invoice.paidAmount += coverage
-                invoice.save()
+        # numInvoices = self.invoice.count()
+        # if numInvoices > 0:
+        #     coverage = round(Decimal(self.paidAmount / numInvoices), 2)
+        #     for invoice in self.invoice.all():
+        #         invoice.paidAmount += coverage
+        #         invoice.save()
 
     def delete(self, *args, **kwargs):
-        coverage = round(self.paidAmount / self.invoice.count(), 2)
-        for invoice in self.invoice.all():
+        invoices = self.invoice
+        coverage = round(self.paidAmount / invoices.count(), 2)
+        for invoice in invoices.all():
             invoice.paidAmount -= coverage
             invoice.state = 2
             invoice.save()

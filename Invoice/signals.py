@@ -11,7 +11,7 @@ from .models import Payment, Invoice, Project, Fee
 
 
 def m2m_changed_payment_invoice_pre_add(payment):
-    if payment.invoice.all().count() > 0:
+    if payment.invoice.count() > 0:
         lastPayment = payment.history.last()
         coverage = Decimal(
             round(
@@ -32,6 +32,7 @@ def m2m_changed_payment_invoice_post_add(payment):
             )
         )
         invoice.state = 2 if invoice.paidAmount < invoice.owedAmount else 3
+        invoice.paymentMethod = payment.paymentMethod
         invoice.save()
 
 

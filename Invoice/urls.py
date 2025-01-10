@@ -17,6 +17,7 @@ from .views import (
     add_estimate_for,
     invoice_estimate,
     delete_payment,
+    download_receipt,
     InvoiceDetailView,
     InvoiceListView,
     EstimateListView,
@@ -99,5 +100,10 @@ urlpatterns = [
         'deletePayment/<int:payment>',
         delete_payment,
         name='delete-payment',
-    )
+    ),
+    path(
+        'downloadReceipt/<int:payment>',
+        download_receipt,
+        name='download-receipt',
+    ),
 ]

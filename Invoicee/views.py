@@ -24,7 +24,7 @@ class InvoiceeCreateView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
 
     model = Invoicee
     template_name = './Invoicee-form.html'
-    fields = ('name', 'address', 'country', 'ice')
+    fields = ('name', 'ice', 'address', 'country')
     success_message = _('InvoiceeHasBeenCreatedSuccessfully')
 
     def form_invalid(self, form):
@@ -102,7 +102,7 @@ class InvoiceeCreateView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
 
 class PrivateInvoiceeCreateView(InvoiceeCreateView):
 
-    fields = ('name', 'address', 'country', 'cin')
+    fields = ('name', 'cin', 'address', 'country')
     success_message = _('PrivateInvoiceeInvoiceeHasBeenCreatedSuccessfully')
 
     def get_context_data(self, *args, **kwargs):

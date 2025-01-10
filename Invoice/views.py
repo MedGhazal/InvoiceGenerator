@@ -1,11 +1,11 @@
 from datetime import date
 from decimal import Decimal
-from os import remove, getcwd
+from os import getcwd
 from os.path import join
 
 from django.contrib.messages import error, success
 from django.shortcuts import render
-from django.db.models import F, Exists, OuterRef
+from django.db.models import F, Q, Exists, OuterRef
 from django.views.generic import (
     ListView,
     DetailView,
@@ -14,7 +14,7 @@ from django.views.generic import (
 )
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import FileResponse, HttpResponseRedirect, HttpResponse
+from django.http import FileResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.views.decorators.http import (
     require_GET,
@@ -34,6 +34,7 @@ from .forms import ProjectForm, FeeForm, InvoiceForm, PaymentForm
 from .utils import (
     create_credit_note,
     generate_invoice_file,
+    generate_receipt_file,
     processInvoiceDraftDataAndSave,
     LateXError,
 )
@@ -45,6 +46,23 @@ def download_invoice(request, invoice):
     invoice = Invoice.objects.get(id=invoice)
     try:
         file = generate_invoice_file(invoice)
+        pathToFile = join(getcwd(), TEMPTEXFILESDIR, file)
+        response = FileResponse(
+            open(pathToFile, 'rb'),
+            content_type='application/pdf',
+            filename=file,
+        )
+        return response
+    except LateXError as e:
+        error(request, ' '.join(e.args))
+        return None
+
+
+@login_required
+def download_receipt(request, payment):
+    payment = Payment.objects.get(id=payment)
+    try:
+        file = generate_receipt_file(payment)
         pathToFile = join(getcwd(), TEMPTEXFILESDIR, file)
         response = FileResponse(
             open(pathToFile, 'rb'),
@@ -756,7 +774,7 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
         ).filter(
             invoicer=invoicer
         ).filter(
-            state__in=[0, 2]
+            state__in=[1, 2]
         ).filter(
             owedAmount__gt=F('paidAmount')
         )
@@ -833,19 +851,16 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
 
     def get_form(self):
         paymentForm = super().get_form()
+        paymentForm.fields.pop('payor')
+        paymentForm.fields.pop('invoice')
         invoicer = Invoicer.objects.get(manager=self.request.user)
         paymentForm.fields['bankAccount'].queryset = invoicer.bankAccounts
         paymentForm.fields['bankAccount'].empty_label = _('NoBankAccount')
-        outStandingInvoicesOfInvoicer = Invoice.objects.filter(
-            invoicer=invoicer
-        ).filter(
-            owedAmount__gt=F('paidAmount')
-        )
-        paymentForm.fields['payor'].queryset = Invoicee.objects.filter(
-            Exists(
-                outStandingInvoicesOfInvoicer.filter(invoicee=OuterRef('id'))
-            )
-        )
+        # paymentForm.fields['invoice'].queryset = self.object.payor.invoice_set.filter(
+        #     Q(owedAmount__gt=F('paidAmount')) |
+        #     Q(id__in=self.object.invoice.values_list('id', flat=True))
+        # )
+        return paymentForm
 
     def form_invalid(self, form):
         response = super().form_invalid(form)
@@ -853,9 +868,6 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
         return response
 
     def form_valid(self, form):
-        form.instance.invoicee = Invoicee.objects.get(
-            id=self.request.POST['payor']
-        )
         form.instance.paymentDay = self.request.POST['paymentDay']
         form.instance.paymentMethod = self.request.POST['paymentMethod']
         form.instance.paidAmount = Decimal(self.request.POST['paidAmount'])
