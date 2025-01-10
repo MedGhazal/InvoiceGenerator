@@ -237,6 +237,7 @@ button.dialog-close-button {
 .form-wrapper {
   margin: auto;
   width: fit-content;
+  padding: max(5%, 10px);
 }
 
 .form {
@@ -1077,18 +1078,62 @@ footer {
   display: flex;
   flex-direction: column;
 }
-
-.mfa-auth-method-status {
-  display: flex;
-  flex-direction: row;
+.mfa-auth-methods-status .mfa-auth-method-status {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
 }
-
-.mfa-auth-method-symbol .x-cirle {
+.mfa-auth-methods-status .x-circle {
   color: red;
 }
-
-.mfa-auth-method-symbol .check-circle {
+.mfa-auth-methods-status .check-circle {
   color: green;
+}
+
+.qr-code {
+  padding: 0;
+  margin: auto;
+  background: 0lh;
+}
+
+.qr-code:hover {
+  background: 0lh;
+}
+
+.mfa-form {
+  color: var(--muted-primary-color);
+  margin: 0;
+  padding: 15px 10px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--primary-color);
+  border-radius: 10px;
+}
+.mfa-form form {
+  display: flex;
+  flex-direction: column;
+}
+.mfa-form form div {
+  display: flex;
+  flex-direction: column;
+}
+.mfa-form input {
+  width: max-content;
+}
+.mfa-form button {
+  color: var(--light-color);
+  font-size: 0.8rem;
+  padding: 0;
+  margin: 0 5px;
+  border: 0;
+  background: 0lh;
+  align-items: flex-end;
+  transition: all 0.25s ease-in-out;
+}
+.mfa-form button:hover {
+  color: var(--light-color);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  background: 0lh;
 }
 
 /*# sourceMappingURL=stylesheet.css.map */

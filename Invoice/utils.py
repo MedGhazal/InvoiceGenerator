@@ -202,7 +202,7 @@ Devis Numéro: D{date.today().year}-{date.today().day}{date.today().month}\\\\
     else:
         return f'''
 Date d{invoiceStatus}: {lformat_date(invoice.facturationDate)}\\\\
-{invoiceType} Numéro: {invoice.facturationDate.year}-{invoice.count}
+{invoiceType} Numéro: {invoice.number}
 '''
 
 
@@ -229,18 +229,20 @@ def check_invoiceIsForeign(invoicer, invoicee):
 
 def get_placeHolder_data(invoice):
     textNote = f'\\begin{{center}}{VAT_NOTE}\\end{{center}}'
-    invoicer_ice_designation = get_ice_designation(invoice.invoicer)
-    invoiceeCountry = get_country(invoice.invoicee)
-    invoicerCountry = get_country(invoice.invoicer)
-    invoicee_id = get_invoiceeID(invoice.invoicer, invoice.invoicee)
-    isForeign = check_invoiceIsForeign(invoice.invoicer, invoice.invoicee)
+    invoicer = invoice.invoicer
+    invoicee = invoice.invoicee
+    invoicer_ice_designation = get_ice_designation(invoicer)
+    invoiceeCountry = get_country(invoicee)
+    invoicerCountry = get_country(invoicer)
+    invoicee_id = get_invoiceeID(invoicer, invoicee)
+    isForeign = check_invoiceIsForeign(invoicer, invoicee)
     activities, invoiceStatus, invoiceType = parse_activities(invoice)
     invoiceBlock = get_invoice_block(invoice, invoiceStatus, invoiceType)
     dueDateBlock = get_dueDate_block(invoice)
     paymentMethodLabel = get_paymentMethod_label(invoice.paymentMethod)
-    invoicerAddress = f'{parse_address(invoice.invoicer.address)} {invoicerCountry}'
-    invoicerFullname = f'{invoice.invoicer.name} {invoice.invoicer.legalinformation.legalForm}'
-    invoiceeAddress = f'{parse_address(invoice.invoicee.address)} {invoiceeCountry}'
+    invoicerAddress = f'{parse_address(invoicer.address)} {invoicerCountry}'
+    invoicerFullname = f'{invoicer.name} {invoicer.legalinformation.legalForm}'
+    invoiceeAddress = f'{parse_address(invoicee.address)} {invoiceeCountry}'
     facturationPeriod = (
         str(invoice.facturationDate.year)
         if invoice.facturationDate is not None
@@ -248,29 +250,28 @@ def get_placeHolder_data(invoice):
     )
     bankBlock = parse_bankdata(
         invoice, isDomestic=(
-            invoice.baseCurrency == invoice.invoicer.bookKeepingCurrency
+            invoice.baseCurrency == invoicer.bookKeepingCurrency
         )
     )
     return {
-        '%COUNT%': str(invoice.count),
         '%ACTIVITIES%': activities,
         '%INVOICERADRESS%': invoicerAddress,
-        '%INVOICERNAME%': invoice.invoicer.name,
+        '%INVOICERNAME%': invoicer.name,
         '%INVOICERFULLNAME%': invoicerFullname,
-        '%INVOICERICE%': f'{invoicer_ice_designation}: {invoice.invoicer.legalinformation.ice}',
-        '%RC%': invoice.invoicer.legalinformation.rc,
-        '%PATENTE%': invoice.invoicer.legalinformation.patente,
-        '%CNSS%': invoice.invoicer.legalinformation.cnss,
-        '%IF%': invoice.invoicer.legalinformation.fiscal,
-        '%TELEFON%': invoice.invoicer.telefon,
+        '%INVOICERICE%': f'{invoicer_ice_designation}: {invoicer.legalinformation.ice}',
+        '%RC%': invoicer.legalinformation.rc,
+        '%PATENTE%': invoicer.legalinformation.patente,
+        '%CNSS%': invoicer.legalinformation.cnss,
+        '%IF%': invoicer.legalinformation.fiscal,
+        '%TELEFON%': invoicer.telefon,
         '%INVOICEEADRESS%': invoiceeAddress,
         '%INVOICEEICE%': invoicee_id,
-        '%INVOICEENAME%': invoice.invoicee.name,
+        '%INVOICEENAME%': invoicee.name,
         '%FACTURATIONYEAR%': facturationPeriod,
         '%DUEDATE%': str(invoice.dueDate),
         '%PAYMENTMODE%': f'\\textbf{{Methode de payement}}: {_(paymentMethodLabel)}\\\\',
         '%NOTE%': textNote if isForeign else '',
-        '%PATHTOLOGO%': str(invoice.invoicer.logo),
+        '%PATHTOLOGO%': str(invoicer.logo),
         '%INVOICEBLOCK%': invoiceBlock,
         '%BANKBLOCK%': bankBlock,
         '%DUEDATEBLOCK%': dueDateBlock,

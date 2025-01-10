@@ -1,14 +1,58 @@
 .mfa-auth-methods-status {
     display: flex;
     flex-direction: column;
+    .mfa-auth-method-status {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+    }
+    .x-circle {
+        color: red;
+    }
+    .check-circle {
+        color: green;
+    }
 }
-.mfa-auth-method-status {
+.qr-code {
+    padding: 0;
+    margin: auto;
+    background: 0lh;
+}
+.qr-code:hover {
+    background: 0lh;
+}
+.mfa-form {
+    color: var(--muted-primary-color);
+    margin: 0;
+    padding: 15px 10px;
     display: flex;
-    flex-direction: row;
-}
-.mfa-auth-method-symbol .x-cirle {
-    color: red;
-}
-.mfa-auth-method-symbol .check-circle {
-    color: green;
+    flex-direction: column;
+    background-color: var(--primary-color);
+    border-radius: 10px;
+    form {
+        display: flex;
+        flex-direction: column;
+        div {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+    input {
+        width: max-content;
+    }
+    button {
+        color: var(--light-color);
+        font-size: 0.8rem;
+        padding: 0;
+        margin: 0 5px;
+        border: 0;
+        background: 0lh;
+        align-items: flex-end;
+        transition: all 0.25s ease-in-out;
+    }
+    button:hover {
+        color: var(--light-color);
+        font-size: 0.8rem;
+        text-decoration: underline;
+        background: 0lh;
+    }
 }
