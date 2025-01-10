@@ -796,15 +796,6 @@ class PaymentCreateView(CreateView, LoginRequiredMixin):
         return response
 
     def form_valid(self, form):
-        form.instance.invoicee = Invoicee.objects.get(
-            id=self.request.POST['payor']
-        )
-        form.instance.paymentDay = self.request.POST['paymentDay']
-        form.instance.paymentMethod = self.request.POST['paymentMethod']
-        form.instance.paidAmount = Decimal(self.request.POST['paidAmount'])
-        form.instance.paidInvoices = Invoice.objects.filter(
-            id__in=self.request.POST['invoice']
-        )
         response = super().form_valid(form)
         return response
 
@@ -868,12 +859,6 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
         return response
 
     def form_valid(self, form):
-        form.instance.paymentDay = self.request.POST['paymentDay']
-        form.instance.paymentMethod = self.request.POST['paymentMethod']
-        form.instance.paidAmount = Decimal(self.request.POST['paidAmount'])
-        # form.instance.paidInvoices = Invoice.objects.filter(
-        #     id__in=self.request.POST['invoice']
-        # )
         response = super().form_valid(form)
         return response
 

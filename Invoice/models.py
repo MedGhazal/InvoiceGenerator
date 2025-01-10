@@ -297,11 +297,14 @@ class Project(Model):
 
     @property
     def totalVAT(self):
-        return self.fee_set.annotate(
-            VAT=F('rateUnit')*F('vat')/100
-        ).aggregate(
-            total=Sum('VAT')
-        )['total']
+        return round(
+            self.fee_set.annotate(
+                VAT=F('rateUnit')*F('vat')/100
+            ).aggregate(
+                total=Sum('VAT')
+            )['total'],
+            2,
+        )
 
     @property
     def totalAfterVAT(self):
