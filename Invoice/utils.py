@@ -594,9 +594,9 @@ def generate_receipt_tex(payment):
 
 def generate_receipt_file(payment):
     rawTex = generate_receipt_tex(payment)
-    fileName = f'{payment.payor.name}-P{payment.paymentDay}'
+    fileName = f'{payment.payor.name}-P{payment.paymentDay}'.replace(' ', '')
     texFilePath = join(getcwd(), TEMPTEXFILESDIR, f'{fileName}.tex')
     with open(texFilePath, 'w', encoding='utf-8') as texFile:
         texFile.write(rawTex)
     compile_texFile(texFilePath)
-    return f'{fileName}.pdf'.replace(' ', '')
+    return f'{fileName}.pdf'
