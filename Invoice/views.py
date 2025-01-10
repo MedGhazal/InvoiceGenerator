@@ -871,9 +871,9 @@ class PaymentUpdateView(UpdateView, LoginRequiredMixin):
         form.instance.paymentDay = self.request.POST['paymentDay']
         form.instance.paymentMethod = self.request.POST['paymentMethod']
         form.instance.paidAmount = Decimal(self.request.POST['paidAmount'])
-        form.instance.paidInvoices = Invoice.objects.filter(
-            id__in=self.request.POST['invoice']
-        )
+        # form.instance.paidInvoices = Invoice.objects.filter(
+        #     id__in=self.request.POST['invoice']
+        # )
         response = super().form_valid(form)
         return response
 
